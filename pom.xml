@@ -10,9 +10,9 @@
 	</parent>
 	<groupId>com.fiscore</groupId>
 	<artifactId>core</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>V0.0.1-alpha</version>
 	<packaging>war</packaging>
-	<name>core</name>
+	<name>fiscore</name>
 	<description>Fiscore es una plataforma SaaS para la gestión integral de facturación, suscripciones y control operativo de despachos contables.</description>
 	<url/>
 	<licenses>
@@ -24,16 +24,27 @@
 	<scm>
 		<connection/>
 		<developerConnection/>
-		<tag/>
+		<tag>V0.0.1-alpha</tag>
 		<url/>
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+		<build.number>1.0.1</build.number>
+		<user.timezone>America/El_Salvador</user.timezone>
+		<maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-crypto</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -62,13 +73,57 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<property name="user.timezone" value="America/El_Salvador"/>
+								<property name="build.number" value="${maven.build.timestamp}" />
+								<property name="timestamp" value="${maven.build.timestamp}" />
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<exportAntProperties>true</exportAntProperties>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>2.7.14</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+							<goal>build-info</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<additionalProperties>
+						<timeZone>America/El_Salvador</timeZone>
+					</additionalProperties>
+					<!--suppress UnresolvedMavenProperty -->
+					<finalName>${project.artifactId}-${project.version}-${timestamp}</finalName>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

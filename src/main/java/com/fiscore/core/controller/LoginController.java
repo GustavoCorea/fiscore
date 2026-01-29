@@ -1,5 +1,15 @@
 package com.fiscore.core.controller;
 
+import com.fiscore.core.models.BuildInfo;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,195 +19,108 @@ import org.springframework.web.context.annotation.SessionScope;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.Serializable;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @SessionScope
 @Controller
 public class LoginController implements Serializable {
 
-//	private final AuthenticationManager authenticationManager;
-//	private final UsuarioService usuarioService;
-//	private final TipoUsuarioService tipoService;
-//	private final CambioContraseniaService cambioContraseniaService;
-//	private final UtilidadesController util;
-//
-//	public LoginController(AuthenticationManager authenticationManager, UsuarioService usuarioService,
-//						   TipoUsuarioService tipoService, CambioContraseniaService cambioContraseniaService, UtilidadesController util) {
-//		this.authenticationManager = authenticationManager;
-//		this.usuarioService = usuarioService;
-//		this.cambioContraseniaService = cambioContraseniaService;
-//		this.util = util;
-//		this.tipoService = tipoService;
-//	}
-//
-//	@PostMapping("/processLogin")
-//    public String processLogin(@RequestParam("username") String username,
-//    		@RequestParam("password") String password,
-//    		@RequestParam("tipo") String tipo,
-//    		Model model, RedirectAttributes flash,
-//    		HttpServletRequest request) {
-//      try {
-//            // Autenticar al usuario
-//            Authentication authentication = authenticationManager.authenticate(
-//                    new UsernamePasswordAuthenticationToken(username, password));
-//            // Establecer la autenticación en el contexto de seguridad
-//            SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//            boolean encontrado=false;
-//            Usuario usuario = new Usuario();
-//
-//            if(tipo.equals("T")) {
-//            	 usuario = usuarioService.findByDUi(username);
-//            }else {
-//            	//busca primero por DUI
-//            	usuario = usuarioService.findByDUi(username);
-//            	if(usuario==null){
-//            		 usuario = usuarioService.findByNit(username);
-//            	}
-//            }
-//
-//
-//            System.out.println(usuario);
-//
-//
-//            if(usuario==null) {
-//            	if(tipo.equals("T")) {
-//            		 flash.addFlashAttribute("error","Credenciales inválidas, por favor verificar.");
-//            		 return "redirect:"+util.rutaBaseRedirect(request.getServerName())+"login?idTipo=2";
-//            	}else {
-//            		 flash.addFlashAttribute("error","Credenciales inválidas, por favor verificar.");
-//            		 return "redirect:"+util.rutaBaseRedirect(request.getServerName())+"login?idTipo=1";
-//            	}
-//            }
-//
-//            //verifica que tenga del tipo seleccionado
-//
-//            List<TipoUsuario> tipoList = tipoService.findByUsetId(usuario.getUsetId());
-//            for(TipoUsuario tipoUsuario : tipoList) {
-//            	if(tipoUsuario.getTuseNombre().equals(tipo)) {
-//            		encontrado=true;
-//            	}
-//            	else if(tipoUsuario.getTuseNombre().equals("J")) {
-//            		encontrado=true;
-//            	}
-//            }
-//
-//            if(encontrado) {
-//            	if(tipo.equals("T")) {
-//
-//            		 return "redirect:"+util.rutaBaseRedirect(request.getServerName())+"inicioTrabajador";
-//            	}
-//            	else {
-//            		 //return "redirect:/inicioEmpleador";
-//            		return "redirect:"+util.rutaBaseRedirect(request.getServerName())+"inicioEmpleador";
-//            	}
-//            }else {
-//            	if(tipo.equals("T")) {
-//            		flash.addFlashAttribute("error","Usted no tiene registros como empleado, por favor verificar.");
-//            		 return "redirect:"+util.rutaBaseRedirect(request.getServerName())+"login?idTipo=2";
-//            	}else {
-//            		flash.addFlashAttribute("error","Usted no tiene registros como empleador, por favor verificar.");
-//            		return "redirect:"+util.rutaBaseRedirect(request.getServerName())+"login?idTipo=1";
-//            	}
-//
-//            }
-//
-//
-//
-//
-//           /* else {
-//            	String tipounico= tipo.get(0).getTuseNombre();
-//            	if(tipounico=="N") {
-//            		 return "redirect:/inicioEmpleador";
-//            	}
-//            	else {
-//            		 return "redirect:/inicioTrabajador";
-//            	}
-//            }*/
-//            //return "redirect:/inicioTrabajador";
-//
-//         }
-//        catch (Exception e) {
-//	        /*String mensaje = switch (e.getMessage()) {
-//	            case "Bad credentials" -> "Credenciales inválidas, por favor verificar.";
-//	            case "Invalid user" -> "El DUI ingresado no existe";
-//	            default -> "Error al iniciar sesión, verifique su conexión";
-//	        };*/
-//	        // Manejar la excepción de autenticación fallida (por ejemplo, usuario/contraseña incorrectos)
-//	       // model.addAttribute("error","Credenciales inválidas, por favor verificar.");
-//	    	 flash.addFlashAttribute("error","Credenciales inválidas, por favor verificar.");
-//	        //e.printStackTrace();
-//	    	 return "redirect:"+util.rutaBaseRedirect(request.getServerName())+"login?idTipo=1";
-//	    }
-//
-//    }
-//
-//	@PostMapping("/processLoginEmpleador")
-//	public String processLoginEmpleador(@RequestParam("username") String username,
-//			@RequestParam("password") String password, Model model) {
-//		try {
-//			// Autenticar al usuario
-//			Authentication authentication = authenticationManager
-//					.authenticate(new UsernamePasswordAuthenticationToken(username, password));
-//
-//			// Establecer la autenticación en el contexto de seguridad
-//			SecurityContextHolder.getContext().setAuthentication(authentication);
-//			// Redirigir al usuario a la página de inicio después de iniciar sesión
-//			return "redirect:/planillasPendientes";
-//		} catch (Exception e) {
-//			/*
-//			 * String mensaje = switch (e.getMessage()) { case "Bad credentials" ->
-//			 * "Credenciales inválidas, por favor verificar."; case "Invalid user" ->
-//			 * "El DUI ingresado no existe"; default ->
-//			 * "Error al iniciar sesión, verifique su conexión"; };
-//			 */
-//			// Manejar la excepción de autenticación fallida (por ejemplo,
-//			// usuario/contraseña incorrectos)
-//			model.addAttribute("error", "Credenciales inválidas, por favor verificar.");
-//			// e.printStackTrace();
-//			return "loginEmpleador";
-//		}
-//	}
-//
-//	@GetMapping("/forgot-password")
-//	public String showForgotPasswordForm() {
-//		return "forgot-password"; // Devuelve la vista donde los usuarios pueden solicitar restablecer su
-//									// contraseña
-//	}
-//
-//	@GetMapping("/reset-password")
-//	public String processResetPassword(@RequestParam("token") String token, Model model) {
-//		CambioContrasenia cambioContrasenia = cambioContraseniaService.findByToken(token);
-//		Usuario usuario = usuarioService.findByUsetId(cambioContrasenia.getUsuario().getUsetId());
-//		if (cambioContrasenia != null && "A".equals(cambioContrasenia.getCacoEstado())) {
-//			// Token válido, mostrar formulario de cambio de contraseña
-//			model.addAttribute("usuario",usuario);
-//			model.addAttribute("token", token);
-//			model.addAttribute("mensaje", "SUCCESS");
-//        } else {
-//			// Token inválido o caducado
-//			model.addAttribute("mensaje", "El enlace de restablecimiento de contraseña no es válido o ha caducado.");
-//        }
-//        return "reset-password";
-//    }
-//
-//	@PostMapping("/reset-password")
-//	public String processResetSavePassword(@RequestParam("token") String token, @RequestParam("password") String newPassword, Model model) {
-//		CambioContrasenia cambioContrasenia = cambioContraseniaService.findByToken(token);
-//		if (cambioContrasenia != null && "A".equals(cambioContrasenia.getCacoEstado())) {
-//			// Actualizar contraseña del usuario
-//			Usuario usuario = cambioContrasenia.getUsuario();
-//			usuario.setUsetPassword(newPassword);
-//			usuarioService.guardar(usuario);
-//			// Desactivar el token
-//			cambioContrasenia.setCacoEstado("I");
-//			cambioContraseniaService.save(cambioContrasenia);
-//			model.addAttribute("message", "La contraseña se ha restablecido con éxito.");
-//        } else {
-//			model.addAttribute("error", "El enlace de restablecimiento de contraseña no es válido o ha caducado.");
-//        }
-//        return "reset-password-success";
-//    }
+    private final BuildInfo buildInfo;
+    private final AuthenticationManager authenticationManager;
+    UserDetails userDetails = null;
 
+    public LoginController(BuildInfo buildInfo, AuthenticationManager authenticationManager) {
+        this.buildInfo = buildInfo;
+        this.authenticationManager = authenticationManager;
+    }
+
+    @GetMapping("/login")
+    public String login(Model model) {
+        String formattedBuildTime = buildInfo.getBuildTime() != null
+                ? DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+                .format(Instant.parse(buildInfo.getBuildTime()).atZone(ZoneId.of("UTC")))
+                : "No build time available";
+
+        model.addAttribute("buildVersion", buildInfo.getVersion());
+        model.addAttribute("buildTime", formattedBuildTime);
+        model.addAttribute("buildNumber", buildInfo.getBuildNumber());
+        return "login";
+    }
+
+    @PostMapping("/autenticar")
+    public String authenticate(@RequestParam String username, @RequestParam String password, Model model, HttpSession session, HttpServletResponse response) {
+        try {
+            Authentication authentication = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(username, password));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            if (!authentication.getAuthorities().stream().anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("CDSF-ACCESS") || grantedAuthority.getAuthority().equals("CDSF-ADMIN"))){
+                model.addAttribute("error", "Usuario no autorizado para acceder al sistema.");
+                return "login";
+            }
+
+            session.setAttribute("userCompleteName", authentication.getName());
+            session.setAttribute("roles", authentication.getAuthorities());
+            session.setAttribute("userInfo", authentication);
+            session.setAttribute("username", authentication.getName());
+            return "redirect:/";
+        } catch (RuntimeException e) {
+            model.addAttribute("error", "El usuario o contraseña no son validos.");
+            return "login";
+        }
+    }
+
+    public void initAuthentication(HttpSession session, Model model) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                // Extraer el usuario autenticado y los roles
+                String username;
+                List<String> roles;
+                Object principal = authentication.getPrincipal();
+                if (principal instanceof UserDetails) {
+                    userDetails = (UserDetails) principal;
+                    //UserDetails userDetails = (UserDetails) principal;
+                    username = userDetails.getUsername();
+                    roles = userDetails.getAuthorities().stream()
+                            .map(authority -> authority.getAuthority())
+                            .collect(Collectors.toList());
+                } else {
+                    username = principal.toString();
+                    roles = authentication.getAuthorities().stream()
+                            .map(authority -> authority.getAuthority())
+                            .collect(Collectors.toList());
+                }
+                session.setAttribute("username", username);
+                session.setAttribute("roles", roles);
+
+                model.addAttribute("username", username);
+                model.addAttribute("roles", roles);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "Hubo un error en la autenticación.");
+        }
+    }
+
+    @GetMapping({"/", "/principal"})
+    public String principal(HttpSession session, Model model) {
+        initAuthentication(session, model);
+        return "index";
+    }
+
+    @GetMapping("/logout")
+    public String logout(HttpServletRequest request, HttpServletResponse response) {
+        Cookie cookie = new Cookie("keycloak_token", null);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+        request.getSession().invalidate();
+        return "redirect:/login?logout=true";
+    }
 }

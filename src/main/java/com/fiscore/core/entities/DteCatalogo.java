@@ -1,78 +1,102 @@
 package com.fiscore.core.entities;
-@jakarta.persistence.Entity
-@jakarta.persistence.Table(name = "\"DTE_CATALOGO\"")
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import java.time.Instant;
+
+@Entity
+@Table(name = "DTE_CATALOGO")
 public class DteCatalogo {
-@jakarta.persistence.Id
-@jakarta.persistence.Column(name = "\"DTCA_ID\"", nullable = false)
-private java.lang.Long id;
+    @Id
+    @Column(name = "DTCA_ID", nullable = false)
+    private Long id;
 
-@jakarta.persistence.Column(name = "\"DTCA_COD\"", length = 18)
-private java.lang.String dtcaCod;
+    @Column(name = "DTCA_COD", length = 18)
+    private String dtcaCod;
 
-@jakarta.persistence.Column(name = "\"DTCA_DES\"", length = 250)
-private java.lang.String dtcaDes;
+    @Column(name = "DTCA_DES", length = 250)
+    private String dtcaDes;
 
-@jakarta.persistence.Column(name = "\"DTCA_CAP\"")
-private java.lang.Long dtcaCap;
+    @Column(name = "DTCA_CAP")
+    private Long dtcaCap;
 
-@jakarta.persistence.Column(name = "\"DTCA_EST\"")
-private java.lang.Short dtcaEst;
+    @Column(name = "DTCA_EST")
+    private Short dtcaEst;
 
-@jakarta.persistence.Column(name = "\"DTCA_CAX\"", length = 10)
-private java.lang.String dtcaCax;
+    @Column(name = "DTCA_CAX", length = 10)
+    private String dtcaCax;
 
-@jakarta.persistence.Column(name = "\"DTCA_USR\"", length = 10)
-private java.lang.String dtcaUsr;
+    @Column(name = "DTCA_USR", length = 10)
+    private String dtcaUsr;
 
-@jakarta.persistence.Column(name = "\"DTCA_FEC\"")
-private java.time.Instant dtcaFec;
+    @Column(name = "DTCA_FEC")
+    private Instant dtcaFec;
 
-public java.lang.Long getId() {
-  return id;
-}public void setId(java.lang.Long id) {
-  this.id = id;
-}
+    public Long getId() {
+        return id;
+    }
 
-public java.lang.String getDtcaCod() {
-  return dtcaCod;
-}public void setDtcaCod(java.lang.String dtcaCod) {
-  this.dtcaCod = dtcaCod;
-}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-public java.lang.String getDtcaDes() {
-  return dtcaDes;
-}public void setDtcaDes(java.lang.String dtcaDes) {
-  this.dtcaDes = dtcaDes;
-}
+    public String getDtcaCod() {
+        return dtcaCod;
+    }
 
-public java.lang.Long getDtcaCap() {
-  return dtcaCap;
-}public void setDtcaCap(java.lang.Long dtcaCap) {
-  this.dtcaCap = dtcaCap;
-}
+    public void setDtcaCod(String dtcaCod) {
+        this.dtcaCod = dtcaCod;
+    }
 
-public java.lang.Short getDtcaEst() {
-  return dtcaEst;
-}public void setDtcaEst(java.lang.Short dtcaEst) {
-  this.dtcaEst = dtcaEst;
-}
+    public String getDtcaDes() {
+        return dtcaDes;
+    }
 
-public java.lang.String getDtcaCax() {
-  return dtcaCax;
-}public void setDtcaCax(java.lang.String dtcaCax) {
-  this.dtcaCax = dtcaCax;
-}
+    public void setDtcaDes(String dtcaDes) {
+        this.dtcaDes = dtcaDes;
+    }
 
-public java.lang.String getDtcaUsr() {
-  return dtcaUsr;
-}public void setDtcaUsr(java.lang.String dtcaUsr) {
-  this.dtcaUsr = dtcaUsr;
-}
+    public Long getDtcaCap() {
+        return dtcaCap;
+    }
 
-public java.time.Instant getDtcaFec() {
-  return dtcaFec;
-}public void setDtcaFec(java.time.Instant dtcaFec) {
-  this.dtcaFec = dtcaFec;
-}
+    public void setDtcaCap(Long dtcaCap) {
+        this.dtcaCap = dtcaCap;
+    }
+
+    public Short getDtcaEst() {
+        return dtcaEst;
+    }
+
+    public void setDtcaEst(Short dtcaEst) {
+        this.dtcaEst = dtcaEst;
+    }
+
+    public String getDtcaCax() {
+        return dtcaCax;
+    }
+
+    public void setDtcaCax(String dtcaCax) {
+        this.dtcaCax = dtcaCax;
+    }
+
+    public String getDtcaUsr() {
+        return dtcaUsr;
+    }
+
+    public void setDtcaUsr(String dtcaUsr) {
+        this.dtcaUsr = dtcaUsr;
+    }
+
+    public Instant getDtcaFec() {
+        return dtcaFec;
+    }
+
+    public void setDtcaFec(Instant dtcaFec) {
+        this.dtcaFec = dtcaFec;
+    }
 
 }

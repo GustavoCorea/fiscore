@@ -23,29 +23,8 @@
                         </nav>
                     </div>
                     <br>
-                    <h3>Lista de clientes</h3>
-                    <table id="fixed-header-datatable" class="table dt-responsive nowrap table-hover w-100">
-                        <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Correo</th>
-                            <th>Teléfono</th>
-                            <th>Dirección</th>
-                            <th>Fecha registro</th>
-                            <th>Acciones</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="cliente : ${clientesList}">
-                            <td th:text="${cliente.nombre}"></td>
-                            <td th:text="${cliente.email}"></td>
-                            <td th:text="${cliente.telefono}"></td>
-                            <td th:text="${cliente.direccion}"></td>
-                            <td th:text="${cliente.fechaRegistro}"></td>
-                            <td></td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <h3>Inicio</h3>
+
 
                 </div>
             </div><br>

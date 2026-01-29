@@ -1,54 +1,79 @@
-package sv.gob.isp.security;
+package com.fiscore.core.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import sv.gob.isp.services.UserDetailsServiceImpl;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
+import java.util.List;
+
+@Configuration
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
-    private final UserDetailsServiceImpl userDetailsService;
-
-    public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
-
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-    }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-                .csrf().disable()
-                .authorizeRequests()
-                //.antMatchers("/esTuplata/**", "/vacantesPublico","/processLogin","/registro", "/forgot-password","/forgot-password-success", "/css/**", "/js/**", "/assets/**", "/login").permitAll() // Permitir acceso sin autenticación
-                .antMatchers("/**", "/esTuplata/**", "/css/**", "/js/**", "/assets/**", "/login").permitAll() // Permitir acceso sin autenticación
-                .anyRequest().authenticated()
-                .and()
-                .formLogin()
-                .loginPage("/login")
-                .permitAll()
-                .and()
-                .logout()
-                .permitAll();
-    }
+    @Value("${authentication.enabled:true}") // Por defecto, la autenticación está habilitada
+    private boolean authenticationEnabled;
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    @Override
     @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        if (authenticationEnabled) {
+            http
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/login**", "/recover-password", "/autenticar", "/resources/**", "/error", "/assets/**").permitAll()
+                    .anyRequest().authenticated()
+                )
+                .formLogin(login -> login
+                    .loginPage("/login")
+                    .permitAll()
+                )
+                .logout(logout -> logout
+                    .logoutUrl("/logout")
+                    .logoutSuccessUrl("/login?logout")
+                    .permitAll()
+                )
+                .sessionManagement(session -> session
+                    .maximumSessions(1)
+                    .expiredUrl("/login?expired=true")
+                    .maxSessionsPreventsLogin(true)
+                );
+        } else {
+            // Configuración sin autenticación
+            http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                    .anyRequest().permitAll()
+                )
+                    .addFilterBefore((request, response, chain) -> {
+                        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("DEV-ADMIN"));
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken("user.local", null, authorities);
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                        chain.doFilter(request, response);
+                    }, UsernamePasswordAuthenticationFilter.class);
+        }
+        return http.build();
     }
 }
