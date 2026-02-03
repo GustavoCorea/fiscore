@@ -19,12 +19,11 @@
                             <div class="page-title-box">
                                 <div class="page-title-right">
                                     <ol class="breadcrumb m-0">
-                                        <li class="breadcrumb-item"><a href="javascript: void(0);">Inicio</a></li>
-                                        <!--li class="breadcrumb-item"><a href="javascript: void(0);">eCommerce</a></li-->
+                                        <li class="breadcrumb-item"><a th:href="@{/inicio}">Inicio</a></li>
                                         <li class="breadcrumb-item active">Servicios</li>
                                     </ol>
                                 </div>
-                                <h4 class="page-title">Customers</h4>
+                                <h4 class="page-title">Servicios</h4>
                             </div>
                         </div>
                     </div>
@@ -36,7 +35,7 @@
                                 <div class="card-body">
                                     <div class="row mb-2">
                                         <div class="col-sm-5">
-                                            <a href="javascript:void(0);" class="btn btn-danger mb-2"><i class="mdi mdi-plus-circle me-2"></i> Agregar servicio</a>
+                                            <a th:href="@{/registroServicios}" class="btn btn-danger mb-2"><i class="mdi mdi-plus-circle me-2"></i> Agregar servicio</a>
                                         </div>
                                         <div class="col-sm-7">
                                             <div class="text-sm-end">
@@ -65,8 +64,8 @@
                                                 <td th:text="${servicio.nombre}"></td>
                                                 <td th:text="${servicio.descripcion}"></td>
                                                 <td th:text="${servicio.precio}"></td>
-                                                <td th:text="${servicio.id}"></td>
-                                                <td th:text="${servicio.id}"></td>
+                                                <td th:text="${servicio.categoria}"></td>
+                                                <td th:text="${servicio.periodicidad}"></td>
                                                 <td>
                                                     <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-square-edit-outline"></i></a>
                                                     <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-delete"></i></a>
