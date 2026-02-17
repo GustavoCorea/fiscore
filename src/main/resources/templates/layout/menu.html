@@ -44,17 +44,32 @@
                     <div class="collapse" id="sidebarDashboards">
                         <ul class="side-nav-second-level">
                             <li>
-                                <a th:href="@{/facturacion}">Facturación</a>
+                                <a class="uil-home-alt" th:href="@{/}"> Inicio</a>
                             </li>
                         </ul>
                         <ul class="side-nav-second-level">
                             <li>
-                                <a th:href="@{/clientes}">Clientes</a>
+                                <a class="uil-users-alt" th:href="@{/clientes}"> Clientes</a>
                             </li>
                         </ul>
                         <ul class="side-nav-second-level">
                             <li>
-                                <a th:href="@{/servicios}">Servicios</a>
+                                <a class="uil-file-alt" th:href="@{/servicios}"> Servicios</a>
+                            </li>
+                        </ul>
+                        <ul class="side-nav-second-level">
+                            <li>
+                                <a class="uil-file-check" th:href="@{/contratos}"> Contratos</a>
+                            </li>
+                        </ul>
+                        <ul class="side-nav-second-level">
+                            <li>
+                                <a class="uil-briefcase" th:href="@{/proyectos}"> Proyectos</a>
+                            </li>
+                        </ul>
+                        <ul class="side-nav-second-level">
+                            <li>
+                                <a class="uil-money-bill" th:href="@{/facturacion}"> Facturación</a>
                             </li>
                         </ul>
                     </div>
@@ -64,23 +79,13 @@
                     <a data-bs-toggle="collapse" href="#sidebarReportes" aria-expanded="false" aria-controls="sidebarReportes"
                        class="side-nav-link">
                         <i class="mdi mdi-printer"></i>
-                        <span> Dashboard </span>
+                        <span> Reportes </span>
                         <span class="menu-arrow"></span>
                     </a>
                     <div class="collapse" id="sidebarReportes">
                         <ul class="side-nav-second-level">
                             <li>
-                                <a th:href="@{/Contratos}">Contratos</a>
-                            </li>
-                        </ul>
-                        <ul class="side-nav-second-level">
-                            <li>
-                                <a th:href="@{/proyectos}">Proyectos</a>
-                            </li>
-                        </ul>
-                        <ul class="side-nav-second-level">
-                            <li>
-                                <a th:href="@{/reportes}">Reportes</a>
+                                <a class="mdi mdi-printer" th:href="@{/reportes}">Reportes</a>
                             </li>
                         </ul>
                     </div>

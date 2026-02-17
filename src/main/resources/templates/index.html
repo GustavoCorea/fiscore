@@ -30,7 +30,7 @@
 
                     <!-- Widgets de Resumen -->
                     <div class="row">
-                        <div class="col-xl-4 col-lg-6">
+                        <div class="col-xl-3 col-lg-6">
                             <div class="card tilebox-one">
                                 <div class="card-body">
                                     <i class="mdi mdi-account-multiple float-end text-muted font-24"></i>
@@ -41,24 +41,35 @@
                             </div>
                         </div>
 
-                        <div class="col-xl-4 col-lg-6">
+                        <div class="col-xl-3 col-lg-6">
                             <div class="card tilebox-one">
                                 <div class="card-body">
-                                    <i class="mdi mdi-briefcase-check float-end text-muted font-24"></i>
-                                    <h6 class="text-muted text-uppercase mt-0">Servicios Activos</h6>
-                                    <h2 class="m-b-20" th:text="${totalServicios ?: '0'}">0</h2>
-                                    <span class="badge bg-success"> En curso </span> <span class="text-muted"> servicios recurrentes</span>
+                                    <i class="mdi mdi-file-document-edit float-end text-muted font-24"></i>
+                                    <h6 class="text-muted text-uppercase mt-0">Contratos Vigentes</h6>
+                                    <h2 class="m-b-20" th:text="${totalContratos ?: '0'}">0</h2>
+                                    <span class="badge bg-success"> Suscripciones </span> <span class="text-muted"> servicios recurrentes</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-xl-4 col-lg-6">
+                        <div class="col-xl-3 col-lg-6">
                             <div class="card tilebox-one">
                                 <div class="card-body">
-                                    <i class="mdi mdi-currency-usd float-end text-muted font-24"></i>
-                                    <h6 class="text-muted text-uppercase mt-0">Ingresos Estimados</h6>
-                                    <h2 class="m-b-20">$0.00</h2>
-                                    <span class="badge bg-danger"> Mensual </span> <span class="text-muted"> proyección actual</span>
+                                    <i class="mdi mdi-briefcase-clock float-end text-muted font-24"></i>
+                                    <h6 class="text-muted text-uppercase mt-0">Proyectos en Curso</h6>
+                                    <h2 class="m-b-20" th:text="${proyectosActivos ?: '0'}">0</h2>
+                                    <span class="badge bg-warning"> Casos </span> <span class="text-muted"> en ejecución</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-lg-6">
+                            <div class="card tilebox-one">
+                                <div class="card-body">
+                                    <i class="mdi mdi-cash-multiple float-end text-muted font-24"></i>
+                                    <h6 class="text-muted text-uppercase mt-0">Por Cobrar (Mes)</h6>
+                                    <h2 class="m-b-20" th:text="${montoPorCobrar ?: '$0.00'}">$0.00</h2>
+                                    <span class="badge bg-danger"> Pendiente </span> <span class="text-muted"> facturación</span>
                                 </div>
                             </div>
                         </div>
@@ -75,12 +86,14 @@
                                             <h4 class="header-title mb-3">¡Bienvenido a Fiscore!</h4>
                                             <p class="text-muted">
                                                 Esta es su plataforma central para la gestión contable. Desde aquí puede administrar su cartera de clientes, 
-                                                configurar su catálogo de servicios y monitorear la actividad de su despacho.
+                                                gestionar contratos, dar seguimiento a casos legales/proyectos y controlar la facturación.
                                             </p>
                                             <p class="text-muted">Seleccione una acción rápida para comenzar:</p>
                                             <div class="button-list">
-                                                <a th:href="@{/clientes}" class="btn btn-outline-primary"><i class="mdi mdi-account-plus me-1"></i> Gestionar Clientes</a>
-                                                <a th:href="@{/servicios}" class="btn btn-outline-secondary"><i class="mdi mdi-format-list-bulleted me-1"></i> Catálogo de Servicios</a>
+                                                <a th:href="@{/clientes}" class="btn btn-outline-primary"><i class="mdi mdi-account-plus me-1"></i> Clientes</a>
+                                                <a th:href="@{/contratos}" class="btn btn-outline-success"><i class="mdi mdi-file-sign me-1"></i> Contratos</a>
+                                                <a th:href="@{/proyectos}" class="btn btn-outline-warning"><i class="mdi mdi-briefcase-plus me-1"></i> Proyectos</a>
+                                                <a th:href="@{/facturacion}" class="btn btn-outline-danger"><i class="mdi mdi-cash-register me-1"></i> Facturación</a>
                                             </div>
                                         </div>
                                         <div class="col-md-4 text-center">
