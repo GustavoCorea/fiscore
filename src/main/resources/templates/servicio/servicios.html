@@ -35,7 +35,7 @@
                                 <div class="card-body">
                                     <div class="row mb-2">
                                         <div class="col-sm-5">
-                                            <a th:href="@{/registroServicios}" class="btn btn-danger mb-2"><i class="mdi mdi-plus-circle me-2"></i> Agregar servicio</a>
+                                            <button type="button" class="btn btn-danger mb-2" data-bs-toggle="modal" data-bs-target="#modalRegistroServicio"><i class="mdi mdi-plus-circle me-2"></i> Agregar servicio</button>
                                         </div>
                                         <div class="col-sm-7">
                                             <div class="text-sm-end">
@@ -86,6 +86,67 @@
     <!--/section-->
 </div>
 <footer th:replace="~{layout/footer :: footer}"></footer>
+
+<!-- Modal de Registro de Servicio -->
+<div class="modal fade" id="modalRegistroServicio" tabindex="-1" aria-labelledby="modalRegistroServicioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h4 class="modal-title" id="modalRegistroServicioLabel">Registrar Nuevo Servicio</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:action="@{/servicios/guardar}" method="post">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <!-- Nombre y Categoría -->
+                        <div class="col-md-8">
+                            <label for="nombre" class="form-label">Nombre del Servicio</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ej: Contabilidad Mensual P. Jurídica" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="categoria" class="form-label">Categoría</label>
+                            <select class="form-select" id="categoria" name="categoria" required>
+                                <option value="CONTABILIDAD">Contabilidad</option>
+                                <option value="LEGAL">Legal / Jurídico</option>
+                                <option value="AUDITORIA">Auditoría</option>
+                                <option value="CONSULTORIA">Consultoría</option>
+                                <option value="TRAMITES">Trámites / Diligencias</option>
+                            </select>
+                        </div>
+
+                        <!-- Precio y Periodicidad -->
+                        <div class="col-md-6">
+                            <label for="precio" class="form-label">Honorarios / Costo Base ($)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="precio" name="precio" step="0.01" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="periodicidad" class="form-label">Frecuencia de Cobro</label>
+                            <select class="form-select" id="periodicidad" name="periodicidad" required>
+                                <option value="MENSUAL">Mensual (Recurrente)</option>
+                                <option value="ANUAL">Anual</option>
+                                <option value="UNICO">Pago Único / Eventual</option>
+                                <option value="HORA">Por Hora</option>
+                            </select>
+                        </div>
+
+                        <!-- Descripción y Actividades -->
+                        <div class="col-12">
+                            <label for="descripcion" class="form-label">Descripción y Actividades Incluidas</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="4" placeholder="Detalle las actividades específicas que incluye este servicio (ej: Elaboración de estados financieros, presentación de impuestos, etc.)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Servicio</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 

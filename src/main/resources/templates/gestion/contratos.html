@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/layout :: head}"></head>
+<body>
+
+<div class="wrapper">
+    <header th:replace="~{layout/header :: header}"></header>
+    <aside th:replace="~{layout/menu :: aside}"> </aside>
+
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+
+                <!-- Título -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box">
+                            <h4 class="page-title">Contratos y Suscripciones</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botonera y Filtros -->
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevoContrato">
+                            <i class="mdi mdi-file-document-edit me-1"></i> Nuevo Contrato
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabla de Contratos Activos -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="header-title mb-3">Cartera de Servicios Activos</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-centered mb-0">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Cliente</th>
+                                            <th>Servicio Contratado</th>
+                                            <th>Modalidad</th>
+                                            <th>Honorarios</th>
+                                            <th>Próx. Facturación</th>
+                                            <th>Estado</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <!-- Ejemplo Estático -->
+                                        <tr>
+                                            <td><span class="fw-bold">Tech Solutions S.A. de C.V.</span></td>
+                                            <td>Contabilidad Mensual</td>
+                                            <td><span class="badge bg-info">Recurrente (Mensual)</span></td>
+                                            <td>$350.00</td>
+                                            <td>30/Oct/2023</td>
+                                            <td><span class="badge bg-success">Activo</span></td>
+                                            <td>
+                                                <a href="#" class="action-icon"> <i class="mdi mdi-pencil"></i></a>
+                                                <a href="#" class="action-icon"> <i class="mdi mdi-delete"></i></a>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <footer th:replace="~{layout/footer :: footer}"></footer>
+    </div>
+</div>
+
+<!-- Modal Nuevo Contrato -->
+<div class="modal fade" id="modalNuevoContrato" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Formalizar Servicio / Contrato</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{/contratos/guardar}" method="post">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Cliente</label>
+                            <select class="form-select" name="clienteId" required>
+                                <option value="">Seleccione Cliente...</option>
+                                <!-- Iterar clientes aquí -->
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Servicio</label>
+                            <select class="form-select" name="servicioId" required>
+                                <option value="">Seleccione Servicio...</option>
+                                <!-- Iterar servicios aquí -->
+                            </select>
+                        </div>
+
+                        <div class="col-12"><hr></div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo de Facturación</label>
+                            <select class="form-select" name="tipoFacturacion">
+                                <option value="RECURRENTE">Suscripción (Recurrente)</option>
+                                <option value="PAGO_UNICO">Pago Único</option>
+                                <option value="POR_HORA">Bolsa de Horas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Honorarios Pactados ($)</label>
+                            <input type="number" class="form-control" step="0.01" placeholder="Monto a cobrar">
+                            <small class="text-muted">Puede diferir del precio base</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Inicio de Facturación</label>
+                            <input type="date" class="form-control" name="fechaInicio">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Notas del Acuerdo</label>
+                            <textarea class="form-control" rows="2" placeholder="Condiciones especiales, fechas de corte, etc."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-success">Crear Contrato</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+</body>
+</html>

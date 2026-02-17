@@ -13,17 +13,85 @@
                 <!-- Start Content-->
                 <div class="container-fluid">
 
-                    <div class="pagetitle mt-0">
-                        <h2>Fiscore</h2>
-                        <nav>
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a th:href="@{/inicio}">Inicio</a></li>
-                                <li class="breadcrumb-item"></li>
-                            </ol>
-                        </nav>
+                    <!-- start page title -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="page-title-box">
+                                <div class="page-title-right">
+                                    <ol class="breadcrumb m-0">
+                                        <li class="breadcrumb-item active">Panel de Control</li>
+                                    </ol>
+                                </div>
+                                <h4 class="page-title">Inicio</h4>
+                            </div>
+                        </div>
                     </div>
-                    <br>
-                    <h3>Inicio</h3>
+                    <!-- end page title -->
+
+                    <!-- Widgets de Resumen -->
+                    <div class="row">
+                        <div class="col-xl-4 col-lg-6">
+                            <div class="card tilebox-one">
+                                <div class="card-body">
+                                    <i class="mdi mdi-account-multiple float-end text-muted font-24"></i>
+                                    <h6 class="text-muted text-uppercase mt-0">Clientes Totales</h6>
+                                    <h2 class="m-b-20" th:text="${totalClientes ?: '0'}">0</h2>
+                                    <span class="badge bg-primary"> Activos </span> <span class="text-muted"> registrados en el sistema</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-lg-6">
+                            <div class="card tilebox-one">
+                                <div class="card-body">
+                                    <i class="mdi mdi-briefcase-check float-end text-muted font-24"></i>
+                                    <h6 class="text-muted text-uppercase mt-0">Servicios Activos</h6>
+                                    <h2 class="m-b-20" th:text="${totalServicios ?: '0'}">0</h2>
+                                    <span class="badge bg-success"> En curso </span> <span class="text-muted"> servicios recurrentes</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-lg-6">
+                            <div class="card tilebox-one">
+                                <div class="card-body">
+                                    <i class="mdi mdi-currency-usd float-end text-muted font-24"></i>
+                                    <h6 class="text-muted text-uppercase mt-0">Ingresos Estimados</h6>
+                                    <h2 class="m-b-20">$0.00</h2>
+                                    <span class="badge bg-danger"> Mensual </span> <span class="text-muted"> proyección actual</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end row -->
+
+                    <!-- Sección de Bienvenida y Accesos Rápidos -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h4 class="header-title mb-3">¡Bienvenido a Fiscore!</h4>
+                                            <p class="text-muted">
+                                                Esta es su plataforma central para la gestión contable. Desde aquí puede administrar su cartera de clientes, 
+                                                configurar su catálogo de servicios y monitorear la actividad de su despacho.
+                                            </p>
+                                            <p class="text-muted">Seleccione una acción rápida para comenzar:</p>
+                                            <div class="button-list">
+                                                <a th:href="@{/clientes}" class="btn btn-outline-primary"><i class="mdi mdi-account-plus me-1"></i> Gestionar Clientes</a>
+                                                <a th:href="@{/servicios}" class="btn btn-outline-secondary"><i class="mdi mdi-format-list-bulleted me-1"></i> Catálogo de Servicios</a>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <!-- Aquí podrías poner una imagen o ilustración vectorial si tienes una en assets -->
+                                            <i class="mdi mdi-monitor-dashboard text-light" style="font-size: 100px;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
 
                 </div>

@@ -34,7 +34,7 @@
                                 <div class="card-body">
                                     <div class="row mb-2">
                                         <div class="col-sm-5">
-                                            <a th:href="@{/registroClientes}" class="btn btn-danger mb-2"><i class="mdi mdi-plus-circle me-2"></i> Agregar cliente</a>
+                                            <button type="button" class="btn btn-danger mb-2" data-bs-toggle="modal" data-bs-target="#modalRegistroCliente"><i class="mdi mdi-plus-circle me-2"></i> Agregar cliente</button>
                                         </div>
                                         <div class="col-sm-7">
                                             <div class="text-sm-end">
@@ -84,6 +84,68 @@
     <!--/section-->
 </div>
 <footer th:replace="~{layout/footer :: footer}"></footer>
+
+<!-- Modal de Registro de Cliente -->
+<div class="modal fade" id="modalRegistroCliente" tabindex="-1" aria-labelledby="modalRegistroClienteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h4 class="modal-title" id="modalRegistroClienteLabel">Registrar Nuevo Cliente</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:action="@{/clientes/guardar}" method="post">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <!-- Tipo de Cliente y NIT -->
+                        <div class="col-md-6">
+                            <label for="tipoCliente" class="form-label">Tipo de Persona</label>
+                            <select class="form-select" id="tipoCliente" name="tipoCliente" required>
+                                <option value="JURIDICA">Persona Jurídica (Empresa)</option>
+                                <option value="NATURAL">Persona Natural</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nit" class="form-label">NIT / DUI</label>
+                            <input type="text" class="form-control" id="nit" name="nit" placeholder="Ej: 0614-..." required>
+                        </div>
+
+                        <!-- Nombre o Razón Social -->
+                        <div class="col-12">
+                            <label for="nombre" class="form-label">Nombre Completo o Razón Social</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre del cliente o empresa" required>
+                        </div>
+
+                        <!-- Giro / Actividad (Importante para contabilidad) -->
+                        <div class="col-12">
+                            <label for="giro" class="form-label">Giro / Actividad Económica</label>
+                            <input type="text" class="form-control" id="giro" name="giro" placeholder="Ej: Servicios de Consultoría, Venta de Repuestos...">
+                        </div>
+
+                        <!-- Contacto -->
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="contacto@empresa.com" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="+503 2222-0000">
+                        </div>
+
+                        <!-- Dirección -->
+                        <div class="col-12">
+                            <label for="direccion" class="form-label">Dirección Fiscal / Física</label>
+                            <textarea class="form-control" id="direccion" name="direccion" rows="2" placeholder="Dirección completa para facturación o notificaciones"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
