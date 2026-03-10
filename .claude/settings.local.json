@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(xargs wc:*)",
+      "Bash(./mvnw compile:*)",
+      "Bash(./mvnw compiler:compile:*)",
+      "Bash(JAVA_HOME=/c/Users/gustavo.cruz/.jdks/corretto-17.0.17 /c/sourcecode/fiscore/mvnw compile:*)",
+      "Bash(JAVA_HOME=/c/Users/gustavo.cruz/.jdks/corretto-17.0.17 /c/sourcecode/fiscore/mvnw compiler:compile:*)",
+      "Bash(JAVA_HOME=/c/Users/gustavo.cruz/.jdks/corretto-17.0.17 ./mvnw compiler:compile:*)"
+    ]
+  }
+}

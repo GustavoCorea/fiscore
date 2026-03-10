@@ -2,152 +2,372 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/layout :: head}"></head>
 <body>
-
 <div class="wrapper">
     <header th:replace="~{layout/header :: header}"></header>
-    <aside th:replace="~{layout/menu :: aside}"> </aside>
+    <aside th:replace="~{layout/menu :: aside}"></aside>
 
-    <!--section class="container"-->
-        <div class="content-page">
-            <div class="content">
-                <!-- Start Content-->
-                <div class="container-fluid">
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
 
-                    <!-- start page title -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="page-title-box">
-                                <div class="page-title-right">
-                                    <ol class="breadcrumb m-0">
-                                        <li class="breadcrumb-item"><a th:href="@{/inicio}">Inicio</a></li>
-                                        <li class="breadcrumb-item active">Clientes</li>
-                                    </ol>
+                <!-- Breadcrumb -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box">
+                            <div class="page-title-right">
+                                <ol class="breadcrumb m-0">
+                                    <li class="breadcrumb-item"><a th:href="@{/inicio}">Inicio</a></li>
+                                    <li class="breadcrumb-item active">Clientes</li>
+                                </ol>
+                            </div>
+                            <h4 class="page-title"><i class="mdi mdi-account-multiple me-2 text-primary"></i>Gestión de Clientes</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjetas de resumen rápido -->
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <div class="card border-left-primary shadow-sm h-100 py-2" style="border-left: 4px solid #727cf5;">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="mdi mdi-account-group font-24 text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small text-uppercase fw-bold">Total Clientes</div>
+                                        <div class="h4 mb-0 fw-bold" id="totalClientesCount" th:text="${#lists.size(clientesList)}">0</div>
+                                    </div>
                                 </div>
-                                <h4 class="page-title">Clientes</h4>
                             </div>
                         </div>
                     </div>
-                    <!-- end page title -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row mb-2">
-                                        <div class="col-sm-5">
-                                            <button type="button" class="btn btn-danger mb-2" data-bs-toggle="modal" data-bs-target="#modalRegistroCliente"><i class="mdi mdi-plus-circle me-2"></i> Agregar cliente</button>
-                                        </div>
-                                        <div class="col-sm-7">
-                                            <div class="text-sm-end">
-                                                <button type="button" class="btn btn-success mb-2 me-1"><i class="mdi mdi-cog"></i></button>
-                                                <button type="button" class="btn btn-light mb-2 me-1">Importar</button>
-                                                <button type="button" class="btn btn-light mb-2">Exportar</button>
-                                            </div>
-                                        </div><!-- end col-->
+                    <div class="col-sm-4">
+                        <div class="card shadow-sm h-100 py-2" style="border-left: 4px solid #0acf97;">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="mdi mdi-domain font-24 text-success"></i>
                                     </div>
-
-                                    <div class="table-responsive">
-                                        <table class="table table-centered table-striped dt-responsive nowrap w-100" id="clientes-datatable">
-                                            <thead>
-                                            <tr>
-                                                <th>Nombre</th>
-                                                <th>Correo</th>
-                                                <th>Teléfono</th>
-                                                <th>Dirección</th>
-                                                <th>Fecha registro</th>
-                                                <th>Acciones</th>
-                                            </tr>
-                                            </thead>
-
-                                            <tbody>
-                                            <tr th:each="cliente : ${clientesList}">
-                                                <td th:text="${cliente.nombre}"></td>
-                                                <td th:text="${cliente.email}"></td>
-                                                <td th:text="${cliente.telefono}"></td>
-                                                <td th:text="${cliente.direccion}"></td>
-                                                <td th:text="${cliente.fechaRegistro}"></td>
-                                                <td>
-                                                    <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-square-edit-outline"></i></a>
-                                                    <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-delete"></i></a>
-                                                </td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
+                                    <div>
+                                        <div class="text-muted small text-uppercase fw-bold">Personas Jurídicas</div>
+                                        <div class="h4 mb-0 fw-bold" id="juridicasCount">0</div>
                                     </div>
-                                </div> <!-- end card-body-->
-                            </div> <!-- end card-->
-                        </div> <!-- end col -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
+                    <div class="col-sm-4">
+                        <div class="card shadow-sm h-100 py-2" style="border-left: 4px solid #ffbc00;">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="mdi mdi-account font-24 text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small text-uppercase fw-bold">Personas Naturales</div>
+                                        <div class="h4 mb-0 fw-bold" id="naturalesCount">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div><br>
-        </div>
-    <!--/section-->
-</div>
-<footer th:replace="~{layout/footer :: footer}"></footer>
 
-<!-- Modal de Registro de Cliente -->
-<div class="modal fade" id="modalRegistroCliente" tabindex="-1" aria-labelledby="modalRegistroClienteLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h4 class="modal-title" id="modalRegistroClienteLabel">Registrar Nuevo Cliente</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <!-- Tabla Principal -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-sm-6">
+                                        <button type="button" class="btn btn-primary" onclick="abrirModalNuevo()">
+                                            <i class="mdi mdi-plus-circle me-1"></i> Nuevo Cliente
+                                        </button>
+                                    </div>
+                                    <div class="col-sm-6 text-sm-end">
+                                        <button type="button" class="btn btn-soft-secondary mb-1 me-1" onclick="exportarCSV()">
+                                            <i class="mdi mdi-file-export me-1"></i> Exportar
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-centered dt-responsive nowrap w-100" id="clientes-datatable">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Nombre / Razón Social</th>
+                                            <th>Tipo</th>
+                                            <th>NIT / DUI</th>
+                                            <th>Giro</th>
+                                            <th>Correo</th>
+                                            <th>Teléfono</th>
+                                            <th>Estado</th>
+                                            <th style="width:90px;">Acciones</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="c : ${clientesList}" th:attr="data-id=${c.id}">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm me-2 bg-soft-primary rounded d-flex align-items-center justify-content-center"
+                                                         style="width:36px;height:36px;background:#eef2ff;">
+                                                        <i class="mdi mdi-domain text-primary" th:if="${c.tipoCliente == 'JURIDICA'}"></i>
+                                                        <i class="mdi mdi-account text-primary" th:unless="${c.tipoCliente == 'JURIDICA'}"></i>
+                                                    </div>
+                                                    <div>
+                                                        <span class="fw-semibold" th:text="${c.nombre}"></span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-soft-info text-info" th:if="${c.tipoCliente == 'JURIDICA'}">Jurídica</span>
+                                                <span class="badge bg-soft-warning text-warning" th:unless="${c.tipoCliente == 'JURIDICA'}">Natural</span>
+                                            </td>
+                                            <td class="font-monospace small" th:text="${c.nit}"></td>
+                                            <td class="text-muted small" th:text="${c.giro}"></td>
+                                            <td th:text="${c.email}"></td>
+                                            <td th:text="${c.telefono}"></td>
+                                            <td>
+                                                <span class="badge bg-success" th:if="${c.estado == 'ACTIVO' or c.estado == null}">Activo</span>
+                                                <span class="badge bg-secondary" th:unless="${c.estado == 'ACTIVO' or c.estado == null}">Inactivo</span>
+                                            </td>
+                                            <td>
+                                                <a href="javascript:void(0);" class="action-icon text-info"
+                                                   th:onclick="'editarCliente(' + ${c.id} + ')'"
+                                                   title="Editar"><i class="mdi mdi-square-edit-outline"></i></a>
+                                                <a href="javascript:void(0);" class="action-icon text-danger"
+                                                   th:onclick="'eliminarCliente(' + ${c.id} + ', \'' + ${c.nombre} + '\')'  "
+                                                   title="Eliminar"><i class="mdi mdi-delete"></i></a>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <form th:action="@{/clientes/guardar}" method="post">
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <!-- Tipo de Cliente y NIT -->
-                        <div class="col-md-6">
-                            <label for="tipoCliente" class="form-label">Tipo de Persona</label>
-                            <select class="form-select" id="tipoCliente" name="tipoCliente" required>
-                                <option value="JURIDICA">Persona Jurídica (Empresa)</option>
-                                <option value="NATURAL">Persona Natural</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="nit" class="form-label">NIT / DUI</label>
-                            <input type="text" class="form-control" id="nit" name="nit" placeholder="Ej: 0614-..." required>
-                        </div>
-
-                        <!-- Nombre o Razón Social -->
-                        <div class="col-12">
-                            <label for="nombre" class="form-label">Nombre Completo o Razón Social</label>
-                            <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre del cliente o empresa" required>
-                        </div>
-
-                        <!-- Giro / Actividad (Importante para contabilidad) -->
-                        <div class="col-12">
-                            <label for="giro" class="form-label">Giro / Actividad Económica</label>
-                            <input type="text" class="form-control" id="giro" name="giro" placeholder="Ej: Servicios de Consultoría, Venta de Repuestos...">
-                        </div>
-
-                        <!-- Contacto -->
-                        <div class="col-md-6">
-                            <label for="email" class="form-label">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="email" name="email" placeholder="contacto@empresa.com" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="telefono" class="form-label">Teléfono</label>
-                            <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="+503 2222-0000">
-                        </div>
-
-                        <!-- Dirección -->
-                        <div class="col-12">
-                            <label for="direccion" class="form-label">Dirección Fiscal / Física</label>
-                            <textarea class="form-control" id="direccion" name="direccion" rows="2" placeholder="Dirección completa para facturación o notificaciones"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Cliente</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<footer th:replace="~{layout/footer :: footer}"></footer>
 
+<!-- ======== MODAL CLIENTE ======== -->
+<div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalClienteTitle">
+                    <i class="mdi mdi-account-plus me-2"></i>Nuevo Cliente
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="clienteId">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Tipo de Persona <span class="text-danger">*</span></label>
+                        <select class="form-select" id="tipoCliente" required>
+                            <option value="JURIDICA">Persona Jurídica (Empresa)</option>
+                            <option value="NATURAL">Persona Natural</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" id="labelNit">NIT <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nit" placeholder="Ej: 0614-010101-001-0">
+                    </div>
+                    <div class="col-md-6" id="nrcGroup">
+                        <label class="form-label fw-semibold">NRC</label>
+                        <input type="text" class="form-control" id="nrc" placeholder="Ej: 123456-7">
+                        <div class="form-text">Requerido para emitir CCF</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nombre / Razón Social <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombre" placeholder="Nombre completo o nombre de empresa" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Giro / Actividad Económica</label>
+                        <input type="text" class="form-control" id="giro" placeholder="Ej: Venta de mercaderías, Servicios de Consultoría...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Correo Electrónico <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" placeholder="contacto@empresa.com.sv">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Teléfono</label>
+                        <input type="tel" class="form-control" id="telefono" placeholder="+503 2222-0000">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Dirección Fiscal</label>
+                        <textarea class="form-control" id="direccion" rows="2" placeholder="Dirección completa para facturación"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Municipio</label>
+                        <input type="text" class="form-control" id="municipio" placeholder="San Salvador">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Departamento</label>
+                        <select class="form-select" id="departamento">
+                            <option value="">Seleccione...</option>
+                            <option>Ahuachapán</option><option>Santa Ana</option><option>Sonsonate</option>
+                            <option>Chalatenango</option><option>La Libertad</option><option selected>San Salvador</option>
+                            <option>Cuscatlán</option><option>La Paz</option><option>Cabañas</option>
+                            <option>San Vicente</option><option>Usulután</option><option>San Miguel</option>
+                            <option>Morazán</option><option>La Unión</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Estado</label>
+                        <select class="form-select" id="estado">
+                            <option value="ACTIVO">Activo</option>
+                            <option value="INACTIVO">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarCliente()">
+                    <i class="mdi mdi-content-save me-1"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#clientes-datatable').DataTable({
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+        },
+        pageLength: 15,
+        columnDefs: [{ orderable: false, targets: 7 }]
+    });
+
+    // Contadores por tipo
+    let juridicas = 0, naturales = 0;
+    $('#clientes-datatable tbody tr').each(function() {
+        const tipo = $(this).find('td:eq(1) span').text().trim();
+        if (tipo === 'Jurídica') juridicas++;
+        else naturales++;
+    });
+    $('#juridicasCount').text(juridicas);
+    $('#naturalesCount').text(naturales);
+
+    // Cambio de tipo cliente
+    $('#tipoCliente').on('change', function() {
+        const esJuridica = $(this).val() === 'JURIDICA';
+        $('#nrcGroup').toggle(esJuridica);
+        $('#labelNit').html(esJuridica ? 'NIT <span class="text-danger">*</span>' : 'DUI <span class="text-danger">*</span>');
+        $('#nit').attr('placeholder', esJuridica ? 'Ej: 0614-010101-001-0' : 'Ej: 01234567-8');
+    });
+});
+
+function abrirModalNuevo() {
+    document.getElementById('clienteId').value = '';
+    document.getElementById('tipoCliente').value = 'JURIDICA';
+    document.getElementById('nit').value = '';
+    document.getElementById('nrc').value = '';
+    document.getElementById('nombre').value = '';
+    document.getElementById('giro').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('telefono').value = '';
+    document.getElementById('direccion').value = '';
+    document.getElementById('municipio').value = '';
+    document.getElementById('departamento').value = 'San Salvador';
+    document.getElementById('estado').value = 'ACTIVO';
+    document.getElementById('modalClienteTitle').innerHTML = '<i class="mdi mdi-account-plus me-2"></i>Nuevo Cliente';
+    $('#nrcGroup').show();
+    new bootstrap.Modal(document.getElementById('modalCliente')).show();
+}
+
+function editarCliente(id) {
+    fetch('/fiscore/clientes/' + id)
+        .then(r => r.json())
+        .then(c => {
+            document.getElementById('clienteId').value = c.id;
+            document.getElementById('tipoCliente').value = c.tipoCliente || 'JURIDICA';
+            document.getElementById('nit').value = c.nit || '';
+            document.getElementById('nrc').value = c.nrc || '';
+            document.getElementById('nombre').value = c.nombre || '';
+            document.getElementById('giro').value = c.giro || '';
+            document.getElementById('email').value = c.email || '';
+            document.getElementById('telefono').value = c.telefono || '';
+            document.getElementById('direccion').value = c.direccion || '';
+            document.getElementById('municipio').value = c.municipio || '';
+            document.getElementById('departamento').value = c.departamento || 'San Salvador';
+            document.getElementById('estado').value = c.estado || 'ACTIVO';
+            document.getElementById('modalClienteTitle').innerHTML = '<i class="mdi mdi-account-edit me-2"></i>Editar Cliente';
+            $('#nrcGroup').toggle(c.tipoCliente === 'JURIDICA');
+            new bootstrap.Modal(document.getElementById('modalCliente')).show();
+        });
+}
+
+function guardarCliente() {
+    const id = document.getElementById('clienteId').value;
+    const body = {
+        tipoCliente: document.getElementById('tipoCliente').value,
+        nit: document.getElementById('nit').value,
+        nrc: document.getElementById('nrc').value,
+        nombre: document.getElementById('nombre').value,
+        giro: document.getElementById('giro').value,
+        email: document.getElementById('email').value,
+        telefono: document.getElementById('telefono').value,
+        direccion: document.getElementById('direccion').value,
+        municipio: document.getElementById('municipio').value,
+        departamento: document.getElementById('departamento').value,
+        estado: document.getElementById('estado').value
+    };
+    const url = id ? '/fiscore/clientes/' + id : '/fiscore/clientes/guardar';
+    const method = id ? 'PUT' : 'POST';
+    fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
+            Swal.fire({ icon: 'success', title: 'Guardado', text: data.message, timer: 1500, showConfirmButton: false })
+                .then(() => location.reload());
+        });
+}
+
+function eliminarCliente(id, nombre) {
+    Swal.fire({
+        title: '¿Eliminar cliente?',
+        text: nombre + ' será eliminado permanentemente.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#fa5c7c',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sí, eliminar'
+    }).then(result => {
+        if (result.isConfirmed) {
+            fetch('/fiscore/clientes/' + id, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(() => {
+                    Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1200, showConfirmButton: false })
+                        .then(() => location.reload());
+                });
+        }
+    });
+}
+
+function exportarCSV() {
+    let csv = 'Nombre,Tipo,NIT,Giro,Correo,Teléfono\n';
+    $('#clientes-datatable tbody tr').each(function() {
+        const celdas = $(this).find('td');
+        csv += '"' + celdas.eq(0).text().trim() + '","' + celdas.eq(1).text().trim() + '","'
+             + celdas.eq(2).text().trim() + '","' + celdas.eq(3).text().trim() + '","'
+             + celdas.eq(4).text().trim() + '","' + celdas.eq(5).text().trim() + '"\n';
+    });
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'clientes.csv';
+    a.click();
+}
+</script>
 </body>
 </html>

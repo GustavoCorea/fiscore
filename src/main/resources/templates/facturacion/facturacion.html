@@ -2,199 +2,842 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/layout :: head}"></head>
 <body>
-
 <div class="wrapper">
     <header th:replace="~{layout/header :: header}"></header>
-    <aside th:replace="~{layout/menu :: aside}"> </aside>
+    <aside th:replace="~{layout/menu :: aside}"></aside>
 
-    <!--section class="container"-->
-        <div class="content-page">
-            <div class="content">
-                <!-- Start Content-->
-                <div class="container-fluid">
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
 
-                    <!-- start page title -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="page-title-box">
-                                <div class="page-title-right">
-                                    <ol class="breadcrumb m-0">
-                                        <li class="breadcrumb-item"><a href="javascript: void(0);">Inicio</a></li>
-                                        <li class="breadcrumb-item active">Facturación</li>
-                                    </ol>
-                                </div>
-                                <h4 class="page-title">Facturación y Cobros</h4>
+                <!-- Breadcrumb -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box">
+                            <div class="page-title-right">
+                                <ol class="breadcrumb m-0">
+                                    <li class="breadcrumb-item"><a th:href="@{/inicio}">Inicio</a></li>
+                                    <li class="breadcrumb-item active">Facturación DTE</li>
+                                </ol>
+                            </div>
+                            <h4 class="page-title">
+                                <i class="mdi mdi-cash-register me-2 text-danger"></i>Facturación Electrónica (DTE)
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPIs -->
+                <div class="row mb-3">
+                    <div class="col-sm-3">
+                        <div class="card shadow-sm text-center py-2" style="border-top:3px solid #727cf5;">
+                            <div class="card-body py-2">
+                                <i class="mdi mdi-file-clock text-primary font-22"></i>
+                                <div class="h4 fw-bold mb-0" id="kpiPendientes"
+                                     th:text="${#lists.size(contratosActivos)}">0</div>
+                                <div class="text-muted small">Por Emitir</div>
                             </div>
                         </div>
                     </div>
-                    <!-- end page title -->
+                    <div class="col-sm-3">
+                        <div class="card shadow-sm text-center py-2" style="border-top:3px solid #ffbc00;">
+                            <div class="card-body py-2">
+                                <i class="mdi mdi-clock-alert text-warning font-22"></i>
+                                <div class="h4 fw-bold mb-0" id="kpiPendPago">0</div>
+                                <div class="text-muted small">Pendientes Pago</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="card shadow-sm text-center py-2" style="border-top:3px solid #0acf97;">
+                            <div class="card-body py-2">
+                                <i class="mdi mdi-check-circle text-success font-22"></i>
+                                <div class="h4 fw-bold mb-0" id="kpiPagadas">0</div>
+                                <div class="text-muted small">Pagadas (mes)</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="card shadow-sm text-center py-2" style="border-top:3px solid #fa5c7c;">
+                            <div class="card-body py-2">
+                                <i class="mdi mdi-cash-multiple text-danger font-22"></i>
+                                <div class="h4 fw-bold mb-0" id="kpiTotalMes">$0.00</div>
+                                <div class="text-muted small">Facturado (mes)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <ul class="nav nav-tabs nav-bordered mb-3">
-                                        <li class="nav-item">
-                                            <a href="#pendientes" data-bs-toggle="tab" aria-expanded="false" class="nav-link active">
-                                                <i class="mdi mdi-calendar-clock me-1"></i> Por Emitir (Suscripciones)
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a href="#historial" data-bs-toggle="tab" aria-expanded="true" class="nav-link">
-                                                <i class="mdi mdi-history me-1"></i> Historial de Facturas
-                                            </a>
-                                        </li>
-                                    </ul>
+                <!-- Tabs -->
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <ul class="nav nav-tabs nav-bordered mb-3">
+                            <li class="nav-item">
+                                <a href="#tabPendientes" data-bs-toggle="tab" class="nav-link active">
+                                    <i class="mdi mdi-calendar-clock me-1"></i> Por Emitir
+                                    <span class="badge bg-danger ms-1" th:text="${#lists.size(contratosActivos)}">0</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#tabHistorial" data-bs-toggle="tab" class="nav-link">
+                                    <i class="mdi mdi-history me-1"></i> Historial de Facturas
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#tabNuevaManual" data-bs-toggle="tab" class="nav-link">
+                                    <i class="mdi mdi-file-document-plus me-1"></i> Nueva Factura Manual
+                                </a>
+                            </li>
+                        </ul>
 
-                                    <div class="tab-content">
-                                        <!-- TAB 1: PENDIENTES DE EMISIÓN -->
-                                        <div class="tab-pane show active" id="pendientes">
-                                            <div class="alert alert-light bg-light border-0" role="alert">
-                                                <i class="mdi mdi-information-outline me-1 text-primary"></i>
-                                                Aquí se muestran los contratos recurrentes que deben facturarse este mes.
-                                            </div>
-                                            <div class="table-responsive">
-                                                <table class="table table-centered table-nowrap mb-0">
-                                                    <thead class="table-light">
-                                                    <tr>
-                                                        <th>Cliente</th>
-                                                        <th>Servicio / Concepto</th>
-                                                        <th>Periodo</th>
-                                                        <th>Monto Pactado</th>
-                                                        <th style="width: 125px;">Acción</th>
-                                                    </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    <!-- Ejemplo de datos -->
-                                                    <tr>
-                                                        <td><span class="fw-bold">Tech Solutions S.A.</span></td>
-                                                        <td>Contabilidad Mensual</td>
-                                                        <td>Febrero 2023</td>
-                                                        <td>$350.00</td>
-                                                        <td>
-                                                            <button class="btn btn-sm btn-primary"><i class="mdi mdi-file-document-plus"></i> Generar</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td><span class="fw-bold">Consultores Asociados</span></td>
-                                                        <td>Asesoría Legal Fija</td>
-                                                        <td>Febrero 2026</td>
-                                                        <td>$150.00</td>
-                                                        <td>
-                                                            <button class="btn btn-sm btn-primary"><i class="mdi mdi-file-document-plus"></i> Generar</button>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                        <div class="tab-content">
+
+                            <!-- ===== TAB 1: POR EMITIR ===== -->
+                            <div class="tab-pane show active" id="tabPendientes">
+                                <div class="alert alert-primary border-0 d-flex align-items-center" role="alert">
+                                    <i class="mdi mdi-information me-2 font-18"></i>
+                                    <div>Contratos activos listos para facturar este mes. Haga clic en <strong>Generar</strong> para emitir el DTE.</div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-centered mb-0">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Cliente</th>
+                                            <th>NIT / NRC</th>
+                                            <th>Servicio / Concepto</th>
+                                            <th>Tipo DTE</th>
+                                            <th>Modalidad</th>
+                                            <th>Honorarios</th>
+                                            <th style="width:140px;">Acción</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="c : ${contratosActivos}">
+                                            <td>
+                                                <div class="fw-semibold" th:text="${c.cliente?.nombre}"></div>
+                                                <small class="text-muted" th:text="${c.cliente?.email}"></small>
+                                            </td>
+                                            <td class="font-monospace small">
+                                                <div th:text="${c.cliente?.nit}"></div>
+                                                <small class="text-muted" th:if="${c.cliente?.nrc != null}"
+                                                       th:text="'NRC: ' + ${c.cliente?.nrc}"></small>
+                                            </td>
+                                            <td th:text="${c.servicio?.nombre}"></td>
+                                            <td>
+                                                <span class="badge bg-primary"
+                                                      th:if="${c.cliente?.nrc != null and !#strings.isEmpty(c.cliente?.nrc)}">
+                                                    CCF (03)
+                                                </span>
+                                                <span class="badge bg-secondary"
+                                                      th:unless="${c.cliente?.nrc != null and !#strings.isEmpty(c.cliente?.nrc)}">
+                                                    Factura CF (01)
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info" th:if="${c.tipoFacturacion == 'RECURRENTE'}">Recurrente</span>
+                                                <span class="badge bg-secondary" th:unless="${c.tipoFacturacion == 'RECURRENTE'}" th:text="${c.tipoFacturacion}"></span>
+                                            </td>
+                                            <td class="fw-bold text-success"
+                                                th:text="'$' + ${#numbers.formatDecimal(c.honorariosPactados, 1, 2)}"></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary"
+                                                        th:onclick="'abrirGenerarFactura(' + ${c.id} + ', \'' + ${c.cliente?.nombre} + '\', ' + ${c.honorariosPactados} + ')'">
+                                                    <i class="mdi mdi-file-send me-1"></i> Generar DTE
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(contratosActivos)}">
+                                            <td colspan="7" class="text-center text-muted py-4">
+                                                <i class="mdi mdi-check-all font-24 d-block mb-1 text-success"></i>
+                                                No hay contratos pendientes de facturación
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- ===== TAB 2: HISTORIAL ===== -->
+                            <div class="tab-pane" id="tabHistorial">
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <input type="search" class="form-control w-auto" id="buscarFactura"
+                                                   placeholder="Buscar cliente, N° factura..." oninput="filtrarHistorial()">
+                                            <select class="form-select w-auto" id="filtroEstado" onchange="filtrarHistorial()">
+                                                <option value="">Todos los estados</option>
+                                                <option value="BORRADOR">Borrador</option>
+                                                <option value="EMITIDA">Emitida</option>
+                                                <option value="PAGADA">Pagada</option>
+                                                <option value="ANULADA">Anulada</option>
+                                            </select>
+                                            <select class="form-select w-auto" id="filtroDte" onchange="filtrarHistorial()">
+                                                <option value="">Todos los tipos</option>
+                                                <option value="01">Factura CF (01)</option>
+                                                <option value="03">CCF (03)</option>
+                                                <option value="05">Nota de Crédito (05)</option>
+                                                <option value="06">Nota de Débito (06)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                                        <button type="button" class="btn btn-soft-secondary" onclick="exportarHistorial()">
+                                            <i class="mdi mdi-file-export me-1"></i> Exportar
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-centered dt-responsive nowrap w-100" id="historial-datatable">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>N° Factura</th>
+                                            <th>Tipo DTE</th>
+                                            <th>Código Generación</th>
+                                            <th>Fecha Emisión</th>
+                                            <th>Cliente</th>
+                                            <th>Periodo</th>
+                                            <th>Monto</th>
+                                            <th>Estado DTE</th>
+                                            <th>Estado</th>
+                                            <th style="width:100px;">Acciones</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="f : ${historialFacturas}">
+                                            <td>
+                                                <a href="javascript:void(0);" class="text-body fw-bold"
+                                                   th:text="'#' + ${f.numeroFactura}"
+                                                   th:onclick="'verFactura(' + ${f.id} + ')'"></a>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary" th:if="${f.tipoDte == '03'}">CCF</span>
+                                                <span class="badge bg-secondary" th:if="${f.tipoDte == '01'}">Factura CF</span>
+                                                <span class="badge bg-warning text-dark" th:if="${f.tipoDte == '05'}">N. Crédito</span>
+                                                <span class="badge bg-dark" th:if="${f.tipoDte == '06'}">N. Débito</span>
+                                            </td>
+                                            <td class="font-monospace" style="font-size:0.7rem;"
+                                                th:text="${f.codigoGeneracion != null ? #strings.substring(f.codigoGeneracion, 0, 8) + '...' : '-'}"></td>
+                                            <td th:text="${f.fechaEmision != null ? #temporals.format(f.fechaEmision, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                                            <td th:text="${f.cliente?.nombre}"></td>
+                                            <td th:text="${f.periodoFacturado}"></td>
+                                            <td class="fw-bold text-success"
+                                                th:text="${f.montoTotal != null ? '$' + #numbers.formatDecimal(f.montoTotal, 1, 2) : '-'}"></td>
+                                            <td>
+                                                <span class="badge bg-warning text-dark" th:if="${f.estadoDte == 'PENDIENTE_ENVIO'}">Pendiente</span>
+                                                <span class="badge bg-success" th:if="${f.estadoDte == 'ACEPTADO'}">Aceptado MH</span>
+                                                <span class="badge bg-danger" th:if="${f.estadoDte == 'RECHAZADO'}">Rechazado</span>
+                                                <span class="badge bg-info" th:if="${f.estadoDte == 'CONTINGENCIA'}">Contingencia</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-success-lighten" th:if="${f.estado == 'PAGADA'}">
+                                                    <i class="mdi mdi-check-circle me-1"></i>Pagada
+                                                </span>
+                                                <span class="badge badge-warning-lighten" th:if="${f.estado == 'EMITIDA'}">
+                                                    <i class="mdi mdi-clock me-1"></i>Emitida
+                                                </span>
+                                                <span class="badge badge-secondary-lighten" th:if="${f.estado == 'BORRADOR'}">
+                                                    Borrador
+                                                </span>
+                                                <span class="badge badge-danger-lighten" th:if="${f.estado == 'ANULADA'}">
+                                                    <i class="mdi mdi-close-circle me-1"></i>Anulada
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="javascript:void(0);" class="action-icon text-primary"
+                                                   th:onclick="'verFactura(' + ${f.id} + ')'" title="Ver detalle">
+                                                    <i class="mdi mdi-eye"></i>
+                                                </a>
+                                                <a href="javascript:void(0);" class="action-icon text-secondary"
+                                                   th:onclick="'imprimirFactura(' + ${f.id} + ')'" title="Imprimir">
+                                                    <i class="mdi mdi-printer"></i>
+                                                </a>
+                                                <a href="javascript:void(0);" class="action-icon text-warning"
+                                                   th:if="${f.estado != 'ANULADA' and f.estado != 'PAGADA'}"
+                                                   th:onclick="'marcarPagada(' + ${f.id} + ')'" title="Marcar pagada">
+                                                    <i class="mdi mdi-cash-check"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(historialFacturas)}">
+                                            <td colspan="10" class="text-center text-muted py-4">
+                                                <i class="mdi mdi-file-hidden font-24 d-block mb-1"></i>
+                                                No hay facturas registradas
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- ===== TAB 3: NUEVA FACTURA MANUAL ===== -->
+                            <div class="tab-pane" id="tabNuevaManual">
+                                <div class="row">
+                                    <div class="col-lg-8">
+                                        <div class="alert alert-info border-0">
+                                            <i class="mdi mdi-information me-1"></i>
+                                            Emite un DTE manualmente. Los campos marcados con
+                                            <strong>*</strong> son obligatorios según la normativa del Ministerio de Hacienda El Salvador.
                                         </div>
 
-                                        <!-- TAB 2: HISTORIAL -->
-                                        <div class="tab-pane" id="historial">
-                                            <div class="row mb-2">
-                                                <div class="col-xl-8">
-                                                    <form class="row gy-2 gx-2 align-items-center justify-content-xl-start justify-content-between">
-                                                        <div class="col-auto">
-                                                            <label for="inputSearch" class="visually-hidden">Buscar</label>
-                                                            <input type="search" class="form-control" id="inputSearch" placeholder="Buscar cliente o factura...">
-                                                        </div>
-                                                        <div class="col-auto">
-                                                            <div class="d-flex align-items-center">
-                                                                <label for="status-select" class="me-2">Estado</label>
-                                                                <select class="form-select" id="status-select">
-                                                                    <option selected>Todos</option>
-                                                                    <option value="PAGADO">Pagado</option>
-                                                                    <option value="PENDIENTE">Pendiente</option>
-                                                                    <option value="ANULADO">Anulado</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                                <div class="col-xl-4">
-                                                    <div class="text-xl-end mt-xl-0 mt-2">
-                                                        <button type="button" class="btn btn-danger mb-2 me-2"><i class="mdi mdi-plus-circle me-1"></i> Nueva Factura Manual</button>
-                                                        <button type="button" class="btn btn-light mb-2">Exportar</button>
+                                        <!-- Sección: Tipo de Documento -->
+                                        <div class="card border mb-3">
+                                            <div class="card-header bg-soft-primary py-2">
+                                                <h6 class="mb-0 text-primary"><i class="mdi mdi-file-document me-1"></i> Tipo de Documento DTE</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">Tipo DTE <span class="text-danger">*</span></label>
+                                                        <select class="form-select" id="mTipoDte" onchange="onTipoDteChange()">
+                                                            <option value="01">01 - Factura (Consumidor Final)</option>
+                                                            <option value="03">03 - Comprobante de Crédito Fiscal (CCF)</option>
+                                                            <option value="05">05 - Nota de Crédito</option>
+                                                            <option value="06">06 - Nota de Débito</option>
+                                                            <option value="14">14 - Factura de Sujeto Excluido</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">Condición de Pago <span class="text-danger">*</span></label>
+                                                        <select class="form-select" id="mCondicionPago" onchange="togglePlazo()">
+                                                            <option value="CONTADO">Contado</option>
+                                                            <option value="CREDITO">Crédito</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6" id="plazoGroup" style="display:none;">
+                                                        <label class="form-label fw-semibold">Plazo (días)</label>
+                                                        <input type="number" class="form-control" id="mPlazoCredito" placeholder="30">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">Periodo Facturado</label>
+                                                        <input type="text" class="form-control" id="mPeriodo" placeholder="Ej: Marzo 2026">
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
 
-                                            <div class="table-responsive">
-                                                <table class="table table-centered table-nowrap mb-0">
-                                                    <thead class="table-light">
-                                                    <tr>
-                                                        <th style="width: 20px;">
-                                                            <div class="form-check">
-                                                                <input type="checkbox" class="form-check-input" id="customCheck1">
-                                                                <label class="form-check-label" for="customCheck1">&nbsp;</label>
-                                                            </div>
-                                                        </th>
-                                                        <th>N° Factura</th>
-                                                        <th>Fecha Emisión</th>
-                                                        <th>Cliente</th>
-                                                        <th>Monto Total</th>
-                                                        <th>Estado</th>
-                                                        <th style="width: 125px;">Acción</th>
-                                                    </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    <tr>
-                                                        <td>
-                                                            <div class="form-check">
-                                                                <input type="checkbox" class="form-check-input" id="check2">
-                                                                <label class="form-check-label" for="check2">&nbsp;</label>
-                                                            </div>
-                                                        </td>
-                                                        <td><a href="#" class="text-body fw-bold">#CCF-00154</a> </td>
-                                                        <td>05 Ago 2023</td>
-                                                        <td>Tech Solutions S.A.</td>
-                                                        <td>$350.00</td>
-                                                        <td>
-                                                            <h5><span class="badge badge-success-lighten"><i class="mdi mdi-check-circle"></i> Pagado</span></h5>
-                                                        </td>
-                                                        <td>
-                                                            <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
-                                                            <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-printer"></i></a>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <div class="form-check">
-                                                                <input type="checkbox" class="form-check-input" id="check3">
-                                                                <label class="form-check-label" for="check3">&nbsp;</label>
-                                                            </div>
-                                                        </td>
-                                                        <td><a href="#" class="text-body fw-bold">#CCF-00153</a> </td>
-                                                        <td>04 Ago 2023</td>
-                                                        <td>Farmacias El Sol</td>
-                                                        <td>$1,458.65</td>
-                                                        <td>
-                                                            <h5><span class="badge badge-warning-lighten"><i class="mdi mdi-clock-outline"></i> Pendiente</span></h5>
-                                                        </td>
-                                                        <td>
-                                                            <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
-                                                            <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-printer"></i></a>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
+                                        <!-- Sección: Receptor -->
+                                        <div class="card border mb-3">
+                                            <div class="card-header bg-soft-success py-2">
+                                                <h6 class="mb-0 text-success"><i class="mdi mdi-account-box me-1"></i> Datos del Receptor</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row g-3">
+                                                    <div class="col-12">
+                                                        <label class="form-label fw-semibold">Seleccionar Cliente</label>
+                                                        <select class="form-select" id="mClienteId" onchange="autoCompletarReceptor()">
+                                                            <option value="">-- Seleccione un cliente --</option>
+                                                            <option th:each="c : ${clientesList}"
+                                                                    th:value="${c.id}"
+                                                                    th:text="${c.nombre}"
+                                                                    th:attr="data-nit=${c.nit},data-nrc=${c.nrc},data-email=${c.email},data-dir=${c.direccion},data-tipo=${c.tipoCliente}"></option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">Nombre del Receptor <span class="text-danger">*</span></label>
+                                                        <input type="text" class="form-control" id="mReceptorNombre" placeholder="Nombre completo o razón social">
+                                                    </div>
+                                                    <div class="col-md-6" id="mNrcGroup">
+                                                        <label class="form-label fw-semibold">NIT del Receptor</label>
+                                                        <input type="text" class="form-control" id="mReceptorNit" placeholder="0000-000000-000-0">
+                                                    </div>
+                                                    <div class="col-md-6" id="mNrcFieldGroup">
+                                                        <label class="form-label fw-semibold">NRC del Receptor</label>
+                                                        <input type="text" class="form-control" id="mReceptorNrc" placeholder="000000-0">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">Correo Receptor</label>
+                                                        <input type="email" class="form-control" id="mReceptorEmail" placeholder="facturacion@empresa.com">
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label fw-semibold">Dirección del Receptor</label>
+                                                        <input type="text" class="form-control" id="mReceptorDireccion" placeholder="Dirección fiscal">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div> <!-- end tab-content -->
-                                </div> <!-- end card-body-->
-                            </div> <!-- end card-->
-                        </div> <!-- end col -->
-                    </div>
-                    <!-- end row -->
 
+                                        <!-- Sección: Cuerpo del Documento -->
+                                        <div class="card border mb-3">
+                                            <div class="card-header bg-soft-warning py-2 d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0 text-warning"><i class="mdi mdi-format-list-bulleted me-1"></i> Cuerpo del Documento</h6>
+                                                <button class="btn btn-sm btn-warning text-white" onclick="agregarLinea()">
+                                                    <i class="mdi mdi-plus me-1"></i> Agregar Línea
+                                                </button>
+                                            </div>
+                                            <div class="card-body p-2">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm mb-0" id="tablaDetalles">
+                                                        <thead class="table-light">
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th style="min-width:250px;">Descripción *</th>
+                                                            <th>Cant.</th>
+                                                            <th>Precio Unit.</th>
+                                                            <th>Gravado</th>
+                                                            <th>Exento</th>
+                                                            <th></th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody id="lineasDetalle">
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Notas -->
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Notas / Observaciones</label>
+                                            <textarea class="form-control" id="mNotas" rows="2"
+                                                placeholder="Información adicional para el receptor..."></textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- Panel de Totales -->
+                                    <div class="col-lg-4">
+                                        <div class="card border sticky-top" style="top:70px;">
+                                            <div class="card-header bg-dark text-white py-2">
+                                                <h6 class="mb-0"><i class="mdi mdi-calculator me-1"></i> Resumen DTE</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <table class="table table-sm mb-0">
+                                                    <tr>
+                                                        <td class="text-muted">Ventas Gravadas:</td>
+                                                        <td class="text-end fw-bold" id="resGravado">$0.00</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Ventas Exentas:</td>
+                                                        <td class="text-end" id="resExento">$0.00</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Ventas No Sujetas:</td>
+                                                        <td class="text-end" id="resNoSujeto">$0.00</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Descuento:</td>
+                                                        <td class="text-end">
+                                                            <input type="number" class="form-control form-control-sm text-end" id="mDescuento"
+                                                                   step="0.01" value="0" style="width:90px;display:inline;" oninput="calcularTotales()">
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="border-top">
+                                                        <td class="text-muted">IVA (13%):</td>
+                                                        <td class="text-end text-warning fw-bold" id="resIva">$0.00</td>
+                                                    </tr>
+                                                    <tr class="border-top">
+                                                        <td class="fw-bold">TOTAL:</td>
+                                                        <td class="text-end text-success fw-bold fs-5" id="resTotal">$0.00</td>
+                                                    </tr>
+                                                </table>
+                                                <hr>
+                                                <div class="d-grid gap-2">
+                                                    <button class="btn btn-danger" onclick="guardarFacturaManual()">
+                                                        <i class="mdi mdi-file-send me-1"></i> Emitir Factura
+                                                    </button>
+                                                    <button class="btn btn-outline-secondary" onclick="guardarBorrador()">
+                                                        <i class="mdi mdi-content-save me-1"></i> Guardar Borrador
+                                                    </button>
+                                                </div>
+
+                                                <div class="mt-3 p-2 bg-light rounded">
+                                                    <small class="text-muted">
+                                                        <i class="mdi mdi-shield-check text-success me-1"></i>
+                                                        <strong>Normativa:</strong> Ministerio de Hacienda El Salvador.
+                                                        El DTE será transmitido con código de generación UUID y número de control.
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div><!-- end tab-content -->
+                    </div>
                 </div>
-            </div><br>
+
+            </div>
         </div>
-    <!--/section-->
+    </div>
 </div>
+
 <footer th:replace="~{layout/footer :: footer}"></footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<!-- Modal: Generar DTE desde contrato -->
+<div class="modal fade" id="modalGenerarDte" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="mdi mdi-file-send me-2"></i>Generar DTE</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="genContratoId">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Cliente</label>
+                    <input type="text" class="form-control" id="genClienteNombre" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Periodo a Facturar <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="genPeriodo" placeholder="Ej: Marzo 2026">
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Condición de Pago</label>
+                        <select class="form-select" id="genCondicion">
+                            <option value="CONTADO">Contado</option>
+                            <option value="CREDITO">Crédito</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Monto (referencia)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="text" class="form-control" id="genMonto" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 alert alert-light border-0">
+                    <i class="mdi mdi-information-outline text-primary me-1"></i>
+                    El sistema asignará automáticamente el <strong>código de generación UUID</strong> y el
+                    <strong>número de control</strong> según la normativa DTE del Ministerio de Hacienda.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarGeneracion()">
+                    <i class="mdi mdi-file-send me-1"></i> Confirmar y Generar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- Modal: Detalle de Factura -->
+<div class="modal fade" id="modalDetalleFactura" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="mdi mdi-file-document me-2"></i>Detalle de Factura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detalleFacturaContent">
+                <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">
+                    <i class="mdi mdi-printer me-1"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var lineaCounter = 0;
+
+$(document).ready(function() {
+    // DataTable historial
+    $('#historial-datatable').DataTable({
+        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+        pageLength: 15,
+        columnDefs: [{ orderable: false, targets: 9 }]
+    });
+
+    // KPIs historial
+    let pendPago = 0, pagadas = 0, totalMes = 0;
+    const hoy = new Date();
+    $('#historial-datatable tbody tr').each(function() {
+        const estadoCell = $(this).find('td:eq(8)').text().trim();
+        const montoText = $(this).find('td:eq(6)').text().replace('$','').replace(',','');
+        const monto = parseFloat(montoText) || 0;
+        if (estadoCell.includes('Emitida')) { pendPago++; totalMes += monto; }
+        if (estadoCell.includes('Pagada')) { pagadas++; totalMes += monto; }
+    });
+    $('#kpiPendPago').text(pendPago);
+    $('#kpiPagadas').text(pagadas);
+    $('#kpiTotalMes').text('$' + totalMes.toFixed(2));
+
+    // Agregar primera línea en manual
+    agregarLinea();
+});
+
+function onTipoDteChange() {
+    const tipo = document.getElementById('mTipoDte').value;
+    // CCF requiere NRC, Factura CF no
+    document.getElementById('mNrcFieldGroup').style.display = (tipo === '03') ? '' : 'none';
+}
+
+function togglePlazo() {
+    const esCred = document.getElementById('mCondicionPago').value === 'CREDITO';
+    document.getElementById('plazoGroup').style.display = esCred ? '' : 'none';
+}
+
+function autoCompletarReceptor() {
+    const opt = $('#mClienteId option:selected');
+    document.getElementById('mReceptorNombre').value = opt.text() === '-- Seleccione un cliente --' ? '' : opt.text();
+    document.getElementById('mReceptorNit').value = opt.attr('data-nit') || '';
+    document.getElementById('mReceptorNrc').value = opt.attr('data-nrc') || '';
+    document.getElementById('mReceptorEmail').value = opt.attr('data-email') || '';
+    document.getElementById('mReceptorDireccion').value = opt.attr('data-dir') || '';
+    // Auto-seleccionar tipo DTE según si tiene NRC
+    if (opt.attr('data-nrc') && opt.attr('data-nrc').trim()) {
+        document.getElementById('mTipoDte').value = '03';
+    } else {
+        document.getElementById('mTipoDte').value = '01';
+    }
+    onTipoDteChange();
+}
+
+function agregarLinea() {
+    lineaCounter++;
+    const num = lineaCounter;
+    const html = `<tr id="linea_${num}">
+        <td class="text-muted">${num}</td>
+        <td><input type="text" class="form-control form-control-sm" placeholder="Descripción del servicio" id="desc_${num}"></td>
+        <td><input type="number" class="form-control form-control-sm text-center" value="1" min="0.01" step="0.01" style="width:70px;" id="cant_${num}" oninput="recalcLinea(${num})"></td>
+        <td><input type="number" class="form-control form-control-sm text-end" value="0.00" step="0.01" style="width:100px;" id="precio_${num}" oninput="recalcLinea(${num})"></td>
+        <td><input type="number" class="form-control form-control-sm text-end bg-light" readonly style="width:100px;" id="gravado_${num}" value="0.00"></td>
+        <td><input type="number" class="form-control form-control-sm text-end bg-light" readonly style="width:100px;" id="exento_${num}" value="0.00"></td>
+        <td><button class="btn btn-sm btn-soft-danger" onclick="eliminarLinea(${num})"><i class="mdi mdi-delete"></i></button></td>
+    </tr>`;
+    document.getElementById('lineasDetalle').insertAdjacentHTML('beforeend', html);
+}
+
+function eliminarLinea(num) {
+    const row = document.getElementById('linea_' + num);
+    if (row) row.remove();
+    calcularTotales();
+}
+
+function recalcLinea(num) {
+    const cant = parseFloat(document.getElementById('cant_' + num).value) || 0;
+    const precio = parseFloat(document.getElementById('precio_' + num).value) || 0;
+    const gravado = (cant * precio).toFixed(2);
+    document.getElementById('gravado_' + num).value = gravado;
+    calcularTotales();
+}
+
+function calcularTotales() {
+    let gravado = 0, exento = 0;
+    document.querySelectorAll('[id^="gravado_"]').forEach(el => gravado += parseFloat(el.value) || 0);
+    document.querySelectorAll('[id^="exento_"]').forEach(el => exento += parseFloat(el.value) || 0);
+    const descuento = parseFloat(document.getElementById('mDescuento').value) || 0;
+    const iva = (gravado * 0.13).toFixed(2);
+    const total = (gravado + exento + parseFloat(iva) - descuento).toFixed(2);
+    document.getElementById('resGravado').textContent = '$' + gravado.toFixed(2);
+    document.getElementById('resExento').textContent = '$' + exento.toFixed(2);
+    document.getElementById('resIva').textContent = '$' + iva;
+    document.getElementById('resTotal').textContent = '$' + total;
+}
+
+function buildFacturaManual(estado) {
+    const clienteId = document.getElementById('mClienteId').value || null;
+    const detalles = [];
+    let i = 1;
+    document.querySelectorAll('[id^="linea_"]').forEach(row => {
+        const num = row.id.replace('linea_', '');
+        const desc = document.getElementById('desc_' + num).value;
+        if (desc.trim()) {
+            detalles.push({
+                numItem: i++,
+                tipoItem: '2',
+                descripcion: desc,
+                cantidad: parseFloat(document.getElementById('cant_' + num).value) || 1,
+                unidadMedida: 'Servicio',
+                precioUnitario: parseFloat(document.getElementById('precio_' + num).value) || 0,
+                descuento: 0,
+                ventaGravada: parseFloat(document.getElementById('gravado_' + num).value) || 0,
+                ventaExenta: parseFloat(document.getElementById('exento_' + num).value) || 0,
+                ventaNoSujeta: 0
+            });
+        }
+    });
+    return {
+        tipoDte: document.getElementById('mTipoDte').value,
+        condicionPago: document.getElementById('mCondicionPago').value,
+        plazoCredito: parseInt(document.getElementById('mPlazoCredito').value) || null,
+        periodoFacturado: document.getElementById('mPeriodo').value,
+        descuento: parseFloat(document.getElementById('mDescuento').value) || 0,
+        notas: document.getElementById('mNotas').value,
+        estado: estado,
+        cliente: clienteId ? { id: parseInt(clienteId) } : null,
+        detalles: detalles
+    };
+}
+
+function guardarFacturaManual() {
+    const body = buildFacturaManual('EMITIDA');
+    fetch('/fiscore/facturacion/guardar', {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
+        Swal.fire({ icon: 'success', title: 'DTE Generado', text: 'Factura ' + data.numeroFactura + ' emitida exitosamente.', confirmButtonText: 'OK' })
+            .then(() => location.reload());
+    });
+}
+
+function guardarBorrador() {
+    const body = buildFacturaManual('BORRADOR');
+    fetch('/fiscore/facturacion/guardar', {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
+        Swal.fire({ icon: 'success', title: 'Guardado', text: 'Borrador guardado: ' + data.numeroFactura, timer: 2000, showConfirmButton: false })
+            .then(() => location.reload());
+    });
+}
+
+function abrirGenerarFactura(contratoId, clienteNombre, monto) {
+    document.getElementById('genContratoId').value = contratoId;
+    document.getElementById('genClienteNombre').value = clienteNombre;
+    document.getElementById('genMonto').value = monto;
+    // Periodo por defecto: mes actual
+    const ahora = new Date();
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('genPeriodo').value = meses[ahora.getMonth()] + ' ' + ahora.getFullYear();
+    new bootstrap.Modal(document.getElementById('modalGenerarDte')).show();
+}
+
+function confirmarGeneracion() {
+    const contratoId = document.getElementById('genContratoId').value;
+    const body = {
+        periodoFacturado: document.getElementById('genPeriodo').value,
+        condicionPago: document.getElementById('genCondicion').value
+    };
+    fetch('/fiscore/facturacion/generar/' + contratoId, {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
+        bootstrap.Modal.getInstance(document.getElementById('modalGenerarDte')).hide();
+        Swal.fire({
+            icon: 'success',
+            title: 'DTE Generado',
+            html: '<p>Factura <strong>' + data.numeroFactura + '</strong> generada exitosamente.</p>' +
+                  '<p class="text-muted small">El documento está pendiente de transmisión al Ministerio de Hacienda.</p>',
+            confirmButtonText: 'Ver Historial'
+        }).then(() => {
+            location.href = '/fiscore/facturacion';
+        });
+    });
+}
+
+function verFactura(id) {
+    document.getElementById('detalleFacturaContent').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+    new bootstrap.Modal(document.getElementById('modalDetalleFactura')).show();
+    fetch('/fiscore/facturacion/' + id)
+        .then(r => r.json())
+        .then(f => {
+            const dte = f.tipoDte === '03' ? 'Comprobante de Crédito Fiscal' : 'Factura Consumidor Final';
+            let detallesHtml = '';
+            if (f.detalles && f.detalles.length > 0) {
+                f.detalles.forEach(d => {
+                    detallesHtml += `<tr>
+                        <td>${d.numItem}</td>
+                        <td>${d.descripcion}</td>
+                        <td class="text-center">${d.cantidad}</td>
+                        <td class="text-end">$${(d.precioUnitario || 0).toFixed(2)}</td>
+                        <td class="text-end">$${(d.ventaGravada || 0).toFixed(2)}</td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('detalleFacturaContent').innerHTML = `
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <div class="badge bg-primary fs-6 mb-2">${dte} (${f.tipoDte})</div>
+                        <table class="table table-sm table-borderless">
+                            <tr><td class="text-muted">N° Factura:</td><td class="fw-bold">${f.numeroFactura || '-'}</td></tr>
+                            <tr><td class="text-muted">Código Gen.:</td><td class="font-monospace small">${(f.codigoGeneracion || '-').substring(0,16)}...</td></tr>
+                            <tr><td class="text-muted">N° Control:</td><td class="font-monospace small">${(f.numeroControl || '-').substring(0,20)}...</td></tr>
+                            <tr><td class="text-muted">Fecha:</td><td>${f.fechaEmision ? f.fechaEmision.substring(0,16).replace('T',' ') : '-'}</td></tr>
+                            <tr><td class="text-muted">Condición:</td><td>${f.condicionPago || '-'}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-muted">Receptor</h6>
+                        <div class="fw-semibold">${f.cliente?.nombre || '-'}</div>
+                        <div class="text-muted small">${f.cliente?.nit || ''} ${f.cliente?.nrc ? '| NRC: ' + f.cliente?.nrc : ''}</div>
+                        <div class="text-muted small">${f.cliente?.email || ''}</div>
+                    </div>
+                </div>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr><th>#</th><th>Descripción</th><th>Cant.</th><th>P. Unit.</th><th>Gravado</th></tr>
+                    </thead>
+                    <tbody>${detallesHtml || '<tr><td colspan="5" class="text-center text-muted">Sin detalles</td></tr>'}</tbody>
+                </table>
+                <div class="row justify-content-end">
+                    <div class="col-md-5">
+                        <table class="table table-sm">
+                            <tr><td>Gravado:</td><td class="text-end">$${(f.subtotalGravado || 0).toFixed(2)}</td></tr>
+                            <tr><td>Exento:</td><td class="text-end">$${(f.subtotalExento || 0).toFixed(2)}</td></tr>
+                            <tr><td>IVA (13%):</td><td class="text-end text-warning">$${(f.ivaPercibido || 0).toFixed(2)}</td></tr>
+                            <tr class="border-top"><td class="fw-bold">TOTAL:</td><td class="text-end text-success fw-bold fs-5">$${(f.montoTotal || 0).toFixed(2)}</td></tr>
+                        </table>
+                    </div>
+                </div>`;
+        });
+}
+
+function imprimirFactura(id) {
+    verFactura(id);
+}
+
+function marcarPagada(id) {
+    Swal.fire({
+        title: '¿Marcar como Pagada?',
+        text: 'Se registrará el pago de esta factura.',
+        icon: 'question', showCancelButton: true,
+        confirmButtonColor: '#0acf97', cancelButtonText: 'Cancelar', confirmButtonText: 'Confirmar Pago'
+    }).then(result => {
+        if (result.isConfirmed) {
+            fetch('/fiscore/facturacion/' + id + '/estado', {
+                method: 'PATCH', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ estado: 'PAGADA' })
+            })
+            .then(r => r.json())
+            .then(() => {
+                Swal.fire({ icon: 'success', title: 'Pago Registrado', timer: 1500, showConfirmButton: false })
+                    .then(() => location.reload());
+            });
+        }
+    });
+}
+
+function filtrarHistorial() {
+    const buscar = document.getElementById('buscarFactura').value.toLowerCase();
+    const estado = document.getElementById('filtroEstado').value.toLowerCase();
+    const dte = document.getElementById('filtroDte').value;
+    $('#historial-datatable tbody tr').each(function() {
+        const texto = $(this).text().toLowerCase();
+        const estadoCell = $(this).find('td:eq(8)').text().toLowerCase();
+        const dteCell = $(this).find('td:eq(1)').text();
+        let visible = true;
+        if (buscar && !texto.includes(buscar)) visible = false;
+        if (estado && !estadoCell.includes(estado === 'pagada' ? 'pagada' : estado === 'emitida' ? 'emitida' : estado)) visible = false;
+        $(this).toggle(visible);
+    });
+}
+
+function exportarHistorial() {
+    let csv = 'N°Factura,Tipo,Fecha,Cliente,Periodo,Monto,Estado\n';
+    $('#historial-datatable tbody tr:visible').each(function() {
+        const c = $(this).find('td');
+        csv += '"'+c.eq(0).text().trim()+'","'+c.eq(1).text().trim()+'","'+c.eq(3).text().trim()+'","'
+             + c.eq(4).text().trim()+'","'+c.eq(5).text().trim()+'","'+c.eq(6).text().trim()+'","'+c.eq(8).text().trim()+'"\n';
+    });
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'historial_facturas.csv'; a.click();
+}
+</script>
 </body>
 </html>

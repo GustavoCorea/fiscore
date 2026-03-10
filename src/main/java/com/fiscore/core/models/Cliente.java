@@ -1,15 +1,13 @@
 package com.fiscore.core.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
 
 @Entity
 @Data
+@Table(name = "cliente")
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,6 +17,12 @@ public class Cliente {
     private String telefono;
     private String email;
     private String nit;
-    private String tipoCliente;
+    private String nrc;
+    private String giro;
+    private String tipoCliente;   // JURIDICA, NATURAL
+    private String tipoDocumento; // NIT, DUI, PASAPORTE, OTRO
+    private String municipio;
+    private String departamento;
+    private String estado;        // ACTIVO, INACTIVO
     private LocalDate fechaRegistro;
 }

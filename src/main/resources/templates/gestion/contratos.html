@@ -2,141 +2,551 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/layout :: head}"></head>
 <body>
-
 <div class="wrapper">
     <header th:replace="~{layout/header :: header}"></header>
-    <aside th:replace="~{layout/menu :: aside}"> </aside>
+    <aside th:replace="~{layout/menu :: aside}"></aside>
 
     <div class="content-page">
         <div class="content">
             <div class="container-fluid">
 
-                <!-- Título -->
                 <div class="row">
                     <div class="col-12">
                         <div class="page-title-box">
-                            <h4 class="page-title">Contratos y Suscripciones</h4>
+                            <div class="page-title-right">
+                                <ol class="breadcrumb m-0">
+                                    <li class="breadcrumb-item"><a th:href="@{/inicio}">Inicio</a></li>
+                                    <li class="breadcrumb-item active">Contratos</li>
+                                </ol>
+                            </div>
+                            <h4 class="page-title"><i class="mdi mdi-file-document-edit me-2 text-success"></i>Contratos y Suscripciones</h4>
                         </div>
                     </div>
                 </div>
 
-                <!-- Botonera y Filtros -->
+                <!-- KPIs -->
                 <div class="row mb-3">
-                    <div class="col-sm-4">
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevoContrato">
-                            <i class="mdi mdi-file-document-edit me-1"></i> Nuevo Contrato
-                        </button>
+                    <div class="col-sm-3">
+                        <div class="card shadow-sm text-center py-2" style="border-top:3px solid #0acf97;">
+                            <div class="card-body py-2">
+                                <i class="mdi mdi-check-circle text-success font-22"></i>
+                                <div class="h4 fw-bold mb-0"
+                                     th:text="${#lists.size(contratosList.?[estado == 'ACTIVO'])}">0</div>
+                                <div class="text-muted small">Activos</div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <!-- Tabla de Contratos Activos -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-body">
-                                <h4 class="header-title mb-3">Cartera de Servicios Activos</h4>
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-centered mb-0">
-                                        <thead class="table-light">
-                                        <tr>
-                                            <th>Cliente</th>
-                                            <th>Servicio Contratado</th>
-                                            <th>Modalidad</th>
-                                            <th>Honorarios</th>
-                                            <th>Próx. Facturación</th>
-                                            <th>Estado</th>
-                                            <th>Acción</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <!-- Ejemplo Estático -->
-                                        <tr>
-                                            <td><span class="fw-bold">Tech Solutions S.A. de C.V.</span></td>
-                                            <td>Contabilidad Mensual</td>
-                                            <td><span class="badge bg-info">Recurrente (Mensual)</span></td>
-                                            <td>$350.00</td>
-                                            <td>30/Oct/2023</td>
-                                            <td><span class="badge bg-success">Activo</span></td>
-                                            <td>
-                                                <a href="#" class="action-icon"> <i class="mdi mdi-pencil"></i></a>
-                                                <a href="#" class="action-icon"> <i class="mdi mdi-delete"></i></a>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                    <div class="col-sm-3">
+                        <div class="card shadow-sm text-center py-2" style="border-top:3px solid #ffbc00;">
+                            <div class="card-body py-2">
+                                <i class="mdi mdi-clock-alert text-warning font-22"></i>
+                                <div class="h4 fw-bold mb-0"
+                                     th:text="${#lists.size(contratosList.?[estado == 'SUSPENDIDO'])}">0</div>
+                                <div class="text-muted small">Suspendidos</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="card shadow-sm text-center py-2" style="border-top:3px solid #727cf5;">
+                            <div class="card-body py-2">
+                                <i class="mdi mdi-refresh text-primary font-22"></i>
+                                <div class="h4 fw-bold mb-0"
+                                     th:text="${#lists.size(contratosList.?[tipoFacturacion == 'RECURRENTE'])}">0</div>
+                                <div class="text-muted small">Recurrentes</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="card shadow-sm text-center py-2" style="border-top:3px solid #fa5c7c;">
+                            <div class="card-body py-2">
+                                <i class="mdi mdi-star text-danger font-22"></i>
+                                <div class="h4 fw-bold mb-0"
+                                     th:text="${#lists.size(contratosList.?[tipoFacturacion == 'PAGO_UNICO'])}">0</div>
+                                <div class="text-muted small">Eventuales</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-            </div>
-        </div>
-        <footer th:replace="~{layout/footer :: footer}"></footer>
-    </div>
-</div>
+                <!-- Botones y tabs de vista -->
+                <div class="row mb-3">
+                    <div class="col-12 d-flex gap-2 align-items-center flex-wrap">
+                        <button type="button" class="btn btn-success" onclick="abrirModalNuevo()">
+                            <i class="mdi mdi-file-document-edit me-1"></i> Nuevo Contrato
+                        </button>
+                        <div class="btn-group ms-2">
+                            <button class="btn btn-soft-secondary btn-sm active" id="btnVistaTabla" onclick="setVista('tabla')">
+                                <i class="mdi mdi-table me-1"></i> Lista
+                            </button>
+                            <button class="btn btn-soft-secondary btn-sm" id="btnVistaCliente" onclick="setVista('cliente')">
+                                <i class="mdi mdi-account-group me-1"></i> Por Cliente
+                            </button>
+                        </div>
+                        <!-- Filtros (sólo en vista tabla) -->
+                        <div id="filtrosTabla" class="btn-group ms-2">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="filtrarEstado('')">Todos</button>
+                            <button class="btn btn-outline-success btn-sm" onclick="filtrarEstado('Activo')">Activos</button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="filtrarEstado('Suspendido')">Suspendidos</button>
+                            <button class="btn btn-outline-info btn-sm" onclick="filtrarTipo('Recurrente')">Recurrentes</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="filtrarTipo('Eventual')">Eventuales</button>
+                        </div>
+                        <div class="ms-auto fw-semibold text-success" id="resumenHonorarios"></div>
+                    </div>
+                </div>
 
-<!-- Modal Nuevo Contrato -->
-<div class="modal fade" id="modalNuevoContrato" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">Formalizar Servicio / Contrato</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form th:action="@{/contratos/guardar}" method="post">
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Cliente</label>
-                            <select class="form-select" name="clienteId" required>
-                                <option value="">Seleccione Cliente...</option>
-                                <!-- Iterar clientes aquí -->
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Servicio</label>
-                            <select class="form-select" name="servicioId" required>
-                                <option value="">Seleccione Servicio...</option>
-                                <!-- Iterar servicios aquí -->
-                            </select>
-                        </div>
-
-                        <div class="col-12"><hr></div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Tipo de Facturación</label>
-                            <select class="form-select" name="tipoFacturacion">
-                                <option value="RECURRENTE">Suscripción (Recurrente)</option>
-                                <option value="PAGO_UNICO">Pago Único</option>
-                                <option value="POR_HORA">Bolsa de Horas</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Honorarios Pactados ($)</label>
-                            <input type="number" class="form-control" step="0.01" placeholder="Monto a cobrar">
-                            <small class="text-muted">Puede diferir del precio base</small>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Inicio de Facturación</label>
-                            <input type="date" class="form-control" name="fechaInicio">
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label">Notas del Acuerdo</label>
-                            <textarea class="form-control" rows="2" placeholder="Condiciones especiales, fechas de corte, etc."></textarea>
+                <!-- ===== VISTA TABLA ===== -->
+                <div id="vistaTabla">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-centered dt-responsive nowrap w-100" id="contratos-datatable">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Servicio Contratado</th>
+                                        <th>Tipo</th>
+                                        <th>Honorarios</th>
+                                        <th>Próx. Facturación</th>
+                                        <th>Estado</th>
+                                        <th style="width:90px;">Acciones</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="c : ${contratosList}">
+                                        <td>
+                                            <div class="fw-semibold" th:text="${c.cliente?.nombre}"></div>
+                                            <small class="text-muted font-monospace" th:text="${c.cliente?.nit}"></small>
+                                        </td>
+                                        <td>
+                                            <div th:text="${c.servicio?.nombre}"></div>
+                                            <small class="badge bg-soft-secondary text-secondary" th:text="${c.servicio?.categoria}"></small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info" th:if="${c.tipoFacturacion == 'RECURRENTE'}">
+                                                <i class="mdi mdi-refresh me-1"></i>Recurrente
+                                            </span>
+                                            <span class="badge bg-warning text-dark" th:if="${c.tipoFacturacion == 'PAGO_UNICO'}">
+                                                <i class="mdi mdi-star me-1"></i>Eventual
+                                            </span>
+                                            <span class="badge bg-dark" th:if="${c.tipoFacturacion == 'POR_HORA'}">
+                                                <i class="mdi mdi-clock me-1"></i>Por Hora
+                                            </span>
+                                        </td>
+                                        <td class="fw-bold text-success"
+                                            th:text="${'$' + #numbers.formatDecimal(c.honorariosPactados, 1, 2)}"></td>
+                                        <td th:text="${c.fechaProximaFacturacion != null ? #temporals.format(c.fechaProximaFacturacion, 'dd/MM/yyyy') : '-'}"></td>
+                                        <td>
+                                            <span class="badge bg-success" th:if="${c.estado == 'ACTIVO'}">Activo</span>
+                                            <span class="badge bg-warning text-dark" th:if="${c.estado == 'SUSPENDIDO'}">Suspendido</span>
+                                            <span class="badge bg-danger" th:if="${c.estado == 'CANCELADO'}">Cancelado</span>
+                                        </td>
+                                        <td>
+                                            <a href="javascript:void(0);" class="action-icon text-info"
+                                               th:onclick="'editarContrato(' + ${c.id} + ')'" title="Editar">
+                                                <i class="mdi mdi-pencil"></i>
+                                            </a>
+                                            <a href="javascript:void(0);" class="action-icon text-danger"
+                                               th:onclick="'eliminarContrato(' + ${c.id} + ')'" title="Eliminar">
+                                                <i class="mdi mdi-delete"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-success">Crear Contrato</button>
+
+                <!-- ===== VISTA POR CLIENTE (múltiples servicios) ===== -->
+                <div id="vistaCliente" style="display:none;">
+                    <div class="mb-3">
+                        <input type="search" class="form-control" style="max-width:280px;"
+                               id="buscarCliente" placeholder="Filtrar por nombre de cliente..." oninput="filtrarPorCliente()">
+                    </div>
+                    <div id="listaClienteContratos">
+                        <!-- Agrupación por cliente via JS desde los datos de la tabla -->
+                        <div class="text-center text-muted py-4" id="loadingClientes">
+                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                            Cargando...
+                        </div>
+                    </div>
                 </div>
-            </form>
+
+            </div>
         </div>
     </div>
 </div>
 
-<div th:replace="~{layout/footer :: footer}"></div>
+<footer th:replace="~{layout/footer :: footer}"></footer>
+
+<!-- ======== MODAL CONTRATO ======== -->
+<div class="modal fade" id="modalContrato" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalContratoTitle">
+                    <i class="mdi mdi-file-document-edit me-2"></i>Nuevo Contrato
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="contratoId">
+                <div class="alert alert-info border-0 py-2 mb-3">
+                    <i class="mdi mdi-information me-1"></i>
+                    Un cliente puede tener múltiples contratos: <strong>recurrentes</strong> (mensuales) y
+                    <strong>eventuales</strong> (únicos). Cada contrato se gestiona de forma independiente.
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Cliente <span class="text-danger">*</span></label>
+                        <select class="form-select" id="ctrClienteId" required>
+                            <option value="">Seleccione Cliente...</option>
+                            <option th:each="c : ${clientesList}" th:value="${c.id}" th:text="${c.nombre}"></option>
+                        </select>
+                        <div class="form-text" id="clienteContratosInfo"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Servicio <span class="text-danger">*</span></label>
+                        <select class="form-select" id="ctrServicioId" required onchange="autoCompletarHonorarios()">
+                            <option value="">Seleccione Servicio...</option>
+                            <option th:each="s : ${serviciosList}"
+                                    th:value="${s.id}"
+                                    th:text="${s.nombre} + ' — ' + ${s.periodicidad}"
+                                    th:attr="data-precio=${s.precio},data-periodicidad=${s.periodicidad}"></option>
+                        </select>
+                    </div>
+                    <div class="col-12"><hr class="my-1"></div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Tipo de Facturación</label>
+                        <select class="form-select" id="ctrTipoFacturacion">
+                            <option value="RECURRENTE">🔄 Suscripción (Recurrente)</option>
+                            <option value="PAGO_UNICO">⭐ Eventual (Pago Único)</option>
+                            <option value="POR_HORA">⏱ Bolsa de Horas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Honorarios Pactados ($)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="ctrHonorarios" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-text">Puede diferir del precio base del catálogo</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Inicio de Facturación</label>
+                        <input type="date" class="form-control" id="ctrFechaInicio">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Estado</label>
+                        <select class="form-select" id="ctrEstado">
+                            <option value="ACTIVO">Activo</option>
+                            <option value="SUSPENDIDO">Suspendido</option>
+                            <option value="CANCELADO">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Notas del Acuerdo</label>
+                        <textarea class="form-control" id="ctrNotas" rows="2"
+                            placeholder="Condiciones especiales, fechas de corte, alcance, entregables..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-success" onclick="guardarContrato()">
+                    <i class="mdi mdi-content-save me-1"></i> Guardar Contrato
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var dt;
+
+$(document).ready(function() {
+    dt = $('#contratos-datatable').DataTable({
+        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+        pageLength: 15,
+        columnDefs: [{ orderable: false, targets: 6 }]
+    });
+
+    // Resumen honorarios activos
+    recalcularResumen();
+
+    // Mostrar contratos existentes del cliente al seleccionarlo
+    $('#ctrClienteId').on('change', function() {
+        const clienteId = this.value;
+        if (!clienteId) { $('#clienteContratosInfo').text(''); return; }
+        fetch('/fiscore/contratos/listar')
+            .then(r => r.json())
+            .then(contratos => {
+                const del = contratos.filter(c => c.cliente?.id == clienteId && c.estado === 'ACTIVO');
+                if (del.length === 0) {
+                    $('#clienteContratosInfo').html('<span class="text-muted">Sin contratos activos aún</span>');
+                } else {
+                    const rec = del.filter(c => c.tipoFacturacion === 'RECURRENTE').length;
+                    const evt = del.filter(c => c.tipoFacturacion !== 'RECURRENTE').length;
+                    $('#clienteContratosInfo').html(
+                        '<span class="text-success"><i class="mdi mdi-check-circle me-1"></i>' +
+                        del.length + ' contrato(s) activo(s): ' + rec + ' recurrente(s), ' + evt + ' eventual(es)</span>'
+                    );
+                }
+            });
+    });
+});
+
+function recalcularResumen() {
+    let totalRec = 0, totalEve = 0;
+    $('#contratos-datatable tbody tr').each(function() {
+        const estado = $(this).find('td:eq(5) span').text().trim();
+        const tipo = $(this).find('td:eq(2) span').text().trim();
+        const val = parseFloat($(this).find('td:eq(3)').text().replace('$','').replace(',','')) || 0;
+        if (estado === 'Activo') {
+            if (tipo.includes('Recurrente')) totalRec += val;
+            else totalEve += val;
+        }
+    });
+    $('#resumenHonorarios').html(
+        '<i class="mdi mdi-cash-multiple me-1"></i>' +
+        'Recurrente/Mes: <strong>$' + totalRec.toFixed(2) + '</strong>' +
+        (totalEve > 0 ? ' &nbsp;|&nbsp; Eventual: <strong>$' + totalEve.toFixed(2) + '</strong>' : '')
+    );
+}
+
+function setVista(tipo) {
+    if (tipo === 'tabla') {
+        document.getElementById('vistaTabla').style.display = '';
+        document.getElementById('vistaCliente').style.display = 'none';
+        document.getElementById('filtrosTabla').style.display = '';
+        document.getElementById('btnVistaTabla').classList.add('active');
+        document.getElementById('btnVistaCliente').classList.remove('active');
+    } else {
+        document.getElementById('vistaTabla').style.display = 'none';
+        document.getElementById('vistaCliente').style.display = '';
+        document.getElementById('filtrosTabla').style.display = 'none';
+        document.getElementById('btnVistaTabla').classList.remove('active');
+        document.getElementById('btnVistaCliente').classList.add('active');
+        renderVistaCliente();
+    }
+}
+
+function renderVistaCliente() {
+    fetch('/fiscore/contratos/listar')
+        .then(r => r.json())
+        .then(contratos => {
+            // Agrupar por cliente
+            const grupos = {};
+            contratos.forEach(c => {
+                if (!c.cliente) return;
+                const id = c.cliente.id;
+                if (!grupos[id]) grupos[id] = { cliente: c.cliente, contratos: [] };
+                grupos[id].contratos.push(c);
+            });
+
+            const html = Object.values(grupos).map((g, i) => {
+                const activos = g.contratos.filter(c => c.estado === 'ACTIVO');
+                const recurrentes = activos.filter(c => c.tipoFacturacion === 'RECURRENTE');
+                const eventuales = activos.filter(c => c.tipoFacturacion !== 'RECURRENTE');
+                const totalRec = recurrentes.reduce((s, c) => s + (c.honorariosPactados || 0), 0);
+                const totalEve = eventuales.reduce((s, c) => s + (c.honorariosPactados || 0), 0);
+                const inicial = g.cliente.nombre.substring(0, 2).toUpperCase();
+
+                const rowsHtml = g.contratos.map(c => {
+                    const estadoBadge = c.estado === 'ACTIVO' ? 'bg-success' :
+                                        c.estado === 'SUSPENDIDO' ? 'bg-warning text-dark' : 'bg-danger';
+                    const tipoBadge = c.tipoFacturacion === 'RECURRENTE' ? 'bg-info' :
+                                      c.tipoFacturacion === 'POR_HORA' ? 'bg-dark' : 'bg-warning text-dark';
+                    const tipoLabel = c.tipoFacturacion === 'RECURRENTE' ? '🔄 Recurrente' :
+                                      c.tipoFacturacion === 'POR_HORA' ? '⏱ Por Hora' : '⭐ Eventual';
+                    return `<tr>
+                        <td class="ps-4">
+                            <div class="fw-semibold">${c.servicio?.nombre || '-'}</div>
+                            <small class="text-muted">${c.servicio?.categoria || ''}</small>
+                        </td>
+                        <td><span class="badge ${tipoBadge}">${tipoLabel}</span></td>
+                        <td class="fw-bold text-success">$${(c.honorariosPactados || 0).toFixed(2)}</td>
+                        <td>${c.fechaProximaFacturacion || '-'}</td>
+                        <td><span class="badge ${estadoBadge}">${c.estado}</span></td>
+                        <td>
+                            <a href="javascript:void(0);" class="action-icon text-info" onclick="editarContrato(${c.id})"><i class="mdi mdi-pencil"></i></a>
+                            <a href="javascript:void(0);" class="action-icon text-danger" onclick="eliminarContrato(${c.id})"><i class="mdi mdi-delete"></i></a>
+                        </td>
+                    </tr>`;
+                }).join('');
+
+                const badgesCliente = [
+                    recurrentes.length > 0 ? `<span class="badge bg-info">${recurrentes.length} recurrente(s)</span>` : '',
+                    eventuales.length > 0 ? `<span class="badge bg-warning text-dark">${eventuales.length} eventual(es)</span>` : ''
+                ].filter(Boolean).join(' ');
+
+                return `<div class="cliente-item border rounded mb-2 shadow-sm" data-nombre="${g.cliente.nombre.toLowerCase()}">
+                    <div class="d-flex align-items-center px-3 py-2 bg-light" style="cursor:pointer;" onclick="toggleGrupo(${i})">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold me-3"
+                             style="width:36px;height:36px;font-size:13px;flex-shrink:0;">${inicial}</div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">${g.cliente.nombre}</div>
+                            <div class="d-flex gap-1 mt-1">${badgesCliente}
+                                <span class="text-muted small">${g.cliente.nit || ''}</span>
+                            </div>
+                        </div>
+                        <div class="text-end me-3">
+                            ${totalRec > 0 ? `<div class="text-success fw-bold small">Recurrente/Mes: $${totalRec.toFixed(2)}</div>` : ''}
+                            ${totalEve > 0 ? `<div class="text-warning fw-bold small">Eventual: $${totalEve.toFixed(2)}</div>` : ''}
+                        </div>
+                        <button class="btn btn-soft-success btn-sm me-2" onclick="event.stopPropagation(); abrirModalParaCliente(${g.cliente.id})">
+                            <i class="mdi mdi-plus me-1"></i>Agregar Servicio
+                        </button>
+                        <i class="mdi mdi-chevron-down" id="chev_${i}"></i>
+                    </div>
+                    <div id="grp_${i}" style="display:none;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Servicio</th>
+                                    <th>Tipo</th>
+                                    <th>Honorarios</th>
+                                    <th>Próx. Facturación</th>
+                                    <th>Estado</th>
+                                    <th style="width:80px;">Acc.</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="2" class="ps-4 fw-bold text-end">Total ${g.contratos.length} servicio(s):</td>
+                                    <td class="fw-bold text-success">$${(totalRec + totalEve).toFixed(2)}</td>
+                                    <td colspan="3"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('listaClienteContratos').innerHTML = html ||
+                '<div class="text-center text-muted py-5"><i class="mdi mdi-file-off font-36 d-block mb-2"></i>Sin contratos registrados</div>';
+        });
+}
+
+function toggleGrupo(i) {
+    const grp = document.getElementById('grp_' + i);
+    const chev = document.getElementById('chev_' + i);
+    const isOpen = grp.style.display !== 'none';
+    grp.style.display = isOpen ? 'none' : '';
+    chev.className = isOpen ? 'mdi mdi-chevron-down' : 'mdi mdi-chevron-up text-success';
+}
+
+function filtrarPorCliente() {
+    const texto = document.getElementById('buscarCliente').value.toLowerCase();
+    document.querySelectorAll('.cliente-item').forEach(el => {
+        el.style.display = (el.getAttribute('data-nombre') || '').includes(texto) ? '' : 'none';
+    });
+}
+
+function filtrarEstado(estado) {
+    if (dt) dt.search(estado).draw();
+}
+
+function filtrarTipo(tipo) {
+    if (dt) dt.search(tipo).draw();
+}
+
+function autoCompletarHonorarios() {
+    const opt = $('#ctrServicioId option:selected');
+    const precio = opt.attr('data-precio');
+    const per = opt.attr('data-periodicidad');
+    if (precio) document.getElementById('ctrHonorarios').value = precio;
+    if (per) {
+        const tipo = per === 'MENSUAL' ? 'RECURRENTE' : per === 'HORA' ? 'POR_HORA' : 'PAGO_UNICO';
+        document.getElementById('ctrTipoFacturacion').value = tipo;
+    }
+}
+
+function abrirModalNuevo() {
+    document.getElementById('contratoId').value = '';
+    document.getElementById('ctrClienteId').value = '';
+    document.getElementById('ctrServicioId').value = '';
+    document.getElementById('ctrTipoFacturacion').value = 'RECURRENTE';
+    document.getElementById('ctrHonorarios').value = '';
+    document.getElementById('ctrFechaInicio').value = '';
+    document.getElementById('ctrEstado').value = 'ACTIVO';
+    document.getElementById('ctrNotas').value = '';
+    document.getElementById('clienteContratosInfo').innerHTML = '';
+    document.getElementById('modalContratoTitle').innerHTML = '<i class="mdi mdi-file-document-edit me-2"></i>Nuevo Contrato';
+    new bootstrap.Modal(document.getElementById('modalContrato')).show();
+}
+
+function abrirModalParaCliente(clienteId) {
+    abrirModalNuevo();
+    setTimeout(() => {
+        document.getElementById('ctrClienteId').value = clienteId;
+        $('#ctrClienteId').trigger('change');
+    }, 100);
+}
+
+function editarContrato(id) {
+    fetch('/fiscore/contratos/' + id)
+        .then(r => r.json())
+        .then(c => {
+            document.getElementById('contratoId').value = c.id;
+            document.getElementById('ctrClienteId').value = c.cliente?.id || '';
+            document.getElementById('ctrServicioId').value = c.servicio?.id || '';
+            document.getElementById('ctrTipoFacturacion').value = c.tipoFacturacion || 'RECURRENTE';
+            document.getElementById('ctrHonorarios').value = c.honorariosPactados || '';
+            document.getElementById('ctrFechaInicio').value = c.fechaInicio || '';
+            document.getElementById('ctrEstado').value = c.estado || 'ACTIVO';
+            document.getElementById('ctrNotas').value = c.notas || '';
+            document.getElementById('clienteContratosInfo').innerHTML = '';
+            document.getElementById('modalContratoTitle').innerHTML = '<i class="mdi mdi-file-edit me-2"></i>Editar Contrato';
+            new bootstrap.Modal(document.getElementById('modalContrato')).show();
+        });
+}
+
+function guardarContrato() {
+    const id = document.getElementById('contratoId').value;
+    const clienteId = document.getElementById('ctrClienteId').value;
+    const servicioId = document.getElementById('ctrServicioId').value;
+    if (!clienteId || !servicioId) {
+        Swal.fire('Campos requeridos', 'Debe seleccionar un cliente y un servicio.', 'warning');
+        return;
+    }
+    const body = {
+        clienteId, servicioId,
+        tipoFacturacion: document.getElementById('ctrTipoFacturacion').value,
+        honorariosPactados: document.getElementById('ctrHonorarios').value,
+        fechaInicio: document.getElementById('ctrFechaInicio').value,
+        estado: document.getElementById('ctrEstado').value,
+        notas: document.getElementById('ctrNotas').value
+    };
+    const url = id ? '/fiscore/contratos/' + id : '/fiscore/contratos/guardar';
+    const method = id ? 'PUT' : 'POST';
+    fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
+            Swal.fire({ icon: 'success', title: 'Guardado', text: data.message, timer: 1500, showConfirmButton: false })
+                .then(() => location.reload());
+        });
+}
+
+function eliminarContrato(id) {
+    Swal.fire({
+        title: '¿Eliminar contrato?', text: 'Esta acción no se puede deshacer.',
+        icon: 'warning', showCancelButton: true,
+        confirmButtonColor: '#fa5c7c', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar'
+    }).then(result => {
+        if (result.isConfirmed) {
+            fetch('/fiscore/contratos/' + id, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(() => {
+                    Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1200, showConfirmButton: false })
+                        .then(() => location.reload());
+                });
+        }
+    });
+}
+</script>
 </body>
 </html>
