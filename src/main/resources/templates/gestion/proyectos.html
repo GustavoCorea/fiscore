@@ -2,85 +2,508 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/layout :: head}"></head>
 <body>
-
 <div class="wrapper">
-  <header th:replace="~{layout/header :: header}"></header>
-  <aside th:replace="~{layout/menu :: aside}"> </aside>
+    <header th:replace="~{layout/header :: header}"></header>
+    <aside th:replace="~{layout/menu :: aside}"></aside>
 
-  <div class="content-page">
-    <div class="content">
-      <div class="container-fluid">
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
 
-        <div class="row">
-          <div class="col-12">
-            <div class="page-title-box">
-              <h4 class="page-title">Gestión de Proyectos y Casos</h4>
-            </div>
-          </div>
-        </div>
-
-        <!-- Kanban Board Simple -->
-        <div class="row">
-          <!-- Columna: Por Iniciar -->
-          <div class="col-md-4">
-            <div class="card bg-light">
-              <div class="card-body">
-                <h5 class="card-title text-uppercase">Por Iniciar / Cotizado</h5>
-                <div class="d-grid gap-3 mt-3">
-                  <!-- Item Proyecto -->
-                  <div class="card shadow-sm border mb-0">
-                    <div class="card-body p-3">
-                      <span class="badge bg-warning float-end">Legal</span>
-                      <h5 class="mt-0"><a href="#" class="text-dark">Constitución de Sociedad</a></h5>
-                      <p class="text-muted mb-1">Cliente: Inversiones ABC</p>
-                      <p class="mb-0 font-13 text-end">Presupuesto: $800.00</p>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box">
+                            <div class="page-title-right">
+                                <ol class="breadcrumb m-0">
+                                    <li class="breadcrumb-item"><a th:href="@{/inicio}">Inicio</a></li>
+                                    <li class="breadcrumb-item active">Proyectos</li>
+                                </ol>
+                            </div>
+                            <h4 class="page-title"><i class="mdi mdi-briefcase me-2 text-warning"></i>Gestión de Proyectos y Casos</h4>
+                        </div>
                     </div>
-                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Columna: En Proceso -->
-          <div class="col-md-4">
-            <div class="card bg-light">
-              <div class="card-body">
-                <h5 class="card-title text-uppercase text-primary">En Ejecución</h5>
-                <div class="d-grid gap-3 mt-3">
-                  <div class="card shadow-sm border mb-0">
-                    <div class="card-body p-3">
-                      <span class="badge bg-info float-end">Auditoría</span>
-                      <h5 class="mt-0"><a href="#" class="text-dark">Auditoría Fiscal 2022</a></h5>
-                      <p class="text-muted mb-1">Cliente: Farmacias El Sol</p>
-                      <div class="progress mt-2" style="height: 5px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: 45%;"></div>
-                      </div>
-                      <p class="mb-0 mt-1 font-13">Avance: 45%</p>
+                <!-- Botonera -->
+                <div class="row mb-3">
+                    <div class="col-12 d-flex gap-2 align-items-center">
+                        <button type="button" class="btn btn-warning text-white" onclick="abrirModalNuevo()">
+                            <i class="mdi mdi-plus-circle me-1"></i> Nuevo Proyecto
+                        </button>
+                        <div class="btn-group ms-2">
+                            <button class="btn btn-soft-secondary btn-sm active" id="btnVistaTarjetas" onclick="toggleVista('kanban')">
+                                <i class="mdi mdi-view-column"></i> Kanban
+                            </button>
+                            <button class="btn btn-soft-secondary btn-sm" id="btnVistaLista" onclick="toggleVista('lista')">
+                                <i class="mdi mdi-view-list"></i> Lista
+                            </button>
+                        </div>
                     </div>
-                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Columna: Finalizado -->
-          <div class="col-md-4">
-            <div class="card bg-light">
-              <div class="card-body">
-                <h5 class="card-title text-uppercase text-success">Finalizado / Por Facturar</h5>
-                <div class="d-grid gap-3 mt-3">
-                  <!-- Items finalizados -->
+                <!-- ===== VISTA KANBAN ===== -->
+                <div id="vistaKanban">
+                    <div class="row">
+
+                        <!-- Columna: Cotizados -->
+                        <div class="col-md-4">
+                            <div class="card" style="border-top:4px solid #ffbc00;">
+                                <div class="card-header bg-soft-warning d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0 text-warning fw-bold">
+                                        <i class="mdi mdi-clipboard-text me-1"></i> Por Iniciar / Cotizado
+                                    </h5>
+                                    <span class="badge bg-warning text-dark" th:text="${#lists.size(cotizados)}">0</span>
+                                </div>
+                                <div class="card-body p-2 kanban-col" style="min-height:200px;max-height:65vh;overflow-y:auto;">
+                                    <div th:each="p : ${cotizados}" class="card shadow-sm border mb-2 proyecto-card"
+                                         th:attr="data-id=${p.id},data-estado=${p.estado}">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <span class="badge"
+                                                      th:classappend="${p.categoria == 'LEGAL'} ? 'bg-danger' :
+                                                                       (${p.categoria == 'AUDITORIA'} ? 'bg-warning text-dark' :
+                                                                       (${p.categoria == 'CONTABILIDAD'} ? 'bg-primary' :
+                                                                       (${p.categoria == 'TRAMITES'} ? 'bg-secondary' : 'bg-info')))"
+                                                      th:text="${p.categoria}"></span>
+                                                <div class="dropdown">
+                                                    <a href="#" class="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown">
+                                                        <i class="mdi mdi-dots-vertical"></i>
+                                                    </a>
+                                                    <div class="dropdown-menu dropdown-menu-end">
+                                                        <a class="dropdown-item" href="javascript:void(0);"
+                                                           th:onclick="'editarProyecto(' + ${p.id} + ')'">
+                                                            <i class="mdi mdi-pencil me-1"></i> Editar
+                                                        </a>
+                                                        <a class="dropdown-item" href="javascript:void(0);"
+                                                           th:onclick="'moverEstado(' + ${p.id} + ', \'EN_EJECUCION\')'">
+                                                            <i class="mdi mdi-play me-1"></i> Iniciar
+                                                        </a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <a class="dropdown-item text-danger" href="javascript:void(0);"
+                                                           th:onclick="'eliminarProyecto(' + ${p.id} + ')'">
+                                                            <i class="mdi mdi-delete me-1"></i> Eliminar
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="mt-1 mb-1"><a href="javascript:void(0);" class="text-dark fw-semibold" th:text="${p.nombre}"></a></h6>
+                                            <p class="text-muted small mb-1">
+                                                <i class="mdi mdi-account-outline me-1"></i>
+                                                <span th:text="${p.cliente?.nombre}">Sin cliente</span>
+                                            </p>
+                                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                                <span class="text-success fw-semibold small"
+                                                      th:text="${p.presupuesto != null ? '$' + #numbers.formatDecimal(p.presupuesto, 1, 2) : ''}"></span>
+                                                <span class="text-muted small" th:text="${p.fechaEstimadaFin}"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div th:if="${#lists.isEmpty(cotizados)}" class="text-center text-muted py-4">
+                                        <i class="mdi mdi-tray-plus font-24 d-block mb-1"></i>
+                                        <small>Sin proyectos cotizados</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Columna: En Ejecución -->
+                        <div class="col-md-4">
+                            <div class="card" style="border-top:4px solid #727cf5;">
+                                <div class="card-header bg-soft-primary d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0 text-primary fw-bold">
+                                        <i class="mdi mdi-progress-wrench me-1"></i> En Ejecución
+                                    </h5>
+                                    <span class="badge bg-primary" th:text="${#lists.size(enEjecucion)}">0</span>
+                                </div>
+                                <div class="card-body p-2 kanban-col" style="min-height:200px;max-height:65vh;overflow-y:auto;">
+                                    <div th:each="p : ${enEjecucion}" class="card shadow-sm border mb-2"
+                                         th:attr="data-id=${p.id}">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <span class="badge"
+                                                      th:classappend="${p.categoria == 'LEGAL'} ? 'bg-danger' :
+                                                                       (${p.categoria == 'AUDITORIA'} ? 'bg-warning text-dark' :
+                                                                       (${p.categoria == 'CONTABILIDAD'} ? 'bg-primary' :
+                                                                       (${p.categoria == 'TRAMITES'} ? 'bg-secondary' : 'bg-info')))"
+                                                      th:text="${p.categoria}"></span>
+                                                <div class="dropdown">
+                                                    <a href="#" class="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown">
+                                                        <i class="mdi mdi-dots-vertical"></i>
+                                                    </a>
+                                                    <div class="dropdown-menu dropdown-menu-end">
+                                                        <a class="dropdown-item" href="javascript:void(0);"
+                                                           th:onclick="'editarProyecto(' + ${p.id} + ')'">
+                                                            <i class="mdi mdi-pencil me-1"></i> Editar
+                                                        </a>
+                                                        <a class="dropdown-item" href="javascript:void(0);"
+                                                           th:onclick="'moverEstado(' + ${p.id} + ', \'FINALIZADO\')'">
+                                                            <i class="mdi mdi-check-circle me-1"></i> Finalizar
+                                                        </a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <a class="dropdown-item text-danger" href="javascript:void(0);"
+                                                           th:onclick="'eliminarProyecto(' + ${p.id} + ')'">
+                                                            <i class="mdi mdi-delete me-1"></i> Eliminar
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="mt-1 mb-1"><a href="javascript:void(0);" class="text-dark fw-semibold" th:text="${p.nombre}"></a></h6>
+                                            <p class="text-muted small mb-1">
+                                                <i class="mdi mdi-account-outline me-1"></i>
+                                                <span th:text="${p.cliente?.nombre}">Sin cliente</span>
+                                            </p>
+                                            <div class="progress mt-2 mb-1" style="height:6px;">
+                                                <div class="progress-bar bg-primary" role="progressbar"
+                                                     th:style="'width:' + ${p.porcentajeAvance != null ? p.porcentajeAvance : 0} + '%'"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted" th:text="${(p.porcentajeAvance != null ? p.porcentajeAvance : 0) + '% completado'}"></small>
+                                                <span class="text-success fw-semibold small"
+                                                      th:text="${p.presupuesto != null ? '$' + #numbers.formatDecimal(p.presupuesto, 1, 2) : ''}"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div th:if="${#lists.isEmpty(enEjecucion)}" class="text-center text-muted py-4">
+                                        <i class="mdi mdi-briefcase-clock font-24 d-block mb-1"></i>
+                                        <small>Sin proyectos en ejecución</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Columna: Finalizados -->
+                        <div class="col-md-4">
+                            <div class="card" style="border-top:4px solid #0acf97;">
+                                <div class="card-header bg-soft-success d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0 text-success fw-bold">
+                                        <i class="mdi mdi-check-decagram me-1"></i> Finalizado / Por Facturar
+                                    </h5>
+                                    <span class="badge bg-success" th:text="${#lists.size(finalizados)}">0</span>
+                                </div>
+                                <div class="card-body p-2 kanban-col" style="min-height:200px;max-height:65vh;overflow-y:auto;">
+                                    <div th:each="p : ${finalizados}" class="card shadow-sm border mb-2"
+                                         th:attr="data-id=${p.id}">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <span class="badge"
+                                                      th:classappend="${p.categoria == 'LEGAL'} ? 'bg-danger' :
+                                                                       (${p.categoria == 'AUDITORIA'} ? 'bg-warning text-dark' :
+                                                                       (${p.categoria == 'CONTABILIDAD'} ? 'bg-primary' :
+                                                                       (${p.categoria == 'TRAMITES'} ? 'bg-secondary' : 'bg-info')))"
+                                                      th:text="${p.categoria}"></span>
+                                                <div class="dropdown">
+                                                    <a href="#" class="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown">
+                                                        <i class="mdi mdi-dots-vertical"></i>
+                                                    </a>
+                                                    <div class="dropdown-menu dropdown-menu-end">
+                                                        <a class="dropdown-item" href="javascript:void(0);"
+                                                           th:onclick="'editarProyecto(' + ${p.id} + ')'">
+                                                            <i class="mdi mdi-pencil me-1"></i> Editar
+                                                        </a>
+                                                        <a class="dropdown-item text-danger" href="javascript:void(0);"
+                                                           th:onclick="'eliminarProyecto(' + ${p.id} + ')'">
+                                                            <i class="mdi mdi-delete me-1"></i> Eliminar
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="mt-1 mb-1 text-muted"><a href="javascript:void(0);" class="text-muted fw-semibold" th:text="${p.nombre}"></a></h6>
+                                            <p class="text-muted small mb-1">
+                                                <i class="mdi mdi-account-outline me-1"></i>
+                                                <span th:text="${p.cliente?.nombre}">Sin cliente</span>
+                                            </p>
+                                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                                <span th:if="${!p.facturado}" class="badge bg-soft-warning text-warning">
+                                                    <i class="mdi mdi-cash me-1"></i>Por Facturar
+                                                </span>
+                                                <span th:if="${p.facturado}" class="badge bg-soft-success text-success">
+                                                    <i class="mdi mdi-check me-1"></i>Facturado
+                                                </span>
+                                                <span class="text-success fw-semibold small"
+                                                      th:text="${p.presupuesto != null ? '$' + #numbers.formatDecimal(p.presupuesto, 1, 2) : ''}"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div th:if="${#lists.isEmpty(finalizados)}" class="text-center text-muted py-4">
+                                        <i class="mdi mdi-check-circle-outline font-24 d-block mb-1"></i>
+                                        <small>Sin proyectos finalizados</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-              </div>
+
+                <!-- ===== VISTA LISTA ===== -->
+                <div id="vistaLista" style="display:none;">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover dt-responsive nowrap w-100" id="proyectos-datatable">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>Proyecto</th>
+                                        <th>Cliente</th>
+                                        <th>Categoría</th>
+                                        <th>Presupuesto</th>
+                                        <th>Avance</th>
+                                        <th>Estado</th>
+                                        <th>F. Fin Est.</th>
+                                        <th style="width:80px;">Acc.</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="p : ${todosProyectos}">
+                                        <td class="fw-semibold" th:text="${p.nombre}"></td>
+                                        <td th:text="${p.cliente?.nombre}"></td>
+                                        <td>
+                                            <span class="badge bg-secondary" th:text="${p.categoria}"></span>
+                                        </td>
+                                        <td class="text-success fw-bold"
+                                            th:text="${p.presupuesto != null ? '$' + #numbers.formatDecimal(p.presupuesto, 1, 2) : '-'}"></td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="progress flex-grow-1" style="height:6px;">
+                                                    <div class="progress-bar bg-success" role="progressbar"
+                                                         th:style="'width:' + ${p.porcentajeAvance != null ? p.porcentajeAvance : 0} + '%'"></div>
+                                                </div>
+                                                <small th:text="${(p.porcentajeAvance != null ? p.porcentajeAvance : 0) + '%'}"></small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning text-dark" th:if="${p.estado == 'COTIZADO'}">Cotizado</span>
+                                            <span class="badge bg-primary" th:if="${p.estado == 'EN_EJECUCION'}">En Ejecución</span>
+                                            <span class="badge bg-success" th:if="${p.estado == 'FINALIZADO'}">Finalizado</span>
+                                            <span class="badge bg-danger" th:if="${p.estado == 'CANCELADO'}">Cancelado</span>
+                                        </td>
+                                        <td th:text="${p.fechaEstimadaFin}"></td>
+                                        <td>
+                                            <a href="javascript:void(0);" class="action-icon text-info"
+                                               th:onclick="'editarProyecto(' + ${p.id} + ')'">
+                                                <i class="mdi mdi-pencil"></i>
+                                            </a>
+                                            <a href="javascript:void(0);" class="action-icon text-danger"
+                                               th:onclick="'eliminarProyecto(' + ${p.id} + ')'">
+                                                <i class="mdi mdi-delete"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-          </div>
         </div>
-
-      </div>
     </div>
-
-  </div>
 </div>
+
 <footer th:replace="~{layout/footer :: footer}"></footer>
+
+<!-- ======== MODAL PROYECTO ======== -->
+<div class="modal fade" id="modalProyecto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="modalProyectoTitle">
+                    <i class="mdi mdi-briefcase-plus me-2"></i>Nuevo Proyecto
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="proyectoId">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold">Nombre del Proyecto <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="proyNombre" placeholder="Ej: Constitución de Sociedad para XYZ">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Categoría</label>
+                        <select class="form-select" id="proyCategoria">
+                            <option value="CONTABILIDAD">Contabilidad</option>
+                            <option value="LEGAL">Legal / Jurídico</option>
+                            <option value="AUDITORIA">Auditoría</option>
+                            <option value="CONSULTORIA">Consultoría</option>
+                            <option value="TRAMITES">Trámites / Diligencias</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Cliente</label>
+                        <select class="form-select" id="proyClienteId">
+                            <option value="">Sin asignar</option>
+                            <option th:each="c : ${clientesList}" th:value="${c.id}" th:text="${c.nombre}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Presupuesto ($)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="proyPresupuesto" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Estado</label>
+                        <select class="form-select" id="proyEstado">
+                            <option value="COTIZADO">Cotizado</option>
+                            <option value="EN_EJECUCION">En Ejecución</option>
+                            <option value="FINALIZADO">Finalizado</option>
+                            <option value="CANCELADO">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Fecha Inicio</label>
+                        <input type="date" class="form-control" id="proyFechaInicio">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Fecha Fin Estimada</label>
+                        <input type="date" class="form-control" id="proyFechaEstimadaFin">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">% Avance</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="range" class="form-range flex-grow-1" id="proyAvanceRange" min="0" max="100" step="5" value="0"
+                                   oninput="document.getElementById('proyAvanceVal').textContent = this.value + '%'">
+                            <span class="badge bg-primary fs-6" id="proyAvanceVal">0%</span>
+                            <input type="hidden" id="proyPorcentajeAvance" value="0">
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Descripción / Notas</label>
+                        <textarea class="form-control" id="proyNotas" rows="3"
+                            placeholder="Descripción del alcance del proyecto, entregables, condiciones..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning text-white" onclick="guardarProyecto()">
+                    <i class="mdi mdi-content-save me-1"></i> Guardar Proyecto
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#proyectos-datatable').DataTable({
+        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+        pageLength: 15,
+        columnDefs: [{ orderable: false, targets: 7 }]
+    });
+
+    // Sync range y hidden
+    document.getElementById('proyAvanceRange').addEventListener('input', function() {
+        document.getElementById('proyPorcentajeAvance').value = this.value;
+    });
+});
+
+function toggleVista(tipo) {
+    if (tipo === 'kanban') {
+        document.getElementById('vistaKanban').style.display = '';
+        document.getElementById('vistaLista').style.display = 'none';
+        document.getElementById('btnVistaTarjetas').classList.add('active');
+        document.getElementById('btnVistaLista').classList.remove('active');
+    } else {
+        document.getElementById('vistaKanban').style.display = 'none';
+        document.getElementById('vistaLista').style.display = '';
+        document.getElementById('btnVistaTarjetas').classList.remove('active');
+        document.getElementById('btnVistaLista').classList.add('active');
+    }
+}
+
+function abrirModalNuevo() {
+    document.getElementById('proyectoId').value = '';
+    document.getElementById('proyNombre').value = '';
+    document.getElementById('proyCategoria').value = 'CONSULTORIA';
+    document.getElementById('proyClienteId').value = '';
+    document.getElementById('proyPresupuesto').value = '';
+    document.getElementById('proyEstado').value = 'COTIZADO';
+    document.getElementById('proyFechaInicio').value = '';
+    document.getElementById('proyFechaEstimadaFin').value = '';
+    document.getElementById('proyAvanceRange').value = 0;
+    document.getElementById('proyAvanceVal').textContent = '0%';
+    document.getElementById('proyPorcentajeAvance').value = 0;
+    document.getElementById('proyNotas').value = '';
+    document.getElementById('modalProyectoTitle').innerHTML = '<i class="mdi mdi-briefcase-plus me-2"></i>Nuevo Proyecto';
+    new bootstrap.Modal(document.getElementById('modalProyecto')).show();
+}
+
+function editarProyecto(id) {
+    fetch('/fiscore/proyectos/' + id)
+        .then(r => r.json())
+        .then(p => {
+            document.getElementById('proyectoId').value = p.id;
+            document.getElementById('proyNombre').value = p.nombre || '';
+            document.getElementById('proyCategoria').value = p.categoria || 'CONSULTORIA';
+            document.getElementById('proyClienteId').value = p.cliente?.id || '';
+            document.getElementById('proyPresupuesto').value = p.presupuesto || '';
+            document.getElementById('proyEstado').value = p.estado || 'COTIZADO';
+            document.getElementById('proyFechaInicio').value = p.fechaInicio || '';
+            document.getElementById('proyFechaEstimadaFin').value = p.fechaEstimadaFin || '';
+            const avance = p.porcentajeAvance || 0;
+            document.getElementById('proyAvanceRange').value = avance;
+            document.getElementById('proyAvanceVal').textContent = avance + '%';
+            document.getElementById('proyPorcentajeAvance').value = avance;
+            document.getElementById('proyNotas').value = p.notas || '';
+            document.getElementById('modalProyectoTitle').innerHTML = '<i class="mdi mdi-briefcase-edit me-2"></i>Editar Proyecto';
+            new bootstrap.Modal(document.getElementById('modalProyecto')).show();
+        });
+}
+
+function guardarProyecto() {
+    const id = document.getElementById('proyectoId').value;
+    const body = {
+        nombre: document.getElementById('proyNombre').value,
+        categoria: document.getElementById('proyCategoria').value,
+        clienteId: document.getElementById('proyClienteId').value,
+        presupuesto: document.getElementById('proyPresupuesto').value,
+        estado: document.getElementById('proyEstado').value,
+        fechaInicio: document.getElementById('proyFechaInicio').value,
+        fechaEstimadaFin: document.getElementById('proyFechaEstimadaFin').value,
+        porcentajeAvance: document.getElementById('proyPorcentajeAvance').value,
+        notas: document.getElementById('proyNotas').value
+    };
+    const url = id ? '/fiscore/proyectos/' + id : '/fiscore/proyectos/guardar';
+    const method = id ? 'PUT' : 'POST';
+    fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
+            Swal.fire({ icon: 'success', title: 'Guardado', text: data.message, timer: 1500, showConfirmButton: false })
+                .then(() => location.reload());
+        });
+}
+
+function moverEstado(id, nuevoEstado) {
+    fetch('/fiscore/proyectos/' + id + '/avance', {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ estado: nuevoEstado, porcentajeAvance: nuevoEstado === 'FINALIZADO' ? 100 : undefined })
+    })
+    .then(r => r.json())
+    .then(() => location.reload());
+}
+
+function eliminarProyecto(id) {
+    Swal.fire({
+        title: '¿Eliminar proyecto?', text: 'Esta acción no se puede deshacer.',
+        icon: 'warning', showCancelButton: true,
+        confirmButtonColor: '#fa5c7c', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar'
+    }).then(result => {
+        if (result.isConfirmed) {
+            fetch('/fiscore/proyectos/' + id, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(() => {
+                    Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1200, showConfirmButton: false })
+                        .then(() => location.reload());
+                });
+        }
+    });
+}
+</script>
 </body>
 </html>

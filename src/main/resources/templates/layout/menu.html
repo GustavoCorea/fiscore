@@ -1,95 +1,102 @@
 <aside id="sidebar" th:aside="aside">
     <!-- ========== Left Sidebar Start ========== -->
     <div class="leftside-menu">
-        <!-- Brand Logo Light -->
-        <a th:href="@{/}" class="logo logo-light">
-			<span class="logo-lg">
-				<img th:src="@{/assets/images/logo.png}" alt="logo">
-			</span>
+        <!-- Brand Logo -->
+        <a th:href="@{/inicio}" class="logo logo-light">
+            <span class="logo-lg">
+                <img th:src="@{/assets/images/logo.png}" alt="Fiscore" style="max-height:40px;">
+            </span>
             <span class="logo-sm">
-				<img th:src="@{/assets/images/logo.png}" alt="small logo">
-			</span>
+                <img th:src="@{/assets/images/logo.png}" alt="F" style="max-height:32px;">
+            </span>
         </a>
-        <!-- Brand Logo Dark -->
-        <a th:href="@{/}" class="logo logo-dark">
-			<span class="logo-lg">
-				<img th:src="@{/assets/images/logo.png}" alt="dark logo">
-			</span>
+        <a th:href="@{/inicio}" class="logo logo-dark">
+            <span class="logo-lg">
+                <img th:src="@{/assets/images/logo.png}" alt="Fiscore" style="max-height:40px;">
+            </span>
             <span class="logo-sm">
-				<img th:src="@{/assets/images/logo-dark-sm.png}" alt="small logo">
-			</span>
+                <img th:src="@{/assets/images/logo-dark-sm.png}" alt="F" style="max-height:32px;">
+            </span>
         </a>
-        <!-- Sidebar Hover Menu Toggle Button -->
-        <div class="button-sm-hover" data-bs-toggle="tooltip" data-bs-placement="right" title="Show Full Sidebar">
+        <!-- Toggle Buttons -->
+        <div class="button-sm-hover" data-bs-toggle="tooltip" data-bs-placement="right" title="Ampliar Sidebar">
             <i class="ri-checkbox-blank-circle-line align-middle"></i>
         </div>
-        <!-- Full Sidebar Menu Close Button -->
         <div class="button-close-fullsidebar">
             <i class="ri-close-fill align-middle"></i>
         </div>
-        <!-- Sidebar -->
+
+        <!-- Sidebar Content -->
         <div class="h-100" id="leftside-menu-container" data-simplebar>
-            <!-- Leftbar User -->
-            <!--- Sidemenu -->
             <ul class="side-nav">
-                <li class="side-nav-title">Navegación</li>
+
+                <!-- Dashboard -->
+                <li class="side-nav-title">Principal</li>
+                <li class="side-nav-item">
+                    <a th:href="@{/inicio}" class="side-nav-link">
+                        <i class="uil-home-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                <!-- Gestión -->
+                <li class="side-nav-title">Gestión</li>
 
                 <li class="side-nav-item">
-                    <a data-bs-toggle="collapse" href="#sidebarDashboards" aria-expanded="false" aria-controls="sidebarDashboards"
-                       class="side-nav-link">
-                        <i class="uil-home-alt"></i>
-                        <!--span class="badge bg-success float-end">1</span-->
-                        <span class="bold"> Menú principal </span>
+                    <a th:href="@{/clientes}" class="side-nav-link">
+                        <i class="uil-users-alt"></i>
+                        <span>Clientes</span>
                     </a>
-                    <div class="collapse" id="sidebarDashboards">
-                        <ul class="side-nav-second-level">
-                            <li>
-                                <a class="uil-home-alt" th:href="@{/}"> Inicio</a>
-                            </li>
-                        </ul>
-                        <ul class="side-nav-second-level">
-                            <li>
-                                <a class="uil-users-alt" th:href="@{/clientes}"> Clientes</a>
-                            </li>
-                        </ul>
-                        <ul class="side-nav-second-level">
-                            <li>
-                                <a class="uil-file-alt" th:href="@{/servicios}"> Servicios</a>
-                            </li>
-                        </ul>
-                        <ul class="side-nav-second-level">
-                            <li>
-                                <a class="uil-file-check" th:href="@{/contratos}"> Contratos</a>
-                            </li>
-                        </ul>
-                        <ul class="side-nav-second-level">
-                            <li>
-                                <a class="uil-briefcase" th:href="@{/proyectos}"> Proyectos</a>
-                            </li>
-                        </ul>
-                        <ul class="side-nav-second-level">
-                            <li>
-                                <a class="uil-money-bill" th:href="@{/facturacion}"> Facturación</a>
-                            </li>
-                        </ul>
-                    </div>
                 </li>
-                <li class="side-nav-title">Acciones adicionales</li>
+
                 <li class="side-nav-item">
-                    <a data-bs-toggle="collapse" href="#sidebarReportes" aria-expanded="false" aria-controls="sidebarReportes"
-                       class="side-nav-link">
-                        <i class="mdi mdi-printer"></i>
-                        <span> Reportes </span>
-                        <span class="menu-arrow"></span>
+                    <a th:href="@{/servicios}" class="side-nav-link">
+                        <i class="uil-briefcase-alt"></i>
+                        <span>Servicios</span>
                     </a>
-                    <div class="collapse" id="sidebarReportes">
-                        <ul class="side-nav-second-level">
-                            <li>
-                                <a class="mdi mdi-printer" th:href="@{/reportes}">Reportes</a>
-                            </li>
-                        </ul>
-                    </div>
                 </li>
+
+                <li class="side-nav-item">
+                    <a th:href="@{/contratos}" class="side-nav-link">
+                        <i class="uil-file-check-alt"></i>
+                        <span>Contratos</span>
+                    </a>
+                </li>
+
+                <li class="side-nav-item">
+                    <a th:href="@{/proyectos}" class="side-nav-link">
+                        <i class="uil-kanban"></i>
+                        <span>Proyectos y Casos</span>
+                    </a>
+                </li>
+
+                <!-- Facturación -->
+                <li class="side-nav-title">Facturación DTE</li>
+
+                <li class="side-nav-item">
+                    <a th:href="@{/facturacion}" class="side-nav-link">
+                        <i class="uil-receipt-alt"></i>
+                        <span>Emisión de Facturas</span>
+                    </a>
+                </li>
+
+                <!-- Reportes -->
+                <li class="side-nav-title">Análisis</li>
+
+                <li class="side-nav-item">
+                    <a th:href="@{/reportes}" class="side-nav-link">
+                        <i class="uil-chart-bar"></i>
+                        <span>Reportes</span>
+                    </a>
+                </li>
+
+                <li class="side-nav-item">
+                    <a th:href="@{/reportes#cartera}" class="side-nav-link">
+                        <i class="uil-briefcase-alt"></i>
+                        <span>Cartera por Cliente</span>
+                    </a>
+                </li>
+
             </ul>
             <div class="clearfix"></div>
         </div>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/layout :: head}"></head>
+<body>
+<div class="wrapper">
+    <header th:replace="~{layout/header :: header}"></header>
+    <aside th:replace="~{layout/menu :: aside}"></aside>
+
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+
+                <!-- Breadcrumb -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box">
+                            <div class="page-title-right">
+                                <ol class="breadcrumb m-0">
+                                    <li class="breadcrumb-item"><a th:href="@{/inicio}">Inicio</a></li>
+                                    <li class="breadcrumb-item active">Reportes</li>
+                                </ol>
+                            </div>
+                            <h4 class="page-title"><i class="mdi mdi-chart-bar me-2 text-primary"></i>Reportes y Análisis</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== KPIs Globales ===== -->
+                <div class="row mb-3">
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="card shadow-sm" style="border-left:4px solid #727cf5;">
+                            <div class="card-body py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <div class="text-muted text-uppercase small fw-bold">Honorarios Recurrentes/Mes</div>
+                                        <div class="h3 fw-bold text-primary mb-0"
+                                             th:text="'$' + ${#numbers.formatDecimal(kpis.honorariosRecurrentes, 1, 2)}">$0.00</div>
+                                    </div>
+                                    <div class="ms-3"><i class="mdi mdi-refresh-circle font-36 text-primary opacity-50"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="card shadow-sm" style="border-left:4px solid #0acf97;">
+                            <div class="card-body py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <div class="text-muted text-uppercase small fw-bold">Total Facturado</div>
+                                        <div class="h3 fw-bold text-success mb-0"
+                                             th:text="'$' + ${#numbers.formatDecimal(kpis.totalFacturado, 1, 2)}">$0.00</div>
+                                    </div>
+                                    <div class="ms-3"><i class="mdi mdi-cash-check font-36 text-success opacity-50"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="card shadow-sm" style="border-left:4px solid #ffbc00;">
+                            <div class="card-body py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <div class="text-muted text-uppercase small fw-bold">Por Cobrar (Emitidas)</div>
+                                        <div class="h3 fw-bold text-warning mb-0"
+                                             th:text="'$' + ${#numbers.formatDecimal(kpis.montoPendiente, 1, 2)}">$0.00</div>
+                                    </div>
+                                    <div class="ms-3"><i class="mdi mdi-clock-outline font-36 text-warning opacity-50"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="card shadow-sm" style="border-left:4px solid #fa5c7c;">
+                            <div class="card-body py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <div class="text-muted text-uppercase small fw-bold">Contratos Activos</div>
+                                        <div class="h3 fw-bold text-danger mb-0" th:text="${kpis.contratosActivos}">0</div>
+                                    </div>
+                                    <div class="ms-3"><i class="mdi mdi-file-check font-36 text-danger opacity-50"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== Gráficas Fila 1 ===== -->
+                <div class="row mb-3">
+                    <!-- Ingresos por Categoría -->
+                    <div class="col-lg-5">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="mdi mdi-chart-pie me-1 text-primary"></i>Honorarios por Categoría</h5>
+                                <small class="text-muted">Contratos activos</small>
+                            </div>
+                            <div class="card-body d-flex align-items-center">
+                                <div id="chartCategoria" style="width:100%;min-height:280px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Distribución por tipo de contrato -->
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="mdi mdi-chart-donut me-1 text-success"></i>Tipo de Contrato</h5>
+                                <small class="text-muted">Activos</small>
+                            </div>
+                            <div class="card-body d-flex align-items-center">
+                                <div id="chartTipo" style="width:100%;min-height:280px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estado de Facturas -->
+                    <div class="col-lg-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header py-2">
+                                <h5 class="mb-0"><i class="mdi mdi-file-chart me-1 text-warning"></i>Estado de Facturas</h5>
+                            </div>
+                            <div class="card-body d-flex align-items-center">
+                                <div id="chartEstadoFacturas" style="width:100%;min-height:280px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== Top Clientes ===== -->
+                <div class="row mb-3">
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header py-2">
+                                <h5 class="mb-0"><i class="mdi mdi-podium me-1 text-danger"></i>Top Clientes por Honorarios (Contratos Activos)</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="chartTopClientes" style="min-height:300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header py-2">
+                                <h5 class="mb-0"><i class="mdi mdi-account-group me-1 text-info"></i>Ranking por Honorarios</h5>
+                            </div>
+                            <div class="card-body">
+                                <div th:each="item, iter : ${topClientes}" class="d-flex align-items-center mb-3">
+                                    <div class="me-3 fw-bold text-muted" style="width:24px;" th:text="${iter.index + 1}"></div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold" th:text="${item.nombre}"></div>
+                                        <div class="progress mt-1" style="height:5px;">
+                                            <div class="progress-bar bg-primary"
+                                                 th:style="'width:' + ${item.porcentaje} + '%'"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3 fw-bold text-success" th:text="'$' + ${#numbers.formatDecimal(item.honorarios, 1, 2)}"></div>
+                                </div>
+                                <div th:if="${#lists.isEmpty(topClientes)}" class="text-center text-muted py-4">
+                                    <i class="mdi mdi-account-off font-24 d-block mb-1"></i>Sin datos
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== CARTERA POR CLIENTE (múltiples servicios) ===== -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="mdi mdi-briefcase-account me-1 text-success"></i>
+                                    Cartera de Servicios por Cliente
+                                    <small class="text-muted fw-normal ms-2">— recurrentes + eventuales activos</small>
+                                </h5>
+                                <div class="d-flex gap-2">
+                                    <input type="search" class="form-control form-control-sm" style="width:200px;"
+                                           id="buscarCartera" placeholder="Filtrar cliente..." oninput="filtrarCartera()">
+                                    <button class="btn btn-sm btn-soft-primary" onclick="expandirTodos()">
+                                        <i class="mdi mdi-expand-all me-1"></i>Expandir todos
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="listaCartera">
+                                    <!-- Iterate carteraClientes -->
+                                    <div th:each="entry, iter : ${carteraClientes}"
+                                         class="cliente-cartera-item"
+                                         th:attr="data-nombre=${entry.cliente.nombre}">
+                                        <!-- Cabecera del cliente -->
+                                        <div class="d-flex align-items-center px-3 py-2 border-bottom bg-light cursor-pointer"
+                                             style="cursor:pointer;"
+                                             th:onclick="'toggleCartera(' + ${iter.index} + ')'">
+                                            <div class="me-3">
+                                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold"
+                                                     style="width:36px;height:36px;font-size:13px;"
+                                                     th:text="${#strings.substring(entry.cliente.nombre, 0, 2).toUpperCase()}"></div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold" th:text="${entry.cliente.nombre}"></div>
+                                                <div class="d-flex gap-2 mt-1">
+                                                    <span class="badge bg-info" th:if="${entry.cantRecurrentes > 0}"
+                                                          th:text="${entry.cantRecurrentes} + ' recurrente(s)'"></span>
+                                                    <span class="badge bg-warning text-dark" th:if="${entry.cantEventuales > 0}"
+                                                          th:text="${entry.cantEventuales} + ' eventual(es)'"></span>
+                                                    <span class="text-muted small font-monospace" th:text="${entry.cliente.nit}"></span>
+                                                </div>
+                                            </div>
+                                            <div class="text-end me-3">
+                                                <div class="fw-bold text-success" th:if="${entry.totalMensual.signum() > 0}"
+                                                     th:text="'Recurrente: $' + ${#numbers.formatDecimal(entry.totalMensual, 1, 2)}"></div>
+                                                <div class="text-warning small" th:if="${entry.totalEventual.signum() > 0}"
+                                                     th:text="'Eventual: $' + ${#numbers.formatDecimal(entry.totalEventual, 1, 2)}"></div>
+                                            </div>
+                                            <div>
+                                                <i class="mdi mdi-chevron-down text-muted" th:id="'icono_' + ${iter.index}"></i>
+                                            </div>
+                                        </div>
+                                        <!-- Servicios del cliente -->
+                                        <div th:id="'servicios_' + ${iter.index}" style="display:none;">
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover mb-0">
+                                                    <thead class="table-light">
+                                                    <tr>
+                                                        <th class="ps-4">Servicio</th>
+                                                        <th>Tipo</th>
+                                                        <th>Honorarios</th>
+                                                        <th>Próx. Facturación</th>
+                                                        <th>Estado</th>
+                                                        <th style="width:80px;">Acciones</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr th:each="c : ${entry.contratos}">
+                                                        <td class="ps-4">
+                                                            <span class="fw-semibold" th:text="${c.servicio?.nombre}"></span>
+                                                            <br>
+                                                            <small class="text-muted" th:text="${c.servicio?.categoria}"></small>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-info" th:if="${c.tipoFacturacion == 'RECURRENTE'}">
+                                                                <i class="mdi mdi-refresh me-1"></i>Recurrente
+                                                            </span>
+                                                            <span class="badge bg-warning text-dark" th:if="${c.tipoFacturacion == 'PAGO_UNICO'}">
+                                                                <i class="mdi mdi-star me-1"></i>Eventual
+                                                            </span>
+                                                            <span class="badge bg-dark" th:if="${c.tipoFacturacion == 'POR_HORA'}">
+                                                                <i class="mdi mdi-clock me-1"></i>Por Hora
+                                                            </span>
+                                                        </td>
+                                                        <td class="fw-bold text-success"
+                                                            th:text="'$' + ${#numbers.formatDecimal(c.honorariosPactados, 1, 2)}"></td>
+                                                        <td th:text="${c.fechaProximaFacturacion != null ? #temporals.format(c.fechaProximaFacturacion, 'dd/MM/yyyy') : '-'}"></td>
+                                                        <td>
+                                                            <span class="badge bg-success" th:if="${c.estado == 'ACTIVO'}">Activo</span>
+                                                            <span class="badge bg-warning text-dark" th:if="${c.estado == 'SUSPENDIDO'}">Suspendido</span>
+                                                        </td>
+                                                        <td>
+                                                            <a th:href="@{/contratos}" class="action-icon text-info" title="Ver contratos">
+                                                                <i class="mdi mdi-open-in-new"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                    <tfoot class="table-light">
+                                                    <tr>
+                                                        <td colspan="2" class="ps-4 fw-bold">Total del cliente:</td>
+                                                        <td class="fw-bold text-success"
+                                                            th:text="'$' + ${#numbers.formatDecimal(entry.totalMensual.add(entry.totalEventual), 1, 2)}"></td>
+                                                        <td colspan="3"></td>
+                                                    </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div th:if="${#lists.isEmpty(carteraClientes)}" class="text-center text-muted py-5">
+                                        <i class="mdi mdi-briefcase-off font-36 d-block mb-2"></i>
+                                        No hay contratos activos registrados
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{layout/footer :: footer}"></footer>
+
+<!-- Hidden data for charts -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const dataCategorias = /*[[${ingresosPorCategoria}]]*/ {};
+    const dataTipos = /*[[${distribucionTipo}]]*/ {};
+    const dataEstadoFacturas = /*[[${distribucionFacturas}]]*/ {};
+    const dataTopClientes = /*[[${topClientes}]]*/ [];
+    /*]]>*/
+</script>
+
+<script>
+// ====== CHARTS ======
+$(document).ready(function() {
+    // ---- Pie: Ingresos por Categoría ----
+    const catLabels = Object.keys(dataCategorias);
+    const catValues = catLabels.map(k => parseFloat(dataCategorias[k]) || 0);
+
+    if (catLabels.length > 0) {
+        new ApexCharts(document.getElementById('chartCategoria'), {
+            series: catValues,
+            labels: catLabels,
+            chart: { type: 'pie', height: 280, fontFamily: 'inherit' },
+            colors: ['#727cf5','#fa5c7c','#ffbc00','#0acf97','#39afd1'],
+            legend: { position: 'bottom', fontSize: '12px' },
+            dataLabels: { formatter: (val) => val.toFixed(1) + '%' },
+            tooltip: {
+                y: { formatter: (val) => '$' + val.toFixed(2) }
+            }
+        }).render();
+    } else {
+        document.getElementById('chartCategoria').innerHTML =
+            '<div class="text-center text-muted py-5"><i class="mdi mdi-chart-arc font-36 d-block mb-2"></i>Sin datos</div>';
+    }
+
+    // ---- Donut: Tipos de Contrato ----
+    const tipoMap = { 'RECURRENTE': 'Recurrente', 'PAGO_UNICO': 'Eventual (Único)', 'POR_HORA': 'Por Hora' };
+    const tipoLabels = Object.keys(dataTipos).map(k => tipoMap[k] || k);
+    const tipoValues = Object.values(dataTipos).map(v => parseInt(v) || 0);
+
+    if (tipoLabels.length > 0) {
+        new ApexCharts(document.getElementById('chartTipo'), {
+            series: tipoValues,
+            labels: tipoLabels,
+            chart: { type: 'donut', height: 280, fontFamily: 'inherit' },
+            colors: ['#0acf97','#ffbc00','#39afd1'],
+            plotOptions: { pie: { donut: { size: '65%' } } },
+            legend: { position: 'bottom', fontSize: '12px' },
+            dataLabels: { formatter: (val, opts) => opts.w.config.series[opts.seriesIndex] }
+        }).render();
+    } else {
+        document.getElementById('chartTipo').innerHTML =
+            '<div class="text-center text-muted py-5"><i class="mdi mdi-chart-donut font-36 d-block mb-2"></i>Sin datos</div>';
+    }
+
+    // ---- Radialbar: Estado Facturas ----
+    const estadoMap = { 'BORRADOR': '#6c757d', 'EMITIDA': '#ffbc00', 'PAGADA': '#0acf97', 'ANULADA': '#fa5c7c' };
+    const estadoLabels = Object.keys(dataEstadoFacturas).map(k => k.charAt(0) + k.slice(1).toLowerCase());
+    const estadoValues = Object.values(dataEstadoFacturas).map(v => parseInt(v) || 0);
+    const estadoColors = Object.keys(dataEstadoFacturas).map(k => estadoMap[k] || '#727cf5');
+    const totalFacturas = estadoValues.reduce((a, b) => a + b, 0);
+
+    if (estadoLabels.length > 0) {
+        new ApexCharts(document.getElementById('chartEstadoFacturas'), {
+            series: estadoValues,
+            labels: estadoLabels,
+            chart: { type: 'donut', height: 280, fontFamily: 'inherit' },
+            colors: estadoColors,
+            plotOptions: { pie: { donut: { size: '70%',
+                labels: { show: true, total: { show: true, label: 'Total', formatter: () => totalFacturas } }
+            }}},
+            legend: { position: 'bottom', fontSize: '11px' }
+        }).render();
+    } else {
+        document.getElementById('chartEstadoFacturas').innerHTML =
+            '<div class="text-center text-muted py-5"><i class="mdi mdi-file-hidden font-36 d-block mb-2"></i>Sin facturas</div>';
+    }
+
+    // ---- Bar Horizontal: Top Clientes ----
+    const clienteNombres = dataTopClientes.map(c => c.nombre.length > 20 ? c.nombre.substring(0,20) + '…' : c.nombre);
+    const clienteHonorarios = dataTopClientes.map(c => parseFloat(c.honorarios) || 0);
+
+    if (clienteNombres.length > 0) {
+        new ApexCharts(document.getElementById('chartTopClientes'), {
+            series: [{ name: 'Honorarios', data: clienteHonorarios }],
+            chart: { type: 'bar', height: 300, fontFamily: 'inherit', toolbar: { show: false } },
+            plotOptions: { bar: { horizontal: true, borderRadius: 4, dataLabels: { position: 'top' } } },
+            dataLabels: { enabled: true, formatter: v => '$' + v.toFixed(0), offsetX: 5,
+                style: { fontSize: '11px', colors: ['#333'] } },
+            xaxis: { categories: clienteNombres, labels: { formatter: v => '$' + v } },
+            colors: ['#727cf5'],
+            grid: { borderColor: '#f0f0f0' }
+        }).render();
+    } else {
+        document.getElementById('chartTopClientes').innerHTML =
+            '<div class="text-center text-muted py-5"><i class="mdi mdi-account-off font-36 d-block mb-2"></i>Sin datos</div>';
+    }
+});
+
+// ====== CARTERA ACCORDION ======
+function toggleCartera(idx) {
+    const panel = document.getElementById('servicios_' + idx);
+    const icono = document.getElementById('icono_' + idx);
+    const isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : '';
+    icono.className = isOpen ? 'mdi mdi-chevron-down text-muted' : 'mdi mdi-chevron-up text-primary';
+}
+
+function expandirTodos() {
+    document.querySelectorAll('[id^="servicios_"]').forEach((el, i) => {
+        el.style.display = '';
+        const icono = document.getElementById('icono_' + i);
+        if (icono) icono.className = 'mdi mdi-chevron-up text-primary';
+    });
+}
+
+function filtrarCartera() {
+    const texto = document.getElementById('buscarCartera').value.toLowerCase();
+    document.querySelectorAll('.cliente-cartera-item').forEach(item => {
+        const nombre = item.getAttribute('data-nombre') || '';
+        item.style.display = nombre.toLowerCase().includes(texto) ? '' : 'none';
+    });
+}
+</script>
+</body>
+</html>
