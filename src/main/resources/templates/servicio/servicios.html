@@ -88,11 +88,12 @@
                                             <td class="text-muted small" style="max-width:250px;white-space:normal;" th:text="${s.descripcion}"></td>
                                             <td>
                                                 <a href="javascript:void(0);" class="action-icon text-info"
-                                                   th:onclick="'editarServicio(' + ${s.id} + ')'" title="Editar">
+                                                   th:onclick="|editarServicio(${s.id})|" title="Editar">
                                                     <i class="mdi mdi-square-edit-outline"></i>
                                                 </a>
                                                 <a href="javascript:void(0);" class="action-icon text-danger"
-                                                   th:onclick="'eliminarServicio(' + ${s.id} + ', \'' + ${s.nombre} + '\')'  "
+                                                   th:data-id="${s.id}" th:data-nombre="${s.nombre}"
+                                                   onclick="eliminarServicio(this.dataset.id, this.dataset.nombre)"
                                                    title="Eliminar">
                                                     <i class="mdi mdi-delete"></i>
                                                 </a>
@@ -236,10 +237,16 @@ function eliminarServicio(id, nombre) {
     }).then(result => {
         if (result.isConfirmed) {
             fetch('/fiscore/servicios/' + id, { method: 'DELETE' })
-                .then(r => r.json())
+                .then(r => {
+                    if (!r.ok) throw new Error('Error ' + r.status);
+                    return r.json();
+                })
                 .then(() => {
                     Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1200, showConfirmButton: false })
                         .then(() => location.reload());
+                })
+                .catch(() => {
+                    Swal.fire('Error', 'No se pudo eliminar el servicio. Puede que tenga contratos asociados.', 'error');
                 });
         }
     });

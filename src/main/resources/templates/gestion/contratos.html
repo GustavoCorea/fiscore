@@ -30,8 +30,7 @@
                         <div class="card shadow-sm text-center py-2" style="border-top:3px solid #0acf97;">
                             <div class="card-body py-2">
                                 <i class="mdi mdi-check-circle text-success font-22"></i>
-                                <div class="h4 fw-bold mb-0"
-                                     th:text="${#lists.size(contratosList.?[estado == 'ACTIVO'])}">0</div>
+                                <div class="h4 fw-bold mb-0" th:text="${#lists.size(contratosList.?[estado == 'ACTIVO'])}">0</div>
                                 <div class="text-muted small">Activos</div>
                             </div>
                         </div>
@@ -40,8 +39,7 @@
                         <div class="card shadow-sm text-center py-2" style="border-top:3px solid #ffbc00;">
                             <div class="card-body py-2">
                                 <i class="mdi mdi-clock-alert text-warning font-22"></i>
-                                <div class="h4 fw-bold mb-0"
-                                     th:text="${#lists.size(contratosList.?[estado == 'SUSPENDIDO'])}">0</div>
+                                <div class="h4 fw-bold mb-0" th:text="${#lists.size(contratosList.?[estado == 'SUSPENDIDO'])}">0</div>
                                 <div class="text-muted small">Suspendidos</div>
                             </div>
                         </div>
@@ -50,8 +48,7 @@
                         <div class="card shadow-sm text-center py-2" style="border-top:3px solid #727cf5;">
                             <div class="card-body py-2">
                                 <i class="mdi mdi-refresh text-primary font-22"></i>
-                                <div class="h4 fw-bold mb-0"
-                                     th:text="${#lists.size(contratosList.?[tipoFacturacion == 'RECURRENTE'])}">0</div>
+                                <div class="h4 fw-bold mb-0" th:text="${#lists.size(contratosList.?[tipoFacturacion == 'RECURRENTE'])}">0</div>
                                 <div class="text-muted small">Recurrentes</div>
                             </div>
                         </div>
@@ -60,15 +57,14 @@
                         <div class="card shadow-sm text-center py-2" style="border-top:3px solid #fa5c7c;">
                             <div class="card-body py-2">
                                 <i class="mdi mdi-star text-danger font-22"></i>
-                                <div class="h4 fw-bold mb-0"
-                                     th:text="${#lists.size(contratosList.?[tipoFacturacion == 'PAGO_UNICO'])}">0</div>
+                                <div class="h4 fw-bold mb-0" th:text="${#lists.size(contratosList.?[tipoFacturacion == 'PAGO_UNICO'])}">0</div>
                                 <div class="text-muted small">Eventuales</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Botones y tabs de vista -->
+                <!-- Botones y tabs -->
                 <div class="row mb-3">
                     <div class="col-12 d-flex gap-2 align-items-center flex-wrap">
                         <button type="button" class="btn btn-success" onclick="abrirModalNuevo()">
@@ -82,7 +78,6 @@
                                 <i class="mdi mdi-account-group me-1"></i> Por Cliente
                             </button>
                         </div>
-                        <!-- Filtros (sólo en vista tabla) -->
                         <div id="filtrosTabla" class="btn-group ms-2">
                             <button class="btn btn-outline-secondary btn-sm" onclick="filtrarEstado('')">Todos</button>
                             <button class="btn btn-outline-success btn-sm" onclick="filtrarEstado('Activo')">Activos</button>
@@ -103,7 +98,7 @@
                                     <thead class="table-light">
                                     <tr>
                                         <th>Cliente</th>
-                                        <th>Servicio Contratado</th>
+                                        <th>Servicios Contratados</th>
                                         <th>Tipo</th>
                                         <th>Honorarios</th>
                                         <th>Próx. Facturación</th>
@@ -117,9 +112,11 @@
                                             <div class="fw-semibold" th:text="${c.cliente?.nombre}"></div>
                                             <small class="text-muted font-monospace" th:text="${c.cliente?.nit}"></small>
                                         </td>
-                                        <td>
-                                            <div th:text="${c.servicio?.nombre}"></div>
-                                            <small class="badge bg-soft-secondary text-secondary" th:text="${c.servicio?.categoria}"></small>
+                                        <td style="max-width:280px;white-space:normal;">
+                                            <span th:each="cs,iter : ${c.servicios}"
+                                                  class="badge bg-soft-secondary text-secondary me-1 mb-1"
+                                                  th:text="${cs.servicio?.nombre}"></span>
+                                            <span th:if="${#lists.isEmpty(c.servicios)}" class="text-muted small">Sin servicios</span>
                                         </td>
                                         <td>
                                             <span class="badge bg-info" th:if="${c.tipoFacturacion == 'RECURRENTE'}">
@@ -142,11 +139,11 @@
                                         </td>
                                         <td>
                                             <a href="javascript:void(0);" class="action-icon text-info"
-                                               th:onclick="'editarContrato(' + ${c.id} + ')'" title="Editar">
+                                               th:onclick="|editarContrato(${c.id})|" title="Editar">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
                                             <a href="javascript:void(0);" class="action-icon text-danger"
-                                               th:onclick="'eliminarContrato(' + ${c.id} + ')'" title="Eliminar">
+                                               th:onclick="|eliminarContrato(${c.id})|" title="Eliminar">
                                                 <i class="mdi mdi-delete"></i>
                                             </a>
                                         </td>
@@ -158,17 +155,15 @@
                     </div>
                 </div>
 
-                <!-- ===== VISTA POR CLIENTE (múltiples servicios) ===== -->
+                <!-- ===== VISTA POR CLIENTE ===== -->
                 <div id="vistaCliente" style="display:none;">
                     <div class="mb-3">
                         <input type="search" class="form-control" style="max-width:280px;"
                                id="buscarCliente" placeholder="Filtrar por nombre de cliente..." oninput="filtrarPorCliente()">
                     </div>
                     <div id="listaClienteContratos">
-                        <!-- Agrupación por cliente via JS desde los datos de la tabla -->
                         <div class="text-center text-muted py-4" id="loadingClientes">
-                            <div class="spinner-border spinner-border-sm text-primary"></div>
-                            Cargando...
+                            <div class="spinner-border spinner-border-sm text-primary"></div> Cargando...
                         </div>
                     </div>
                 </div>
@@ -182,7 +177,7 @@
 
 <!-- ======== MODAL CONTRATO ======== -->
 <div class="modal fade" id="modalContrato" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title" id="modalContratoTitle">
@@ -192,13 +187,10 @@
             </div>
             <div class="modal-body p-4">
                 <input type="hidden" id="contratoId">
-                <div class="alert alert-info border-0 py-2 mb-3">
-                    <i class="mdi mdi-information me-1"></i>
-                    Un cliente puede tener múltiples contratos: <strong>recurrentes</strong> (mensuales) y
-                    <strong>eventuales</strong> (únicos). Cada contrato se gestiona de forma independiente.
-                </div>
-                <div class="row g-3">
-                    <div class="col-md-6">
+
+                <!-- Fila 1: Cliente + Tipo + Fechas -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold">Cliente <span class="text-danger">*</span></label>
                         <select class="form-select" id="ctrClienteId" required>
                             <option value="">Seleccione Cliente...</option>
@@ -206,38 +198,19 @@
                         </select>
                         <div class="form-text" id="clienteContratosInfo"></div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Servicio <span class="text-danger">*</span></label>
-                        <select class="form-select" id="ctrServicioId" required onchange="autoCompletarHonorarios()">
-                            <option value="">Seleccione Servicio...</option>
-                            <option th:each="s : ${serviciosList}"
-                                    th:value="${s.id}"
-                                    th:text="${s.nombre} + ' — ' + ${s.periodicidad}"
-                                    th:attr="data-precio=${s.precio},data-periodicidad=${s.periodicidad}"></option>
-                        </select>
-                    </div>
-                    <div class="col-12"><hr class="my-1"></div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-semibold">Tipo de Facturación</label>
                         <select class="form-select" id="ctrTipoFacturacion">
-                            <option value="RECURRENTE">🔄 Suscripción (Recurrente)</option>
-                            <option value="PAGO_UNICO">⭐ Eventual (Pago Único)</option>
-                            <option value="POR_HORA">⏱ Bolsa de Horas</option>
+                            <option value="RECURRENTE">Suscripción (Recurrente)</option>
+                            <option value="PAGO_UNICO">Eventual (Pago Único)</option>
+                            <option value="POR_HORA">Bolsa de Horas</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Honorarios Pactados ($)</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" id="ctrHonorarios" step="0.01" placeholder="0.00">
-                        </div>
-                        <div class="form-text">Puede diferir del precio base del catálogo</div>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-md-2">
                         <label class="form-label fw-semibold">Inicio de Facturación</label>
                         <input type="date" class="form-control" id="ctrFechaInicio">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-2">
                         <label class="form-label fw-semibold">Estado</label>
                         <select class="form-select" id="ctrEstado">
                             <option value="ACTIVO">Activo</option>
@@ -245,6 +218,44 @@
                             <option value="CANCELADO">Cancelado</option>
                         </select>
                     </div>
+                </div>
+
+                <hr class="my-2">
+
+                <!-- Sección servicios -->
+                <div class="mb-2 d-flex align-items-center justify-content-between">
+                    <label class="form-label fw-semibold mb-0">
+                        <i class="mdi mdi-briefcase-outline me-1 text-success"></i>
+                        Servicios del Contrato <span class="text-danger">*</span>
+                    </label>
+                    <button type="button" class="btn btn-soft-success btn-sm" onclick="agregarFilaServicio()">
+                        <i class="mdi mdi-plus me-1"></i> Agregar Servicio
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" id="tablaServiciosContrato">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Servicio</th>
+                                <th style="width:160px;">Precio Acordado ($)</th>
+                                <th style="width:50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyServiciosContrato">
+                            <!-- filas dinámicas -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-success">
+                                <td class="fw-bold text-end">Total Honorarios:</td>
+                                <td class="fw-bold text-success" id="totalHonorariosLabel">$0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="row g-3 mt-1">
                     <div class="col-12">
                         <label class="form-label fw-semibold">Notas del Acuerdo</label>
                         <textarea class="form-control" id="ctrNotas" rows="2"
@@ -254,13 +265,18 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-success" onclick="guardarContrato()">
+                <button type="button" class="btn btn-success" id="btnGuardarContrato" onclick="guardarContrato()">
                     <i class="mdi mdi-content-save me-1"></i> Guardar Contrato
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Datos de servicios disponibles para JS (sin Thymeleaf en onclick) -->
+<script th:inline="javascript">
+    const SERVICIOS_CATALOGO = /*[[${serviciosList}]]*/ [];
+</script>
 
 <script>
 var dt;
@@ -272,37 +288,115 @@ $(document).ready(function() {
         columnDefs: [{ orderable: false, targets: 6 }]
     });
 
-    // Resumen honorarios activos
     recalcularResumen();
 
-    // Mostrar contratos existentes del cliente al seleccionarlo
     $('#ctrClienteId').on('change', function() {
         const clienteId = this.value;
         if (!clienteId) { $('#clienteContratosInfo').text(''); return; }
         fetch('/fiscore/contratos/listar')
             .then(r => r.json())
             .then(contratos => {
-                const del = contratos.filter(c => c.cliente?.id == clienteId && c.estado === 'ACTIVO');
-                if (del.length === 0) {
+                const activos = contratos.filter(c => c.cliente?.id == clienteId && c.estado === 'ACTIVO');
+                if (activos.length === 0) {
                     $('#clienteContratosInfo').html('<span class="text-muted">Sin contratos activos aún</span>');
                 } else {
-                    const rec = del.filter(c => c.tipoFacturacion === 'RECURRENTE').length;
-                    const evt = del.filter(c => c.tipoFacturacion !== 'RECURRENTE').length;
+                    const rec = activos.filter(c => c.tipoFacturacion === 'RECURRENTE').length;
                     $('#clienteContratosInfo').html(
                         '<span class="text-success"><i class="mdi mdi-check-circle me-1"></i>' +
-                        del.length + ' contrato(s) activo(s): ' + rec + ' recurrente(s), ' + evt + ' eventual(es)</span>'
+                        activos.length + ' contrato(s) activo(s): ' + rec + ' recurrente(s)</span>'
                     );
                 }
             });
     });
 });
 
+/* ---- Gestión de filas de servicios ---- */
+
+function buildSelectServicio(valorSeleccionado) {
+    let opts = '<option value="">Seleccione servicio...</option>';
+    SERVICIOS_CATALOGO.forEach(s => {
+        const sel = (valorSeleccionado && s.id == valorSeleccionado) ? 'selected' : '';
+        opts += `<option value="${s.id}" data-precio="${s.precio}" data-periodicidad="${s.periodicidad}" ${sel}>
+                    ${s.nombre} &mdash; ${s.periodicidad}
+                 </option>`;
+    });
+    return opts;
+}
+
+function agregarFilaServicio(servicioId, precioAcordado) {
+    const tbody = document.getElementById('bodyServiciosContrato');
+    const tr = document.createElement('tr');
+    tr.className = 'servicio-fila';
+    tr.innerHTML = `
+        <td>
+            <select class="form-select form-select-sm svc-select" onchange="alSeleccionarServicio(this)">
+                ${buildSelectServicio(servicioId)}
+            </select>
+        </td>
+        <td>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text">$</span>
+                <input type="number" class="form-control svc-precio" step="0.01" min="0"
+                       value="${precioAcordado != null ? precioAcordado : ''}"
+                       placeholder="0.00" oninput="recalcularTotal()">
+            </div>
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-soft-danger btn-sm btn-icon" onclick="quitarFila(this)" title="Quitar">
+                <i class="mdi mdi-close"></i>
+            </button>
+        </td>`;
+    tbody.appendChild(tr);
+    recalcularTotal();
+}
+
+function alSeleccionarServicio(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const precio = opt.getAttribute('data-precio');
+    const per = opt.getAttribute('data-periodicidad');
+    const fila = sel.closest('tr');
+    if (precio) fila.querySelector('.svc-precio').value = precio;
+    // Sugerir tipo de facturación según primer servicio
+    if (per && document.querySelectorAll('#bodyServiciosContrato .servicio-fila').length === 1) {
+        const tipo = per === 'MENSUAL' ? 'RECURRENTE' : per === 'HORA' ? 'POR_HORA' : 'PAGO_UNICO';
+        document.getElementById('ctrTipoFacturacion').value = tipo;
+    }
+    recalcularTotal();
+}
+
+function quitarFila(btn) {
+    btn.closest('tr').remove();
+    recalcularTotal();
+}
+
+function recalcularTotal() {
+    let total = 0;
+    document.querySelectorAll('#bodyServiciosContrato .svc-precio').forEach(inp => {
+        total += parseFloat(inp.value) || 0;
+    });
+    document.getElementById('totalHonorariosLabel').textContent = '$' + total.toFixed(2);
+}
+
+function recolectarServicios() {
+    const servicios = [];
+    document.querySelectorAll('#bodyServiciosContrato .servicio-fila').forEach(fila => {
+        const servicioId = fila.querySelector('.svc-select').value;
+        const precio = fila.querySelector('.svc-precio').value;
+        if (servicioId) {
+            servicios.push({ servicioId, precioAcordado: parseFloat(precio) || 0 });
+        }
+    });
+    return servicios;
+}
+
+/* ---- KPI resumen ---- */
+
 function recalcularResumen() {
     let totalRec = 0, totalEve = 0;
     $('#contratos-datatable tbody tr').each(function() {
         const estado = $(this).find('td:eq(5) span').text().trim();
         const tipo = $(this).find('td:eq(2) span').text().trim();
-        const val = parseFloat($(this).find('td:eq(3)').text().replace('$','').replace(',','')) || 0;
+        const val = parseFloat($(this).find('td:eq(3)').text().replace('$', '').replace(',', '')) || 0;
         if (estado === 'Activo') {
             if (tipo.includes('Recurrente')) totalRec += val;
             else totalEve += val;
@@ -314,6 +408,8 @@ function recalcularResumen() {
         (totalEve > 0 ? ' &nbsp;|&nbsp; Eventual: <strong>$' + totalEve.toFixed(2) + '</strong>' : '')
     );
 }
+
+/* ---- Vistas ---- */
 
 function setVista(tipo) {
     if (tipo === 'tabla') {
@@ -336,21 +432,20 @@ function renderVistaCliente() {
     fetch('/fiscore/contratos/listar')
         .then(r => r.json())
         .then(contratos => {
-            // Agrupar por cliente
             const grupos = {};
             contratos.forEach(c => {
                 if (!c.cliente) return;
-                const id = c.cliente.id;
-                if (!grupos[id]) grupos[id] = { cliente: c.cliente, contratos: [] };
-                grupos[id].contratos.push(c);
+                const cid = c.cliente.id;
+                if (!grupos[cid]) grupos[cid] = { cliente: c.cliente, contratos: [] };
+                grupos[cid].contratos.push(c);
             });
 
             const html = Object.values(grupos).map((g, i) => {
                 const activos = g.contratos.filter(c => c.estado === 'ACTIVO');
-                const recurrentes = activos.filter(c => c.tipoFacturacion === 'RECURRENTE');
-                const eventuales = activos.filter(c => c.tipoFacturacion !== 'RECURRENTE');
-                const totalRec = recurrentes.reduce((s, c) => s + (c.honorariosPactados || 0), 0);
-                const totalEve = eventuales.reduce((s, c) => s + (c.honorariosPactados || 0), 0);
+                const rec = activos.filter(c => c.tipoFacturacion === 'RECURRENTE');
+                const totalRec = rec.reduce((s, c) => s + (c.honorariosPactados || 0), 0);
+                const totalEve = activos.filter(c => c.tipoFacturacion !== 'RECURRENTE')
+                                        .reduce((s, c) => s + (c.honorariosPactados || 0), 0);
                 const inicial = g.cliente.nombre.substring(0, 2).toUpperCase();
 
                 const rowsHtml = g.contratos.map(c => {
@@ -358,13 +453,13 @@ function renderVistaCliente() {
                                         c.estado === 'SUSPENDIDO' ? 'bg-warning text-dark' : 'bg-danger';
                     const tipoBadge = c.tipoFacturacion === 'RECURRENTE' ? 'bg-info' :
                                       c.tipoFacturacion === 'POR_HORA' ? 'bg-dark' : 'bg-warning text-dark';
-                    const tipoLabel = c.tipoFacturacion === 'RECURRENTE' ? '🔄 Recurrente' :
-                                      c.tipoFacturacion === 'POR_HORA' ? '⏱ Por Hora' : '⭐ Eventual';
+                    const tipoLabel = c.tipoFacturacion === 'RECURRENTE' ? 'Recurrente' :
+                                      c.tipoFacturacion === 'POR_HORA' ? 'Por Hora' : 'Eventual';
+                    const svcsHtml = (c.servicios || []).map(cs =>
+                        `<span class="badge bg-soft-secondary text-secondary me-1">${cs.servicio?.nombre || '-'}</span>`
+                    ).join('') || '<span class="text-muted small">Sin servicios</span>';
                     return `<tr>
-                        <td class="ps-4">
-                            <div class="fw-semibold">${c.servicio?.nombre || '-'}</div>
-                            <small class="text-muted">${c.servicio?.categoria || ''}</small>
-                        </td>
+                        <td class="ps-4">${svcsHtml}</td>
                         <td><span class="badge ${tipoBadge}">${tipoLabel}</span></td>
                         <td class="fw-bold text-success">$${(c.honorariosPactados || 0).toFixed(2)}</td>
                         <td>${c.fechaProximaFacturacion || '-'}</td>
@@ -377,8 +472,8 @@ function renderVistaCliente() {
                 }).join('');
 
                 const badgesCliente = [
-                    recurrentes.length > 0 ? `<span class="badge bg-info">${recurrentes.length} recurrente(s)</span>` : '',
-                    eventuales.length > 0 ? `<span class="badge bg-warning text-dark">${eventuales.length} eventual(es)</span>` : ''
+                    rec.length > 0 ? `<span class="badge bg-info">${rec.length} recurrente(s)</span>` : '',
+                    totalEve > 0 ? `<span class="badge bg-warning text-dark">eventuales</span>` : ''
                 ].filter(Boolean).join(' ');
 
                 return `<div class="cliente-item border rounded mb-2 shadow-sm" data-nombre="${g.cliente.nombre.toLowerCase()}">
@@ -396,7 +491,7 @@ function renderVistaCliente() {
                             ${totalEve > 0 ? `<div class="text-warning fw-bold small">Eventual: $${totalEve.toFixed(2)}</div>` : ''}
                         </div>
                         <button class="btn btn-soft-success btn-sm me-2" onclick="event.stopPropagation(); abrirModalParaCliente(${g.cliente.id})">
-                            <i class="mdi mdi-plus me-1"></i>Agregar Servicio
+                            <i class="mdi mdi-plus me-1"></i>Nuevo Contrato
                         </button>
                         <i class="mdi mdi-chevron-down" id="chev_${i}"></i>
                     </div>
@@ -404,7 +499,7 @@ function renderVistaCliente() {
                         <table class="table table-sm table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-4">Servicio</th>
+                                    <th class="ps-4">Servicios</th>
                                     <th>Tipo</th>
                                     <th>Honorarios</th>
                                     <th>Próx. Facturación</th>
@@ -415,7 +510,7 @@ function renderVistaCliente() {
                             <tbody>${rowsHtml}</tbody>
                             <tfoot class="table-light">
                                 <tr>
-                                    <td colspan="2" class="ps-4 fw-bold text-end">Total ${g.contratos.length} servicio(s):</td>
+                                    <td colspan="2" class="ps-4 fw-bold text-end">Total ${g.contratos.length} contrato(s):</td>
                                     <td class="fw-bold text-success">$${(totalRec + totalEve).toFixed(2)}</td>
                                     <td colspan="3"></td>
                                 </tr>
@@ -445,37 +540,28 @@ function filtrarPorCliente() {
     });
 }
 
-function filtrarEstado(estado) {
-    if (dt) dt.search(estado).draw();
-}
+function filtrarEstado(estado) { if (dt) dt.search(estado).draw(); }
+function filtrarTipo(tipo) { if (dt) dt.search(tipo).draw(); }
 
-function filtrarTipo(tipo) {
-    if (dt) dt.search(tipo).draw();
-}
+/* ---- CRUD ---- */
 
-function autoCompletarHonorarios() {
-    const opt = $('#ctrServicioId option:selected');
-    const precio = opt.attr('data-precio');
-    const per = opt.attr('data-periodicidad');
-    if (precio) document.getElementById('ctrHonorarios').value = precio;
-    if (per) {
-        const tipo = per === 'MENSUAL' ? 'RECURRENTE' : per === 'HORA' ? 'POR_HORA' : 'PAGO_UNICO';
-        document.getElementById('ctrTipoFacturacion').value = tipo;
-    }
-}
-
-function abrirModalNuevo() {
+function resetModal() {
     document.getElementById('contratoId').value = '';
     document.getElementById('ctrClienteId').value = '';
-    document.getElementById('ctrServicioId').value = '';
     document.getElementById('ctrTipoFacturacion').value = 'RECURRENTE';
-    document.getElementById('ctrHonorarios').value = '';
     document.getElementById('ctrFechaInicio').value = '';
     document.getElementById('ctrEstado').value = 'ACTIVO';
     document.getElementById('ctrNotas').value = '';
     document.getElementById('clienteContratosInfo').innerHTML = '';
+    document.getElementById('bodyServiciosContrato').innerHTML = '';
+    recalcularTotal();
+}
+
+function abrirModalNuevo() {
+    resetModal();
     document.getElementById('modalContratoTitle').innerHTML = '<i class="mdi mdi-file-document-edit me-2"></i>Nuevo Contrato';
-    new bootstrap.Modal(document.getElementById('modalContrato')).show();
+    agregarFilaServicio();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalContrato')).show();
 }
 
 function abrirModalParaCliente(clienteId) {
@@ -490,32 +576,49 @@ function editarContrato(id) {
     fetch('/fiscore/contratos/' + id)
         .then(r => r.json())
         .then(c => {
+            resetModal();
             document.getElementById('contratoId').value = c.id;
             document.getElementById('ctrClienteId').value = c.cliente?.id || '';
-            document.getElementById('ctrServicioId').value = c.servicio?.id || '';
             document.getElementById('ctrTipoFacturacion').value = c.tipoFacturacion || 'RECURRENTE';
-            document.getElementById('ctrHonorarios').value = c.honorariosPactados || '';
             document.getElementById('ctrFechaInicio').value = c.fechaInicio || '';
             document.getElementById('ctrEstado').value = c.estado || 'ACTIVO';
             document.getElementById('ctrNotas').value = c.notas || '';
-            document.getElementById('clienteContratosInfo').innerHTML = '';
             document.getElementById('modalContratoTitle').innerHTML = '<i class="mdi mdi-file-edit me-2"></i>Editar Contrato';
-            new bootstrap.Modal(document.getElementById('modalContrato')).show();
+
+            // Cargar servicios existentes
+            if (c.servicios && c.servicios.length > 0) {
+                c.servicios.forEach(cs => agregarFilaServicio(cs.servicio?.id, cs.precioAcordado));
+            } else {
+                agregarFilaServicio();
+            }
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalContrato')).show();
         });
 }
 
+let _guardandoContrato = false;
 function guardarContrato() {
-    const id = document.getElementById('contratoId').value;
+    if (_guardandoContrato) return;
     const clienteId = document.getElementById('ctrClienteId').value;
-    const servicioId = document.getElementById('ctrServicioId').value;
-    if (!clienteId || !servicioId) {
-        Swal.fire('Campos requeridos', 'Debe seleccionar un cliente y un servicio.', 'warning');
+    if (!clienteId) {
+        Swal.fire('Campos requeridos', 'Debe seleccionar un cliente.', 'warning');
         return;
     }
+    const servicios = recolectarServicios();
+    if (servicios.length === 0) {
+        Swal.fire('Campos requeridos', 'Debe agregar al menos un servicio al contrato.', 'warning');
+        return;
+    }
+
+    _guardandoContrato = true;
+    const btn = document.getElementById('btnGuardarContrato');
+    btn.disabled = true;
+
+    const id = document.getElementById('contratoId').value;
     const body = {
-        clienteId, servicioId,
+        clienteId,
+        servicios,
         tipoFacturacion: document.getElementById('ctrTipoFacturacion').value,
-        honorariosPactados: document.getElementById('ctrHonorarios').value,
         fechaInicio: document.getElementById('ctrFechaInicio').value,
         estado: document.getElementById('ctrEstado').value,
         notas: document.getElementById('ctrNotas').value
@@ -528,6 +631,13 @@ function guardarContrato() {
             if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
             Swal.fire({ icon: 'success', title: 'Guardado', text: data.message, timer: 1500, showConfirmButton: false })
                 .then(() => location.reload());
+        })
+        .catch(() => {
+            Swal.fire('Error', 'No se pudo guardar el contrato.', 'error');
+        })
+        .finally(() => {
+            _guardandoContrato = false;
+            btn.disabled = false;
         });
 }
 
@@ -539,10 +649,16 @@ function eliminarContrato(id) {
     }).then(result => {
         if (result.isConfirmed) {
             fetch('/fiscore/contratos/' + id, { method: 'DELETE' })
-                .then(r => r.json())
+                .then(r => {
+                    if (!r.ok) throw new Error('Error ' + r.status);
+                    return r.json();
+                })
                 .then(() => {
                     Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1200, showConfirmButton: false })
                         .then(() => location.reload());
+                })
+                .catch(() => {
+                    Swal.fire('Error', 'No se pudo eliminar el contrato.', 'error');
                 });
         }
     });

@@ -78,7 +78,11 @@ public class FacturacionService {
         detalle.setFactura(factura);
         detalle.setNumItem(1);
         detalle.setTipoItem("2");
-        detalle.setDescripcion(contrato.getServicio().getNombre() + " - " + periodoFacturado);
+        String nombresServicios = contrato.getServicios().stream()
+                .map(cs -> cs.getServicio() != null ? cs.getServicio().getNombre() : "")
+                .filter(n -> !n.isEmpty())
+                .collect(java.util.stream.Collectors.joining(", "));
+        detalle.setDescripcion((nombresServicios.isEmpty() ? "Servicios contratados" : nombresServicios) + " - " + periodoFacturado);
         detalle.setCantidad(BigDecimal.ONE);
         detalle.setUnidadMedida("Servicio");
         detalle.setPrecioUnitario(gravado);

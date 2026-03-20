@@ -231,10 +231,14 @@
                                                     </thead>
                                                     <tbody>
                                                     <tr th:each="c : ${entry.contratos}">
-                                                        <td class="ps-4">
-                                                            <span class="fw-semibold" th:text="${c.servicio?.nombre}"></span>
-                                                            <br>
-                                                            <small class="text-muted" th:text="${c.servicio?.categoria}"></small>
+                                                        <td class="ps-4" style="white-space:normal;">
+                                                            <span th:each="cs : ${c.servicios}"
+                                                                  class="badge bg-soft-secondary text-secondary me-1"
+                                                                  th:text="${cs.servicio?.nombre}"></span>
+                                                            <span th:if="${#lists.isEmpty(c.servicios)}" class="text-muted small">—</span>
+                                                            <br th:if="${not #lists.isEmpty(c.servicios)}">
+                                                            <small class="text-muted"
+                                                                   th:text="${not #lists.isEmpty(c.servicios) ? c.servicios[0].servicio?.categoria : ''}"></small>
                                                         </td>
                                                         <td>
                                                             <span class="badge bg-info" th:if="${c.tipoFacturacion == 'RECURRENTE'}">

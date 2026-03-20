@@ -2,6 +2,7 @@ package com.fiscore.core.controller;
 
 import com.fiscore.core.models.Cliente;
 import com.fiscore.core.models.Contrato;
+import com.fiscore.core.models.ContratoServicio;
 import com.fiscore.core.models.Servicio;
 import com.fiscore.core.services.ClienteService;
 import com.fiscore.core.services.ContratoService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -90,24 +92,45 @@ public class ContratoController {
         }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @SuppressWarnings("unchecked")
     private Contrato buildContrato(Long id, Map<String, Object> body) {
         Contrato contrato = new Contrato();
         if (id != null) contrato.setId(id);
 
         Long clienteId = Long.valueOf(body.get("clienteId").toString());
-        Long servicioId = Long.valueOf(body.get("servicioId").toString());
-
         Cliente cliente = clienteService.findById(clienteId)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
-        Servicio servicio = servicioService.findById(servicioId)
-                .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
-
         contrato.setCliente(cliente);
-        contrato.setServicio(servicio);
+
+        // Procesar lista de servicios
+        List<Map<String, Object>> serviciosData = (List<Map<String, Object>>) body.get("servicios");
+        if (serviciosData == null || serviciosData.isEmpty()) {
+            throw new RuntimeException("Debe agregar al menos un servicio al contrato");
+        }
+
+        BigDecimal totalCalculado = BigDecimal.ZERO;
+        for (Map<String, Object> sData : serviciosData) {
+            Long servicioId = Long.valueOf(sData.get("servicioId").toString());
+            Servicio servicio = servicioService.findById(servicioId)
+                    .orElseThrow(() -> new RuntimeException("Servicio no encontrado: " + servicioId));
+            BigDecimal precio = new BigDecimal(sData.getOrDefault("precioAcordado", "0").toString());
+
+            ContratoServicio cs = new ContratoServicio();
+            cs.setServicio(servicio);
+            cs.setPrecioAcordado(precio);
+            contrato.getServicios().add(cs);
+            totalCalculado = totalCalculado.add(precio);
+        }
+
         contrato.setTipoFacturacion(body.getOrDefault("tipoFacturacion", "RECURRENTE").toString());
 
+        // Honorarios: usar valor explícito o suma de servicios
         Object hon = body.get("honorariosPactados");
-        if (hon != null) contrato.setHonorariosPactados(new BigDecimal(hon.toString()));
+        if (hon != null && !hon.toString().isBlank()) {
+            contrato.setHonorariosPactados(new BigDecimal(hon.toString()));
+        } else {
+            contrato.setHonorariosPactados(totalCalculado);
+        }
 
         Object fi = body.get("fechaInicio");
         if (fi != null && !fi.toString().isBlank()) contrato.setFechaInicio(LocalDate.parse(fi.toString()));

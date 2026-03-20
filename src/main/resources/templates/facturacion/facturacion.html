@@ -122,7 +122,12 @@
                                                 <small class="text-muted" th:if="${c.cliente?.nrc != null}"
                                                        th:text="'NRC: ' + ${c.cliente?.nrc}"></small>
                                             </td>
-                                            <td th:text="${c.servicio?.nombre}"></td>
+                                            <td style="white-space:normal;max-width:200px;">
+                                                <span th:each="cs : ${c.servicios}"
+                                                      class="badge bg-soft-secondary text-secondary me-1"
+                                                      th:text="${cs.servicio?.nombre}"></span>
+                                                <span th:if="${#lists.isEmpty(c.servicios)}" class="text-muted small">—</span>
+                                            </td>
                                             <td>
                                                 <span class="badge bg-primary"
                                                       th:if="${c.cliente?.nrc != null and !#strings.isEmpty(c.cliente?.nrc)}">
@@ -141,7 +146,8 @@
                                                 th:text="'$' + ${#numbers.formatDecimal(c.honorariosPactados, 1, 2)}"></td>
                                             <td>
                                                 <button class="btn btn-sm btn-primary"
-                                                        th:onclick="'abrirGenerarFactura(' + ${c.id} + ', \'' + ${c.cliente?.nombre} + '\', ' + ${c.honorariosPactados} + ')'">
+                                                        th:data-id="${c.id}" th:data-nombre="${c.cliente?.nombre}" th:data-honorarios="${c.honorariosPactados}"
+                                                        onclick="abrirGenerarFactura(this.dataset.id, this.dataset.nombre, this.dataset.honorarios)">
                                                     <i class="mdi mdi-file-send me-1"></i> Generar DTE
                                                 </button>
                                             </td>

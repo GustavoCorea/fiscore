@@ -134,10 +134,12 @@
                                             </td>
                                             <td>
                                                 <a href="javascript:void(0);" class="action-icon text-info"
-                                                   th:onclick="'editarCliente(' + ${c.id} + ')'"
+                                                   th:attr="data-id=${c.id}"
+                                                   onclick="editarCliente(this.dataset.id)"
                                                    title="Editar"><i class="mdi mdi-square-edit-outline"></i></a>
                                                 <a href="javascript:void(0);" class="action-icon text-danger"
-                                                   th:onclick="'eliminarCliente(' + ${c.id} + ', \'' + ${c.nombre} + '\')'  "
+                                                   th:attr="data-id=${c.id},data-nombre=${c.nombre}"
+                                                   onclick="eliminarCliente(this.dataset.id, this.dataset.nombre)"
                                                    title="Eliminar"><i class="mdi mdi-delete"></i></a>
                                             </td>
                                         </tr>
@@ -282,7 +284,7 @@ function abrirModalNuevo() {
     document.getElementById('estado').value = 'ACTIVO';
     document.getElementById('modalClienteTitle').innerHTML = '<i class="mdi mdi-account-plus me-2"></i>Nuevo Cliente';
     $('#nrcGroup').show();
-    new bootstrap.Modal(document.getElementById('modalCliente')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCliente')).show();
 }
 
 function editarCliente(id) {
@@ -303,11 +305,17 @@ function editarCliente(id) {
             document.getElementById('estado').value = c.estado || 'ACTIVO';
             document.getElementById('modalClienteTitle').innerHTML = '<i class="mdi mdi-account-edit me-2"></i>Editar Cliente';
             $('#nrcGroup').toggle(c.tipoCliente === 'JURIDICA');
-            new bootstrap.Modal(document.getElementById('modalCliente')).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCliente')).show();
         });
 }
 
+let _guardandoCliente = false;
 function guardarCliente() {
+    if (_guardandoCliente) return;
+    _guardandoCliente = true;
+    const btn = document.querySelector('#modalCliente .modal-footer .btn-primary');
+    if (btn) btn.disabled = true;
+
     const id = document.getElementById('clienteId').value;
     const body = {
         tipoCliente: document.getElementById('tipoCliente').value,
@@ -330,13 +338,18 @@ function guardarCliente() {
             if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
             Swal.fire({ icon: 'success', title: 'Guardado', text: data.message, timer: 1500, showConfirmButton: false })
                 .then(() => location.reload());
+        })
+        .catch(() => {
+            Swal.fire('Error', 'No se pudo guardar el cliente.', 'error');
+            _guardandoCliente = false;
+            if (btn) btn.disabled = false;
         });
 }
 
 function eliminarCliente(id, nombre) {
     Swal.fire({
         title: '¿Eliminar cliente?',
-        text: nombre + ' será eliminado permanentemente.',
+        text: (nombre || 'Este cliente') + ' será eliminado permanentemente.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#fa5c7c',
@@ -345,10 +358,16 @@ function eliminarCliente(id, nombre) {
     }).then(result => {
         if (result.isConfirmed) {
             fetch('/fiscore/clientes/' + id, { method: 'DELETE' })
-                .then(r => r.json())
+                .then(r => {
+                    if (!r.ok) throw new Error('Error ' + r.status);
+                    return r.json();
+                })
                 .then(() => {
                     Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1200, showConfirmButton: false })
                         .then(() => location.reload());
+                })
+                .catch(() => {
+                    Swal.fire('Error', 'No se pudo eliminar el cliente. Puede que tenga contratos o facturas asociadas.', 'error');
                 });
         }
     });
