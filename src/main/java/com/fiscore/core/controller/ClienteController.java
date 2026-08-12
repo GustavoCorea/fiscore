@@ -48,10 +48,13 @@ public class ClienteController {
     @PutMapping("/{id}")
     @ResponseBody
     public ResponseEntity<?> actualizarCliente(@PathVariable Long id, @RequestBody Cliente cliente) {
-        if (!clienteService.findById(id).isPresent()) {
+        Cliente existente = clienteService.findById(id).orElse(null);
+        if (existente == null) {
             return ResponseEntity.notFound().build();
         }
         cliente.setId(id);
+        // La fecha de alta no se envía desde el formulario: se conserva la original.
+        cliente.setFechaRegistro(existente.getFechaRegistro());
         Cliente saved = clienteService.save(cliente);
         return ResponseEntity.ok(Map.of("message", "Cliente actualizado exitosamente", "id", saved.getId()));
     }

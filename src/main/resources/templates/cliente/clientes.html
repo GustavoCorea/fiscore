@@ -240,7 +240,7 @@
     </div>
 </div>
 
-<script>
+<script th:inline="none">
 $(document).ready(function() {
     $('#clientes-datatable').DataTable({
         language: {
@@ -288,7 +288,7 @@ function abrirModalNuevo() {
 }
 
 function editarCliente(id) {
-    fetch('/fiscore/clientes/' + id)
+    fetch(window.url('/clientes/' + id))
         .then(r => r.json())
         .then(c => {
             document.getElementById('clienteId').value = c.id;
@@ -330,7 +330,7 @@ function guardarCliente() {
         departamento: document.getElementById('departamento').value,
         estado: document.getElementById('estado').value
     };
-    const url = id ? '/fiscore/clientes/' + id : '/fiscore/clientes/guardar';
+    const url = id ? window.url('/clientes/' + id) : window.url('/clientes/guardar');
     const method = id ? 'PUT' : 'POST';
     fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })
         .then(r => r.json())
@@ -357,7 +357,7 @@ function eliminarCliente(id, nombre) {
         confirmButtonText: 'Sí, eliminar'
     }).then(result => {
         if (result.isConfirmed) {
-            fetch('/fiscore/clientes/' + id, { method: 'DELETE' })
+            fetch(window.url('/clientes/' + id), { method: 'DELETE' })
                 .then(r => {
                     if (!r.ok) throw new Error('Error ' + r.status);
                     return r.json();
@@ -373,19 +373,28 @@ function eliminarCliente(id, nombre) {
     });
 }
 
+/**
+ * Deja una celda segura para el CSV: escapa las comillas y evita que Excel
+ * interprete como fórmula un valor que empiece por = + - @.
+ */
+function celdaSegura(texto) {
+    let limpio = (texto || '').trim().replace(/\s+/g, ' ');
+    if (limpio && '=+-@'.includes(limpio.charAt(0))) limpio = "'" + limpio;
+    return '"' + limpio.replace(/"/g, '""') + '"';
+}
+
 function exportarCSV() {
     let csv = 'Nombre,Tipo,NIT,Giro,Correo,Teléfono\n';
     $('#clientes-datatable tbody tr').each(function() {
         const celdas = $(this).find('td');
-        csv += '"' + celdas.eq(0).text().trim() + '","' + celdas.eq(1).text().trim() + '","'
-             + celdas.eq(2).text().trim() + '","' + celdas.eq(3).text().trim() + '","'
-             + celdas.eq(4).text().trim() + '","' + celdas.eq(5).text().trim() + '"\n';
+        csv += [0, 1, 2, 3, 4, 5].map(i => celdaSegura(celdas.eq(i).text())).join(',') + '\n';
     });
-    const blob = new Blob([csv], {type: 'text/csv'});
+    const blob = new Blob(['﻿' + csv], {type: 'text/csv;charset=utf-8;'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'clientes.csv';
     a.click();
+    URL.revokeObjectURL(a.href);
 }
 </script>
 </body>

@@ -24,6 +24,24 @@
                     </div>
                 </div>
 
+                <!-- Aviso de proyectos atrasados -->
+                <div class="row" th:if="${not #lists.isEmpty(proyectosAtrasados)}">
+                    <div class="col-12">
+                        <div class="alert alert-warning d-flex align-items-start" role="alert">
+                            <i class="mdi mdi-calendar-alert me-2 font-18"></i>
+                            <div>
+                                <strong th:text="${#lists.size(proyectosAtrasados)} + ' proyecto(s) atrasado(s)'"></strong>
+                                — pasaron su fecha estimada de cierre:
+                                <span th:each="p, iter : ${proyectosAtrasados}">
+                                    <span th:text="${p.nombre}"></span><span
+                                        th:text="' (' + ${#temporals.format(p.fechaEstimadaFin, 'dd/MM/yyyy')} + ')'"></span><span
+                                        th:if="${!iter.last}">, </span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Botonera -->
                 <div class="row mb-3">
                     <div class="col-12 d-flex gap-2 align-items-center">
@@ -46,7 +64,7 @@
                     <div class="row">
 
                         <!-- Columna: Cotizados -->
-                        <div class="col-md-4">
+                        <div class="col-lg-3 col-md-6">
                             <div class="card" style="border-top:4px solid #ffbc00;">
                                 <div class="card-header bg-soft-warning d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0 text-warning fw-bold">
@@ -107,7 +125,7 @@
                         </div>
 
                         <!-- Columna: En Ejecución -->
-                        <div class="col-md-4">
+                        <div class="col-lg-3 col-md-6">
                             <div class="card" style="border-top:4px solid #727cf5;">
                                 <div class="card-header bg-soft-primary d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0 text-primary fw-bold">
@@ -172,7 +190,7 @@
                         </div>
 
                         <!-- Columna: Finalizados -->
-                        <div class="col-md-4">
+                        <div class="col-lg-3 col-md-6">
                             <div class="card" style="border-top:4px solid #0acf97;">
                                 <div class="card-header bg-soft-success d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0 text-success fw-bold">
@@ -200,6 +218,13 @@
                                                            th:onclick="'editarProyecto(' + ${p.id} + ')'">
                                                             <i class="mdi mdi-pencil me-1"></i> Editar
                                                         </a>
+                                                        <a class="dropdown-item text-success" href="javascript:void(0);"
+                                                           th:if="${p.presupuesto != null and p.cliente != null}"
+                                                           th:attr="data-id=${p.id},data-nombre=${p.nombre},data-monto=${p.presupuesto}"
+                                                           onclick="abrirFacturarProyecto(this.dataset.id, this.dataset.nombre, this.dataset.monto)">
+                                                            <i class="mdi mdi-cash-register me-1"></i> Facturar
+                                                        </a>
+                                                        <div class="dropdown-divider"></div>
                                                         <a class="dropdown-item text-danger" href="javascript:void(0);"
                                                            th:onclick="'eliminarProyecto(' + ${p.id} + ')'">
                                                             <i class="mdi mdi-delete me-1"></i> Eliminar
@@ -207,26 +232,74 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <h6 class="mt-1 mb-1 text-muted"><a href="javascript:void(0);" class="text-muted fw-semibold" th:text="${p.nombre}"></a></h6>
+                                            <h6 class="mt-1 mb-1"><a href="javascript:void(0);" class="text-dark fw-semibold" th:text="${p.nombre}"></a></h6>
                                             <p class="text-muted small mb-1">
                                                 <i class="mdi mdi-account-outline me-1"></i>
                                                 <span th:text="${p.cliente?.nombre}">Sin cliente</span>
                                             </p>
                                             <div class="d-flex justify-content-between align-items-center mt-2">
-                                                <span th:if="${!p.facturado}" class="badge bg-soft-warning text-warning">
-                                                    <i class="mdi mdi-cash me-1"></i>Por Facturar
-                                                </span>
-                                                <span th:if="${p.facturado}" class="badge bg-soft-success text-success">
-                                                    <i class="mdi mdi-check me-1"></i>Facturado
+                                                <span class="badge bg-soft-warning text-warning">
+                                                    <i class="mdi mdi-cash me-1"></i>Por facturar
                                                 </span>
                                                 <span class="text-success fw-semibold small"
-                                                      th:text="${p.presupuesto != null ? '$' + #numbers.formatDecimal(p.presupuesto, 1, 2) : ''}"></span>
+                                                      th:text="${p.presupuesto != null ? '$' + #numbers.formatDecimal(p.presupuesto, 1, 'COMMA', 2, 'POINT') : ''}"></span>
+                                            </div>
+                                            <button class="btn btn-sm btn-success w-100 mt-2"
+                                                    th:if="${p.presupuesto != null and p.cliente != null}"
+                                                    th:attr="data-id=${p.id},data-nombre=${p.nombre},data-monto=${p.presupuesto}"
+                                                    onclick="abrirFacturarProyecto(this.dataset.id, this.dataset.nombre, this.dataset.monto)">
+                                                <i class="mdi mdi-cash-register me-1"></i> Emitir DTE
+                                            </button>
+                                            <div class="alert alert-warning py-1 px-2 mb-0 mt-2 small"
+                                                 th:if="${p.presupuesto == null or p.cliente == null}">
+                                                <i class="mdi mdi-alert me-1"></i>Falta cliente o presupuesto
                                             </div>
                                         </div>
                                     </div>
-                                    <div th:if="${#lists.isEmpty(finalizados)}" class="text-center text-muted py-4">
-                                        <i class="mdi mdi-check-circle-outline font-24 d-block mb-1"></i>
+                                    <div class="empty-state" th:if="${#lists.isEmpty(finalizados)}">
+                                        <i class="mdi mdi-check-circle-outline"></i>
                                         <small>Sin proyectos finalizados</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Columna: Facturados -->
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card" style="border-top:4px solid #39afd1;">
+                                <div class="card-header bg-soft-info d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0 text-info fw-bold">
+                                        <i class="mdi mdi-receipt me-1"></i> Facturado
+                                    </h5>
+                                    <span class="badge bg-info" th:text="${#lists.size(facturados)}">0</span>
+                                </div>
+                                <div class="card-body p-2 kanban-col" style="min-height:200px;max-height:65vh;overflow-y:auto;">
+                                    <div th:each="p : ${facturados}" class="card shadow-sm border mb-2">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <span class="badge bg-soft-secondary text-secondary" th:text="${p.categoria}"></span>
+                                                <a href="javascript:void(0);" class="text-muted"
+                                                   th:onclick="'editarProyecto(' + ${p.id} + ')'" title="Editar">
+                                                    <i class="mdi mdi-pencil"></i>
+                                                </a>
+                                            </div>
+                                            <h6 class="mt-1 mb-1 text-muted fw-semibold" th:text="${p.nombre}"></h6>
+                                            <p class="text-muted small mb-1">
+                                                <i class="mdi mdi-account-outline me-1"></i>
+                                                <span th:text="${p.cliente?.nombre}">Sin cliente</span>
+                                            </p>
+                                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                                <span class="badge bg-soft-success text-success">
+                                                    <i class="mdi mdi-check-circle me-1"></i>Cobrado
+                                                </span>
+                                                <span class="text-success fw-semibold small"
+                                                      th:text="${p.presupuesto != null ? '$' + #numbers.formatDecimal(p.presupuesto, 1, 'COMMA', 2, 'POINT') : ''}"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="empty-state" th:if="${#lists.isEmpty(facturados)}">
+                                        <i class="mdi mdi-receipt"></i>
+                                        <small>Sin proyectos facturados</small>
                                     </div>
                                 </div>
                             </div>
@@ -261,7 +334,7 @@
                                             <span class="badge bg-secondary" th:text="${p.categoria}"></span>
                                         </td>
                                         <td class="text-success fw-bold"
-                                            th:text="${p.presupuesto != null ? '$' + #numbers.formatDecimal(p.presupuesto, 1, 2) : '-'}"></td>
+                                            th:text="${p.presupuesto != null ? '$' + #numbers.formatDecimal(p.presupuesto, 1, 'COMMA', 2, 'POINT') : '-'}"></td>
                                         <td>
                                             <div class="d-flex align-items-center gap-2">
                                                 <div class="progress flex-grow-1" style="height:6px;">
@@ -275,16 +348,24 @@
                                             <span class="badge bg-warning text-dark" th:if="${p.estado == 'COTIZADO'}">Cotizado</span>
                                             <span class="badge bg-primary" th:if="${p.estado == 'EN_EJECUCION'}">En Ejecución</span>
                                             <span class="badge bg-success" th:if="${p.estado == 'FINALIZADO'}">Finalizado</span>
+                                            <span class="badge bg-info" th:if="${p.estado == 'FACTURADO'}">Facturado</span>
                                             <span class="badge bg-danger" th:if="${p.estado == 'CANCELADO'}">Cancelado</span>
                                         </td>
-                                        <td th:text="${p.fechaEstimadaFin}"></td>
+                                        <td th:text="${p.fechaEstimadaFin != null ? #temporals.format(p.fechaEstimadaFin, 'dd/MM/yyyy') : '-'}"></td>
                                         <td>
+                                            <a href="javascript:void(0);" class="action-icon text-success"
+                                               th:if="${p.estado == 'FINALIZADO' and p.presupuesto != null and p.cliente != null}"
+                                               th:attr="data-id=${p.id},data-nombre=${p.nombre},data-monto=${p.presupuesto}"
+                                               onclick="abrirFacturarProyecto(this.dataset.id, this.dataset.nombre, this.dataset.monto)"
+                                               title="Facturar">
+                                                <i class="mdi mdi-cash-register"></i>
+                                            </a>
                                             <a href="javascript:void(0);" class="action-icon text-info"
-                                               th:onclick="'editarProyecto(' + ${p.id} + ')'">
+                                               th:onclick="'editarProyecto(' + ${p.id} + ')'" title="Editar">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
                                             <a href="javascript:void(0);" class="action-icon text-danger"
-                                               th:onclick="'eliminarProyecto(' + ${p.id} + ')'">
+                                               th:onclick="'eliminarProyecto(' + ${p.id} + ')'" title="Eliminar">
                                                 <i class="mdi mdi-delete"></i>
                                             </a>
                                         </td>
@@ -387,7 +468,57 @@
     </div>
 </div>
 
-<script>
+<!-- Modal: facturar proyecto -->
+<div class="modal fade" id="modalFacturarProyecto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="mdi mdi-cash-register me-2"></i>Facturar proyecto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="factProyectoId">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Proyecto</label>
+                    <input type="text" class="form-control" id="factProyectoNombre" readonly>
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Condición de pago</label>
+                        <select class="form-select" id="factCondicion" onchange="toggleFactPlazo()">
+                            <option value="CONTADO">Contado</option>
+                            <option value="CREDITO">Crédito</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Monto</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="text" class="form-control" id="factMonto" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-6" id="factPlazoGroup" style="display:none;">
+                        <label class="form-label fw-semibold">Plazo (días)</label>
+                        <input type="number" class="form-control" id="factPlazo" value="30" min="1">
+                    </div>
+                </div>
+                <div class="alert alert-light border-0 mt-3 mb-0">
+                    <i class="mdi mdi-information-outline text-primary me-1"></i>
+                    El tipo de DTE se determina por el NRC del cliente. El proyecto pasará a estado
+                    <strong>FACTURADO</strong>.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnConfirmarFactura" onclick="confirmarFacturarProyecto()">
+                    <i class="mdi mdi-file-send me-1"></i> Emitir DTE
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="none">
 $(document).ready(function() {
     $('#proyectos-datatable').DataTable({
         language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
@@ -433,7 +564,7 @@ function abrirModalNuevo() {
 }
 
 function editarProyecto(id) {
-    fetch('/fiscore/proyectos/' + id)
+    fetch(window.url('/proyectos/' + id))
         .then(r => r.json())
         .then(p => {
             document.getElementById('proyectoId').value = p.id;
@@ -467,7 +598,7 @@ function guardarProyecto() {
         porcentajeAvance: document.getElementById('proyPorcentajeAvance').value,
         notas: document.getElementById('proyNotas').value
     };
-    const url = id ? '/fiscore/proyectos/' + id : '/fiscore/proyectos/guardar';
+    const url = id ? window.url('/proyectos/' + id) : window.url('/proyectos/guardar');
     const method = id ? 'PUT' : 'POST';
     fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })
         .then(r => r.json())
@@ -479,7 +610,7 @@ function guardarProyecto() {
 }
 
 function moverEstado(id, nuevoEstado) {
-    fetch('/fiscore/proyectos/' + id + '/avance', {
+    fetch(window.url('/proyectos/' + id + '/avance'), {
         method: 'PATCH',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ estado: nuevoEstado, porcentajeAvance: nuevoEstado === 'FINALIZADO' ? 100 : undefined })
@@ -495,7 +626,7 @@ function eliminarProyecto(id) {
         confirmButtonColor: '#fa5c7c', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar'
     }).then(result => {
         if (result.isConfirmed) {
-            fetch('/fiscore/proyectos/' + id, { method: 'DELETE' })
+            fetch(window.url('/proyectos/' + id), { method: 'DELETE' })
                 .then(r => r.json())
                 .then(() => {
                     Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1200, showConfirmButton: false })
@@ -503,6 +634,50 @@ function eliminarProyecto(id) {
                 });
         }
     });
+}
+
+// ===================== Facturación del proyecto =====================
+
+function abrirFacturarProyecto(id, nombre, monto) {
+    document.getElementById('factProyectoId').value = id;
+    document.getElementById('factProyectoNombre').value = nombre;
+    document.getElementById('factMonto').value = (parseFloat(monto) || 0).toFixed(2);
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalFacturarProyecto')).show();
+}
+
+function toggleFactPlazo() {
+    const esCredito = document.getElementById('factCondicion').value === 'CREDITO';
+    document.getElementById('factPlazoGroup').style.display = esCredito ? '' : 'none';
+}
+
+async function confirmarFacturarProyecto() {
+    const boton = document.getElementById('btnConfirmarFactura');
+    boton.disabled = true;
+    try {
+        const respuesta = await fetch(window.url('/facturacion/generar-proyecto/' + document.getElementById('factProyectoId').value), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                condicionPago: document.getElementById('factCondicion').value,
+                plazoCredito: document.getElementById('factPlazo').value
+            })
+        });
+        const datos = await respuesta.json();
+        if (!respuesta.ok || datos.error) throw new Error(datos.error || 'Error ' + respuesta.status);
+
+        bootstrap.Modal.getInstance(document.getElementById('modalFacturarProyecto')).hide();
+        await Swal.fire({
+            icon: 'success',
+            title: 'DTE generado',
+            html: 'Documento <strong>' + datos.numeroFactura + '</strong> por <strong>$'
+                + (parseFloat(datos.montoTotal) || 0).toFixed(2) + '</strong>'
+        });
+        location.reload();
+    } catch (e) {
+        Swal.fire('No se pudo facturar', e.message, 'error');
+    } finally {
+        boton.disabled = false;
+    }
 }
 </script>
 </body>

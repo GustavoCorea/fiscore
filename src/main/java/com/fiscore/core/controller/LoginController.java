@@ -41,10 +41,14 @@ public class LoginController implements Serializable {
 
     @GetMapping("/login")
     public String login(Model model) {
-        String formattedBuildTime = buildInfo.getBuildTime() != null
-                ? DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-                .format(Instant.parse(buildInfo.getBuildTime()).atZone(ZoneId.of("UTC")))
-                : "No build time available";
+        // El build-info puede no existir (ejecución desde IDE) o no ser una fecha ISO.
+        String formattedBuildTime;
+        try {
+            formattedBuildTime = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+                    .format(Instant.parse(buildInfo.getBuildTime()).atZone(ZoneId.of("UTC")));
+        } catch (RuntimeException e) {
+            formattedBuildTime = "No build time available";
+        }
 
         model.addAttribute("buildVersion", buildInfo.getVersion());
         model.addAttribute("buildTime", formattedBuildTime);
@@ -108,10 +112,14 @@ public class LoginController implements Serializable {
         }
     }
 
+    /**
+     * La raíz y /principal delegan en /inicio, que es quien construye
+     * el modelo del dashboard. Renderizar "index" aquí dejaba la pantalla
+     * de inicio con todos los indicadores en blanco.
+     */
     @GetMapping({"/", "/principal"})
-    public String principal(HttpSession session, Model model) {
-        initAuthentication(session, model);
-        return "index";
+    public String principal() {
+        return "redirect:/inicio";
     }
 
     @GetMapping("/logout")

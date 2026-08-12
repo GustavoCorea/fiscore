@@ -1,6 +1,10 @@
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
+
+### Entorno local — nunca versionar credenciales ###
+.env
+*.env.local
 !**/src/main/**/target/
 !**/src/test/**/target/
 

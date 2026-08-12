@@ -1,21 +1,29 @@
 <aside id="sidebar" th:aside="aside">
     <!-- ========== Left Sidebar Start ========== -->
     <div class="leftside-menu">
-        <!-- Brand Logo -->
+        <!-- Marca del menú lateral -->
+        <!-- Los span .logo-lg / .logo-sm los oculta y muestra Hyper al plegar el
+             menú: la maquetación de la marca va dentro, nunca sobre ellos. -->
         <a th:href="@{/inicio}" class="logo logo-light">
             <span class="logo-lg">
-                <img th:src="@{/assets/images/logo.png}" alt="Fiscore" style="max-height:40px;">
+                <span class="fs-logo">
+                    <img class="fs-logo-mark" th:src="@{/assets/images/fiscore-mark.svg}" alt="">
+                    <span class="fs-logo-text">Fiscore<small>Gestión fiscal</small></span>
+                </span>
             </span>
             <span class="logo-sm">
-                <img th:src="@{/assets/images/logo.png}" alt="F" style="max-height:32px;">
+                <img class="fs-logo-mark" th:src="@{/assets/images/fiscore-mark.svg}" alt="Fiscore">
             </span>
         </a>
         <a th:href="@{/inicio}" class="logo logo-dark">
             <span class="logo-lg">
-                <img th:src="@{/assets/images/logo.png}" alt="Fiscore" style="max-height:40px;">
+                <span class="fs-logo">
+                    <img class="fs-logo-mark" th:src="@{/assets/images/fiscore-mark.svg}" alt="">
+                    <span class="fs-logo-text">Fiscore<small>Gestión fiscal</small></span>
+                </span>
             </span>
             <span class="logo-sm">
-                <img th:src="@{/assets/images/logo-dark-sm.png}" alt="F" style="max-height:32px;">
+                <img class="fs-logo-mark" th:src="@{/assets/images/fiscore-mark.svg}" alt="Fiscore">
             </span>
         </a>
         <!-- Toggle Buttons -->
@@ -33,9 +41,10 @@
                 <!-- Dashboard -->
                 <li class="side-nav-title">Principal</li>
                 <li class="side-nav-item">
-                    <a th:href="@{/inicio}" class="side-nav-link">
+                    <a th:href="@{/inicio}" class="side-nav-link"
+                       th:classappend="${menuActivo == 'inicio'} ? 'active'">
                         <i class="uil-home-alt"></i>
-                        <span>Dashboard</span>
+                        <span>Panel de Control</span>
                     </a>
                 </li>
 
@@ -43,28 +52,32 @@
                 <li class="side-nav-title">Gestión</li>
 
                 <li class="side-nav-item">
-                    <a th:href="@{/clientes}" class="side-nav-link">
+                    <a th:href="@{/clientes}" class="side-nav-link"
+                       th:classappend="${menuActivo == 'clientes'} ? 'active'">
                         <i class="uil-users-alt"></i>
                         <span>Clientes</span>
                     </a>
                 </li>
 
                 <li class="side-nav-item">
-                    <a th:href="@{/servicios}" class="side-nav-link">
+                    <a th:href="@{/servicios}" class="side-nav-link"
+                       th:classappend="${menuActivo == 'servicios'} ? 'active'">
                         <i class="uil-briefcase-alt"></i>
-                        <span>Servicios</span>
+                        <span>Catálogo de Servicios</span>
                     </a>
                 </li>
 
                 <li class="side-nav-item">
-                    <a th:href="@{/contratos}" class="side-nav-link">
+                    <a th:href="@{/contratos}" class="side-nav-link"
+                       th:classappend="${menuActivo == 'contratos'} ? 'active'">
                         <i class="uil-file-check-alt"></i>
                         <span>Contratos</span>
                     </a>
                 </li>
 
                 <li class="side-nav-item">
-                    <a th:href="@{/proyectos}" class="side-nav-link">
+                    <a th:href="@{/proyectos}" class="side-nav-link"
+                       th:classappend="${menuActivo == 'proyectos'} ? 'active'">
                         <i class="uil-moneybag"></i>
                         <span>Proyectos y Casos</span>
                     </a>
@@ -74,26 +87,60 @@
                 <li class="side-nav-title">Facturación DTE</li>
 
                 <li class="side-nav-item">
-                    <a th:href="@{/facturacion}" class="side-nav-link">
+                    <a th:href="@{/facturacion}" class="side-nav-link"
+                       th:classappend="${menuActivo == 'facturacion'} ? 'active'">
                         <i class="uil-receipt-alt"></i>
                         <span>Emisión de Facturas</span>
                     </a>
                 </li>
 
-                <!-- Reportes -->
+                <li class="side-nav-item">
+                    <a th:href="@{/facturacion(tab='historial')}" class="side-nav-link">
+                        <i class="uil-history"></i>
+                        <span>Historial de DTE</span>
+                    </a>
+                </li>
+
+                <!-- Análisis -->
                 <li class="side-nav-title">Análisis</li>
 
                 <li class="side-nav-item">
-                    <a th:href="@{/reportes}" class="side-nav-link">
+                    <a th:href="@{/reportes}" class="side-nav-link"
+                       th:classappend="${menuActivo == 'reportes'} ? 'active'">
                         <i class="uil-chart-bar"></i>
                         <span>Reportes</span>
                     </a>
                 </li>
 
                 <li class="side-nav-item">
-                    <a th:href="@{/reportes#cartera}" class="side-nav-link">
+                    <a th:href="@{/reportes(tab='cobranza')}" class="side-nav-link">
+                        <i class="uil-clock-three"></i>
+                        <span>Cuentas por Cobrar</span>
+                    </a>
+                </li>
+
+                <li class="side-nav-item">
+                    <a th:href="@{/reportes(tab='libro')}" class="side-nav-link">
+                        <i class="uil-book-open"></i>
+                        <span>Libro de Ventas</span>
+                    </a>
+                </li>
+
+                <li class="side-nav-item">
+                    <a th:href="@{/reportes(tab='cartera')}" class="side-nav-link">
                         <i class="uil-briefcase-alt"></i>
                         <span>Cartera por Cliente</span>
+                    </a>
+                </li>
+
+                <!-- Configuración -->
+                <li class="side-nav-title">Configuración</li>
+
+                <li class="side-nav-item">
+                    <a th:href="@{/configuracion/dte}" class="side-nav-link"
+                       th:classappend="${menuActivo == 'configuracion'} ? 'active'">
+                        <i class="uil-cog"></i>
+                        <span>Parámetros DTE</span>
                     </a>
                 </li>
 

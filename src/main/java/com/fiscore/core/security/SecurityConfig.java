@@ -15,6 +15,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.List;
 
@@ -35,29 +37,57 @@ public class SecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
+    /**
+     * Spring Security 6 carga el token CSRF de forma diferida: si nadie lo consulta
+     * durante la petición, la cookie XSRF-TOKEN nunca se emite y el primer POST
+     * se rechaza con 403. Poner a null el nombre del atributo fuerza la carga
+     * inmediata, de modo que la cookie viaja siempre.
+     *
+     * Se usa el handler simple (no el XOR de protección BREACH) porque el valor
+     * de la cookie debe coincidir literalmente con el que el JavaScript reenvía
+     * en la cabecera X-XSRF-TOKEN.
+     */
+    private CsrfTokenRequestAttributeHandler csrfTokenRequestHandler() {
+        CsrfTokenRequestAttributeHandler handler = new CsrfTokenRequestAttributeHandler();
+        handler.setCsrfRequestAttributeName(null);
+        return handler;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         if (authenticationEnabled) {
             http
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                // withHttpOnlyFalse permite que el JS lea la cookie XSRF-TOKEN
+                // y la reenvíe como cabecera en las llamadas fetch().
+                .csrf(csrf -> csrf
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                    .csrfTokenRequestHandler(csrfTokenRequestHandler()))
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/login**", "/recover-password", "/autenticar", "/resources/**", "/error", "/assets/**").permitAll()
                     .anyRequest().authenticated()
                 )
                 .formLogin(login -> login
                     .loginPage("/login")
+                    .defaultSuccessUrl("/inicio", true)
+                    .failureUrl("/login?error")
                     .permitAll()
                 )
                 .logout(logout -> logout
                     .logoutUrl("/logout")
                     .logoutSuccessUrl("/login?logout")
+                    // El enlace del menú es un GET, no un POST
+                    .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                    .invalidateHttpSession(true)
+                    .deleteCookies("JSESSIONID", "XSRF-TOKEN")
                     .permitAll()
                 )
                 .sessionManagement(session -> session
                     .maximumSessions(1)
                     .expiredUrl("/login?expired=true")
-                    .maxSessionsPreventsLogin(true)
+                    // false: al iniciar sesión de nuevo se cierra la anterior en lugar
+                    // de bloquear el acceso, que dejaba al usuario fuera tras un cierre sucio.
+                    .maxSessionsPreventsLogin(false)
                 );
         } else {
             // Configuración sin autenticación

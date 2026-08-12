@@ -3,9 +3,11 @@ package com.fiscore.core.repositories;
 import com.fiscore.core.models.Contrato;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -39,4 +41,17 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
     /** Todos los contratos activos con relaciones cargadas */
     @Query("SELECT DISTINCT c FROM Contrato c JOIN FETCH c.cliente cl LEFT JOIN FETCH c.servicios WHERE c.estado = 'ACTIVO' ORDER BY cl.nombre")
     List<Contrato> findActivosConDetalle();
+
+    /** Contratos activos cuya próxima facturación cae en o antes de la fecha indicada */
+    @Query("SELECT DISTINCT c FROM Contrato c JOIN FETCH c.cliente cl LEFT JOIN FETCH c.servicios " +
+           "WHERE c.estado = 'ACTIVO' AND c.fechaProximaFacturacion IS NOT NULL AND c.fechaProximaFacturacion <= :fecha " +
+           "ORDER BY c.fechaProximaFacturacion ASC")
+    List<Contrato> findPorFacturarHasta(@Param("fecha") LocalDate fecha);
+
+    /** Agenda de facturación: próximos vencimientos ordenados */
+    @Query("SELECT DISTINCT c FROM Contrato c JOIN FETCH c.cliente cl " +
+           "WHERE c.estado = 'ACTIVO' AND c.fechaProximaFacturacion IS NOT NULL " +
+           "  AND c.fechaProximaFacturacion BETWEEN :desde AND :hasta " +
+           "ORDER BY c.fechaProximaFacturacion ASC")
+    List<Contrato> findAgendaFacturacion(@Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
 }

@@ -48,28 +48,18 @@ public class ContratoController {
     @PostMapping("/guardar")
     @ResponseBody
     public ResponseEntity<?> guardarContrato(@RequestBody Map<String, Object> body) {
-        try {
-            Contrato contrato = buildContrato(null, body);
-            Contrato saved = contratoService.save(contrato);
-            return ResponseEntity.ok(Map.of("message", "Contrato creado exitosamente", "id", saved.getId()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        Contrato saved = contratoService.save(buildContrato(null, body));
+        return ResponseEntity.ok(Map.of("message", "Contrato creado exitosamente", "id", saved.getId()));
     }
 
     @PutMapping("/{id}")
     @ResponseBody
     public ResponseEntity<?> actualizarContrato(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        if (!contratoService.findById(id).isPresent()) {
+        if (contratoService.findById(id).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        try {
-            Contrato contrato = buildContrato(id, body);
-            Contrato saved = contratoService.save(contrato);
-            return ResponseEntity.ok(Map.of("message", "Contrato actualizado exitosamente", "id", saved.getId()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        Contrato saved = contratoService.save(buildContrato(id, body));
+        return ResponseEntity.ok(Map.of("message", "Contrato actualizado exitosamente", "id", saved.getId()));
     }
 
     @DeleteMapping("/{id}")
@@ -97,22 +87,26 @@ public class ContratoController {
         Contrato contrato = new Contrato();
         if (id != null) contrato.setId(id);
 
-        Long clienteId = Long.valueOf(body.get("clienteId").toString());
+        Object clienteRaw = body.get("clienteId");
+        if (clienteRaw == null || clienteRaw.toString().isBlank()) {
+            throw new IllegalArgumentException("Debe seleccionar el cliente del contrato.");
+        }
+        Long clienteId = Long.valueOf(clienteRaw.toString());
         Cliente cliente = clienteService.findById(clienteId)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado."));
         contrato.setCliente(cliente);
 
         // Procesar lista de servicios
         List<Map<String, Object>> serviciosData = (List<Map<String, Object>>) body.get("servicios");
         if (serviciosData == null || serviciosData.isEmpty()) {
-            throw new RuntimeException("Debe agregar al menos un servicio al contrato");
+            throw new IllegalArgumentException("Debe agregar al menos un servicio al contrato.");
         }
 
         BigDecimal totalCalculado = BigDecimal.ZERO;
         for (Map<String, Object> sData : serviciosData) {
             Long servicioId = Long.valueOf(sData.get("servicioId").toString());
             Servicio servicio = servicioService.findById(servicioId)
-                    .orElseThrow(() -> new RuntimeException("Servicio no encontrado: " + servicioId));
+                    .orElseThrow(() -> new IllegalArgumentException("Servicio no encontrado: " + servicioId));
             BigDecimal precio = new BigDecimal(sData.getOrDefault("precioAcordado", "0").toString());
 
             ContratoServicio cs = new ContratoServicio();

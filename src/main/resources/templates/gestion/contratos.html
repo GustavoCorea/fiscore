@@ -278,7 +278,7 @@
     const SERVICIOS_CATALOGO = /*[[${serviciosList}]]*/ [];
 </script>
 
-<script>
+<script th:inline="none">
 var dt;
 
 $(document).ready(function() {
@@ -293,7 +293,7 @@ $(document).ready(function() {
     $('#ctrClienteId').on('change', function() {
         const clienteId = this.value;
         if (!clienteId) { $('#clienteContratosInfo').text(''); return; }
-        fetch('/fiscore/contratos/listar')
+        fetch(window.url('/contratos/listar'))
             .then(r => r.json())
             .then(contratos => {
                 const activos = contratos.filter(c => c.cliente?.id == clienteId && c.estado === 'ACTIVO');
@@ -429,7 +429,7 @@ function setVista(tipo) {
 }
 
 function renderVistaCliente() {
-    fetch('/fiscore/contratos/listar')
+    fetch(window.url('/contratos/listar'))
         .then(r => r.json())
         .then(contratos => {
             const grupos = {};
@@ -540,8 +540,21 @@ function filtrarPorCliente() {
     });
 }
 
-function filtrarEstado(estado) { if (dt) dt.search(estado).draw(); }
-function filtrarTipo(tipo) { if (dt) dt.search(tipo).draw(); }
+/* Filtros por columna: buscar en toda la tabla daba falsos positivos
+   (p. ej. "Recurrente" también aparece en la columna de servicios). */
+const COL_TIPO = 2, COL_ESTADO = 5;
+
+function filtrarEstado(estado) {
+    if (!dt) return;
+    dt.column(COL_TIPO).search('');
+    dt.column(COL_ESTADO).search(estado ? '^' + estado + '$' : '', true, false).draw();
+}
+
+function filtrarTipo(tipo) {
+    if (!dt) return;
+    dt.column(COL_ESTADO).search('');
+    dt.column(COL_TIPO).search(tipo ? '^' + tipo + '$' : '', true, false).draw();
+}
 
 /* ---- CRUD ---- */
 
@@ -573,7 +586,7 @@ function abrirModalParaCliente(clienteId) {
 }
 
 function editarContrato(id) {
-    fetch('/fiscore/contratos/' + id)
+    fetch(window.url('/contratos/' + id))
         .then(r => r.json())
         .then(c => {
             resetModal();
@@ -623,7 +636,7 @@ function guardarContrato() {
         estado: document.getElementById('ctrEstado').value,
         notas: document.getElementById('ctrNotas').value
     };
-    const url = id ? '/fiscore/contratos/' + id : '/fiscore/contratos/guardar';
+    const url = id ? window.url('/contratos/' + id) : window.url('/contratos/guardar');
     const method = id ? 'PUT' : 'POST';
     fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })
         .then(r => r.json())
@@ -648,7 +661,7 @@ function eliminarContrato(id) {
         confirmButtonColor: '#fa5c7c', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar'
     }).then(result => {
         if (result.isConfirmed) {
-            fetch('/fiscore/contratos/' + id, { method: 'DELETE' })
+            fetch(window.url('/contratos/' + id), { method: 'DELETE' })
                 .then(r => {
                     if (!r.ok) throw new Error('Error ' + r.status);
                     return r.json();
