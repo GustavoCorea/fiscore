@@ -39,31 +39,27 @@ public class ProyectoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/por-facturar")
+    @ResponseBody
+    public ResponseEntity<?> listarPorFacturar() {
+        return ResponseEntity.ok(proyectoService.findFinalizadosSinFacturar());
+    }
+
     @PostMapping("/guardar")
     @ResponseBody
     public ResponseEntity<?> guardarProyecto(@RequestBody Map<String, Object> body) {
-        try {
-            Proyecto proyecto = buildProyecto(null, body);
-            Proyecto saved = proyectoService.save(proyecto);
-            return ResponseEntity.ok(Map.of("message", "Proyecto creado exitosamente", "id", saved.getId()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        Proyecto saved = proyectoService.save(buildProyecto(null, body));
+        return ResponseEntity.ok(Map.of("message", "Proyecto creado exitosamente", "id", saved.getId()));
     }
 
     @PutMapping("/{id}")
     @ResponseBody
     public ResponseEntity<?> actualizarProyecto(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        if (!proyectoService.findById(id).isPresent()) {
+        if (proyectoService.findById(id).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        try {
-            Proyecto proyecto = buildProyecto(id, body);
-            Proyecto saved = proyectoService.save(proyecto);
-            return ResponseEntity.ok(Map.of("message", "Proyecto actualizado exitosamente", "id", saved.getId()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        Proyecto saved = proyectoService.save(buildProyecto(id, body));
+        return ResponseEntity.ok(Map.of("message", "Proyecto actualizado exitosamente", "id", saved.getId()));
     }
 
     @PatchMapping("/{id}/avance")
@@ -89,18 +85,29 @@ public class ProyectoController {
         return ResponseEntity.ok(Map.of("message", "Proyecto eliminado exitosamente"));
     }
 
+    /**
+     * Al editar se parte de la entidad almacenada para no perder los campos que
+     * el formulario no envía (fecha de creación, marca de facturado, fecha de cierre).
+     */
     private Proyecto buildProyecto(Long id, Map<String, Object> body) {
-        Proyecto proyecto = new Proyecto();
-        if (id != null) proyecto.setId(id);
+        Proyecto proyecto = (id != null)
+                ? proyectoService.findById(id).orElseThrow(() -> new IllegalArgumentException("Proyecto no encontrado."))
+                : new Proyecto();
 
         Object clienteId = body.get("clienteId");
         if (clienteId != null && !clienteId.toString().isBlank()) {
             Cliente cliente = clienteService.findById(Long.valueOf(clienteId.toString()))
-                    .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                    .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado."));
             proyecto.setCliente(cliente);
+        } else {
+            proyecto.setCliente(null);
         }
 
-        proyecto.setNombre(body.getOrDefault("nombre", "").toString());
+        String nombre = body.getOrDefault("nombre", "").toString().trim();
+        if (nombre.isEmpty()) {
+            throw new IllegalArgumentException("El nombre del proyecto es obligatorio.");
+        }
+        proyecto.setNombre(nombre);
         proyecto.setDescripcion(body.getOrDefault("descripcion", "").toString());
         proyecto.setCategoria(body.getOrDefault("categoria", "CONSULTORIA").toString());
 

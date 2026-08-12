@@ -5,12 +5,18 @@ import lombok.Data;
 import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Data
-@Table(name = "factura")
+@Table(name = "factura", uniqueConstraints = {
+        // Última defensa contra correlativos repetidos: si la aplicación fallara
+        // en la reserva, la base de datos rechaza el documento duplicado.
+        @UniqueConstraint(name = "uk_factura_numero_control", columnNames = "numero_control"),
+        @UniqueConstraint(name = "uk_factura_codigo_generacion", columnNames = "codigo_generacion")
+})
 public class Factura {
 
     @Id
@@ -33,10 +39,17 @@ public class Factura {
     @JoinColumn(name = "contrato_id")
     private Contrato contrato;
 
+    /** Proyecto de origen cuando la factura nace de un caso/proyecto finalizado */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "proyecto_id")
+    private Proyecto proyecto;
+
     private LocalDateTime fechaEmision;
     private String periodoFacturado;    // Ej: "Marzo 2026"
     private String condicionPago;       // CONTADO, CREDITO
     private Integer plazoCredito;       // días si es crédito
+    private LocalDate fechaVencimiento; // emisión + plazoCredito (contado = mismo día)
+    private LocalDate fechaPago;        // se registra al marcar PAGADA
 
     // ---- Montos ----
     private BigDecimal subtotalGravado;
@@ -57,6 +70,6 @@ public class Factura {
     private String notas;
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<DetalleFactura> detalles;
 }

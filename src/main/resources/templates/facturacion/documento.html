@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{layout/layout :: head}"></head>
+<body class="bg-light">
+
+<div class="container py-4">
+
+    <!-- Barra de acciones (no se imprime) -->
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+        <a th:href="@{/facturacion}" class="btn btn-light">
+            <i class="mdi mdi-arrow-left me-1"></i> Volver a facturación
+        </a>
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="mdi mdi-printer me-1"></i> Imprimir / Guardar PDF
+        </button>
+    </div>
+
+    <div class="card shadow-sm print-sheet">
+        <div class="card-body">
+
+            <!-- ===== Encabezado ===== -->
+            <div class="row align-items-start border-bottom pb-3 mb-3">
+                <div class="col-7">
+                    <h4 class="mb-1 fw-bold" th:text="${emisor.nombre}">Emisor</h4>
+                    <div class="text-muted small">
+                        <div th:if="${!#strings.isEmpty(emisor.nombreComercial)}"
+                             th:text="${emisor.nombreComercial}"></div>
+                        <div th:text="'NIT: ' + ${emisor.nit} + '  ·  NRC: ' + ${emisor.nrc}"></div>
+                        <div th:text="${emisor.giro}"></div>
+                        <div th:text="${emisor.direccion}"></div>
+                        <div>
+                            <span th:if="${!#strings.isEmpty(emisor.telefono)}" th:text="'Tel. ' + ${emisor.telefono}"></span>
+                            <span th:if="${!#strings.isEmpty(emisor.correo)}" th:text="' · ' + ${emisor.correo}"></span>
+                        </div>
+                    </div>
+                    <div class="badge bg-warning text-dark mt-2" th:if="${ambiente != 'Producción'}">
+                        <i class="mdi mdi-flask-outline me-1"></i>Ambiente de pruebas — sin validez fiscal
+                    </div>
+                </div>
+                <div class="col-5 text-end">
+                    <div class="badge bg-primary fs-6 mb-2 doc-title"
+                         th:switch="${factura.tipoDte}">
+                        <span th:case="'03'">COMPROBANTE DE CRÉDITO FISCAL</span>
+                        <span th:case="'05'">NOTA DE CRÉDITO</span>
+                        <span th:case="'06'">NOTA DE DÉBITO</span>
+                        <span th:case="'14'">FACTURA DE SUJETO EXCLUIDO</span>
+                        <span th:case="*">FACTURA (CONSUMIDOR FINAL)</span>
+                    </div>
+                    <table class="table table-sm table-borderless mb-0 small">
+                        <tr>
+                            <td class="text-muted text-end">N° documento:</td>
+                            <td class="fw-bold text-end" th:text="${factura.numeroFactura}"></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted text-end">Código de generación:</td>
+                            <td class="font-monospace text-end" style="font-size:.7rem;"
+                                th:text="${factura.codigoGeneracion}"></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted text-end">Número de control:</td>
+                            <td class="font-monospace text-end" style="font-size:.7rem;"
+                                th:text="${factura.numeroControl}"></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted text-end">Sello de recepción:</td>
+                            <td class="font-monospace text-end" style="font-size:.7rem;"
+                                th:text="${factura.selloRecepcion} ?: 'Pendiente de transmisión'"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== Receptor y condiciones ===== -->
+            <div class="row mb-3">
+                <div class="col-7">
+                    <h6 class="text-uppercase text-muted small fw-bold mb-2">Receptor</h6>
+                    <div class="fw-semibold" th:text="${factura.cliente?.nombre} ?: '—'"></div>
+                    <div class="text-muted small">
+                        <div>
+                            <span th:if="${factura.cliente?.nit}" th:text="'NIT: ' + ${factura.cliente.nit}"></span>
+                            <span th:if="${factura.cliente?.nrc}" th:text="'  ·  NRC: ' + ${factura.cliente.nrc}"></span>
+                        </div>
+                        <div th:if="${factura.cliente?.giro}" th:text="'Giro: ' + ${factura.cliente.giro}"></div>
+                        <div th:if="${factura.cliente?.direccion}" th:text="${factura.cliente.direccion}"></div>
+                        <div th:if="${factura.cliente?.municipio}"
+                             th:text="${factura.cliente.municipio} + ', ' + (${factura.cliente.departamento} ?: '')"></div>
+                        <div th:if="${factura.cliente?.email}" th:text="${factura.cliente.email}"></div>
+                    </div>
+                </div>
+                <div class="col-5">
+                    <h6 class="text-uppercase text-muted small fw-bold mb-2">Condiciones</h6>
+                    <table class="table table-sm table-borderless mb-0 small">
+                        <tr>
+                            <td class="text-muted">Fecha de emisión:</td>
+                            <td class="text-end fw-semibold"
+                                th:text="${factura.fechaEmision != null ? #temporals.format(factura.fechaEmision, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Periodo facturado:</td>
+                            <td class="text-end" th:text="${factura.periodoFacturado} ?: '-'"></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Condición de pago:</td>
+                            <td class="text-end" th:text="${factura.condicionPago} ?: 'CONTADO'"></td>
+                        </tr>
+                        <tr th:if="${factura.plazoCredito != null}">
+                            <td class="text-muted">Plazo:</td>
+                            <td class="text-end" th:text="${factura.plazoCredito} + ' días'"></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Vence:</td>
+                            <td class="text-end fw-semibold"
+                                th:text="${factura.fechaVencimiento != null ? #temporals.format(factura.fechaVencimiento, 'dd/MM/yyyy') : '-'}"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== Cuerpo del documento ===== -->
+            <table class="table table-sm table-bordered mb-3">
+                <thead class="table-light">
+                <tr>
+                    <th style="width:40px;">#</th>
+                    <th>Descripción</th>
+                    <th class="text-center" style="width:70px;">Cant.</th>
+                    <th class="text-center" style="width:90px;">Unidad</th>
+                    <th class="text-end" style="width:110px;">P. unitario</th>
+                    <th class="text-end" style="width:110px;">Ventas gravadas</th>
+                    <th class="text-end" style="width:100px;">Exentas</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="d : ${factura.detalles}">
+                    <td th:text="${d.numItem}"></td>
+                    <td th:text="${d.descripcion}"></td>
+                    <td class="text-center" th:text="${#numbers.formatDecimal(d.cantidad, 1, 2)}"></td>
+                    <td class="text-center" th:text="${d.unidadMedida}"></td>
+                    <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(d.precioUnitario, 1, 'COMMA', 2, 'POINT')}"></td>
+                    <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(d.ventaGravada, 1, 'COMMA', 2, 'POINT')}"></td>
+                    <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(d.ventaExenta, 1, 'COMMA', 2, 'POINT')}"></td>
+                </tr>
+                <tr th:if="${factura.detalles == null or #lists.isEmpty(factura.detalles)}">
+                    <td colspan="7" class="text-center text-muted py-3">Documento sin líneas de detalle</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- ===== Totales ===== -->
+            <div class="row justify-content-end">
+                <div class="col-md-5">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td class="text-muted">Suma de ventas gravadas:</td>
+                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(factura.subtotalGravado, 1, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
+                        <tr th:if="${factura.subtotalExento != null and factura.subtotalExento.signum() > 0}">
+                            <td class="text-muted">Ventas exentas:</td>
+                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(factura.subtotalExento, 1, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
+                        <tr th:if="${factura.subtotalNoSujeto != null and factura.subtotalNoSujeto.signum() > 0}">
+                            <td class="text-muted">Ventas no sujetas:</td>
+                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(factura.subtotalNoSujeto, 1, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
+                        <tr th:if="${factura.descuento != null and factura.descuento.signum() > 0}">
+                            <td class="text-muted">Descuento:</td>
+                            <td class="text-end text-danger" th:text="'-$' + ${#numbers.formatDecimal(factura.descuento, 1, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">IVA (13%):</td>
+                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(factura.ivaPercibido, 1, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
+                        <tr th:if="${factura.ivaRetenido != null and factura.ivaRetenido.signum() > 0}">
+                            <td class="text-muted">IVA retenido:</td>
+                            <td class="text-end text-danger" th:text="'-$' + ${#numbers.formatDecimal(factura.ivaRetenido, 1, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
+                        <tr class="border-top">
+                            <td class="fw-bold fs-5">TOTAL A PAGAR:</td>
+                            <td class="text-end fw-bold fs-5 text-success"
+                                th:text="'$' + ${#numbers.formatDecimal(factura.montoTotal, 1, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== Pie ===== -->
+            <div class="border-top mt-3 pt-3">
+                <div class="row">
+                    <div class="col-8">
+                        <div th:if="${factura.notas}" class="small">
+                            <span class="text-muted fw-semibold">Observaciones: </span>
+                            <span th:text="${factura.notas}"></span>
+                        </div>
+                        <div class="small text-muted mt-2">
+                            Documento Tributario Electrónico emitido conforme a la normativa del
+                            Ministerio de Hacienda de El Salvador.
+                        </div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <span class="badge fs-6"
+                              th:classappend="${factura.estado == 'PAGADA'} ? 'bg-success' :
+                                              (${factura.estado == 'ANULADA'} ? 'bg-danger' :
+                                              (${factura.estado == 'EMITIDA'} ? 'bg-warning text-dark' : 'bg-secondary'))"
+                              th:text="${factura.estado}"></span>
+                        <div class="small text-muted mt-1" th:text="'Estado DTE: ' + (${factura.estadoDte} ?: '-')"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/assets/js/vendor.min.js}"></script>
+</body>
+</html>

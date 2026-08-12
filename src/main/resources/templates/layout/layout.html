@@ -3,18 +3,65 @@
 
 <head th:fragment="head">
     <meta charset="utf-8">
-    <title>Fiscore</title>
-    <base href="/">
+    <title th:text="${pageTitle != null ? 'Fiscore · ' + pageTitle : 'Fiscore'}">Fiscore</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/x-icon" th:href="@{/assets/img/isp_icon.png}">
+    <!-- Context path disponible para todo el JS de la aplicación -->
+    <script th:inline="javascript">
+        window.CTX = /*[[@{/}]]*/ '/';
+        /** Construye una URL absoluta respetando el context-path. */
+        window.url = function (path) {
+            return window.CTX.replace(/\/$/, '') + (path.startsWith('/') ? path : '/' + path);
+        };
+    </script>
+    <!-- Con la seguridad activada, Spring exige el token CSRF en toda petición
+         que modifique datos. Se envuelve fetch() una sola vez aquí para que
+         ningún POST/PUT/PATCH/DELETE de las pantallas tenga que recordarlo. -->
+    <script th:inline="none">
+        (function () {
+            const SEGUROS = ['GET', 'HEAD', 'OPTIONS', 'TRACE'];
+
+            function leerCookie(nombre) {
+                return document.cookie.split('; ')
+                    .filter(c => c.startsWith(nombre + '='))
+                    .map(c => decodeURIComponent(c.substring(nombre.length + 1)))[0];
+            }
+
+            const fetchOriginal = window.fetch;
+            window.fetch = function (recurso, opciones) {
+                opciones = opciones || {};
+                const metodo = (opciones.method || 'GET').toUpperCase();
+
+                if (!SEGUROS.includes(metodo)) {
+                    const token = leerCookie('XSRF-TOKEN');
+                    if (token) {
+                        const cabeceras = new Headers(opciones.headers || {});
+                        if (!cabeceras.has('X-XSRF-TOKEN')) cabeceras.set('X-XSRF-TOKEN', token);
+                        opciones = Object.assign({}, opciones, { headers: cabeceras });
+                    }
+                    // Necesario para que la cookie de sesión viaje en la petición
+                    if (!opciones.credentials) opciones.credentials = 'same-origin';
+                }
+
+                return fetchOriginal.call(this, recurso, opciones).then(function (respuesta) {
+                    // Si la sesión caducó, Spring responde con el HTML del login:
+                    // se detecta y se redirige en lugar de fallar al parsear JSON.
+                    if (respuesta.redirected && respuesta.url.includes('/login')) {
+                        window.location.href = respuesta.url;
+                    }
+                    return respuesta;
+                });
+            };
+        })();
+    </script>
     <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.gstatic.com" rel="preconnect">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
 
-    <!-- App favicon -->
-    <link rel="shortcut icon" th:href="@{/assets/images/favicon.ico}">
+    <!-- Favicon propio de Fiscore -->
+    <link rel="icon" type="image/svg+xml" th:href="@{/assets/images/favicon.svg}">
+    <link rel="apple-touch-icon" th:href="@{/assets/images/fiscore-mark.svg}">
     <!-- Datatables css -->
     <link th:href="@{/assets/vendor/datatables.net-bs5/css/dataTables.bootstrap5.min.css}" rel="stylesheet" type="text/css" />
     <link th:href="@{/assets/vendor/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css}" rel="stylesheet" type="text/css" />
@@ -29,6 +76,8 @@
     <!-- Icons css -->
     <link th:href="@{/assets/css/icons.min.css}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" type="text/css" th:href="@{https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css}">
+    <!-- Estilos propios de Fiscore -->
+    <link th:href="@{/assets/css/fiscore.css}" rel="stylesheet" type="text/css" />
 
 </head>
 <body>

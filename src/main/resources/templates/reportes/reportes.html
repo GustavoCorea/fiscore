@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head th:replace="~{layout/layout :: head}"></head>
 <body>
 <div class="wrapper">
@@ -26,260 +26,588 @@
                 </div>
 
                 <!-- ===== KPIs Globales ===== -->
-                <div class="row mb-3">
-                    <div class="col-xl-3 col-sm-6">
-                        <div class="card shadow-sm" style="border-left:4px solid #727cf5;">
-                            <div class="card-body py-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-grow-1">
-                                        <div class="text-muted text-uppercase small fw-bold">Honorarios Recurrentes/Mes</div>
-                                        <div class="h3 fw-bold text-primary mb-0"
-                                             th:text="'$' + ${#numbers.formatDecimal(kpis.honorariosRecurrentes, 1, 2)}">$0.00</div>
-                                    </div>
-                                    <div class="ms-3"><i class="mdi mdi-refresh-circle font-36 text-primary opacity-50"></i></div>
+                <div class="row">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card kpi-card shadow-sm" style="--kpi-color:#727cf5;">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <div class="kpi-label">Honorarios recurrentes / mes</div>
+                                    <div class="kpi-value text-primary"
+                                         th:text="'$' + ${#numbers.formatDecimal(kpis.honorariosRecurrentes, 1, 'COMMA', 2, 'POINT')}">$0.00</div>
                                 </div>
+                                <i class="mdi mdi-refresh-circle kpi-icon"></i>
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-3 col-sm-6">
-                        <div class="card shadow-sm" style="border-left:4px solid #0acf97;">
-                            <div class="card-body py-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-grow-1">
-                                        <div class="text-muted text-uppercase small fw-bold">Total Facturado</div>
-                                        <div class="h3 fw-bold text-success mb-0"
-                                             th:text="'$' + ${#numbers.formatDecimal(kpis.totalFacturado, 1, 2)}">$0.00</div>
-                                    </div>
-                                    <div class="ms-3"><i class="mdi mdi-cash-check font-36 text-success opacity-50"></i></div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card kpi-card shadow-sm" style="--kpi-color:#0acf97;">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <div class="kpi-label">Total facturado</div>
+                                    <div class="kpi-value text-success"
+                                         th:text="'$' + ${#numbers.formatDecimal(kpis.totalFacturado, 1, 'COMMA', 2, 'POINT')}">$0.00</div>
+                                    <small class="text-muted">
+                                        Cobrado <span th:text="${kpis.tasaCobro}">0</span>%
+                                    </small>
                                 </div>
+                                <i class="mdi mdi-cash-check kpi-icon"></i>
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-3 col-sm-6">
-                        <div class="card shadow-sm" style="border-left:4px solid #ffbc00;">
-                            <div class="card-body py-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-grow-1">
-                                        <div class="text-muted text-uppercase small fw-bold">Por Cobrar (Emitidas)</div>
-                                        <div class="h3 fw-bold text-warning mb-0"
-                                             th:text="'$' + ${#numbers.formatDecimal(kpis.montoPendiente, 1, 2)}">$0.00</div>
-                                    </div>
-                                    <div class="ms-3"><i class="mdi mdi-clock-outline font-36 text-warning opacity-50"></i></div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card kpi-card shadow-sm" style="--kpi-color:#ffbc00;">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <div class="kpi-label">Por cobrar</div>
+                                    <div class="kpi-value text-warning"
+                                         th:text="'$' + ${#numbers.formatDecimal(kpis.montoPendiente, 1, 'COMMA', 2, 'POINT')}">$0.00</div>
+                                    <small class="text-danger fw-semibold" th:if="${kpis.facturasVencidas > 0}"
+                                           th:text="${kpis.facturasVencidas} + ' documento(s) vencido(s)'"></small>
                                 </div>
+                                <i class="mdi mdi-clock-outline kpi-icon"></i>
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-3 col-sm-6">
-                        <div class="card shadow-sm" style="border-left:4px solid #fa5c7c;">
-                            <div class="card-body py-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-grow-1">
-                                        <div class="text-muted text-uppercase small fw-bold">Contratos Activos</div>
-                                        <div class="h3 fw-bold text-danger mb-0" th:text="${kpis.contratosActivos}">0</div>
-                                    </div>
-                                    <div class="ms-3"><i class="mdi mdi-file-check font-36 text-danger opacity-50"></i></div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card kpi-card shadow-sm" style="--kpi-color:#fa5c7c;">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <div class="kpi-label">Proyectos por cobrar</div>
+                                    <div class="kpi-value text-danger"
+                                         th:text="'$' + ${#numbers.formatDecimal(kpis.presupuestoPendiente, 1, 'COMMA', 2, 'POINT')}">$0.00</div>
+                                    <small class="text-muted">
+                                        <span th:text="${kpis.proyectosActivos}">0</span> en ejecución
+                                    </small>
                                 </div>
+                                <i class="mdi mdi-briefcase-clock kpi-icon"></i>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ===== Gráficas Fila 1 ===== -->
-                <div class="row mb-3">
-                    <!-- Ingresos por Categoría -->
-                    <div class="col-lg-5">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0"><i class="mdi mdi-chart-pie me-1 text-primary"></i>Honorarios por Categoría</h5>
-                                <small class="text-muted">Contratos activos</small>
-                            </div>
-                            <div class="card-body d-flex align-items-center">
-                                <div id="chartCategoria" style="width:100%;min-height:280px;"></div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- ===== Pestañas ===== -->
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <ul class="nav nav-tabs nav-bordered mb-3" id="tabsReportes">
+                            <li class="nav-item">
+                                <a href="#tabResumen" data-bs-toggle="tab" data-tab-key="resumen" class="nav-link active">
+                                    <i class="mdi mdi-chart-pie me-1"></i> Resumen
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#tabCobranza" data-bs-toggle="tab" data-tab-key="cobranza" class="nav-link">
+                                    <i class="mdi mdi-clock-alert me-1"></i> Cuentas por Cobrar
+                                    <span class="badge bg-danger ms-1" th:if="${antiguedad.cantidad > 0}"
+                                          th:text="${antiguedad.cantidad}">0</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#tabLibro" data-bs-toggle="tab" data-tab-key="libro" class="nav-link">
+                                    <i class="mdi mdi-book-open-variant me-1"></i> Libro de Ventas
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#tabProyectos" data-bs-toggle="tab" data-tab-key="proyectos" class="nav-link">
+                                    <i class="mdi mdi-briefcase-outline me-1"></i> Proyectos
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#tabCartera" data-bs-toggle="tab" data-tab-key="cartera" class="nav-link">
+                                    <i class="mdi mdi-briefcase-account me-1"></i> Cartera por Cliente
+                                </a>
+                            </li>
+                        </ul>
 
-                    <!-- Distribución por tipo de contrato -->
-                    <div class="col-lg-4">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0"><i class="mdi mdi-chart-donut me-1 text-success"></i>Tipo de Contrato</h5>
-                                <small class="text-muted">Activos</small>
-                            </div>
-                            <div class="card-body d-flex align-items-center">
-                                <div id="chartTipo" style="width:100%;min-height:280px;"></div>
-                            </div>
-                        </div>
-                    </div>
+                        <div class="tab-content">
 
-                    <!-- Estado de Facturas -->
-                    <div class="col-lg-3">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-header py-2">
-                                <h5 class="mb-0"><i class="mdi mdi-file-chart me-1 text-warning"></i>Estado de Facturas</h5>
-                            </div>
-                            <div class="card-body d-flex align-items-center">
-                                <div id="chartEstadoFacturas" style="width:100%;min-height:280px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            <!-- ================= TAB RESUMEN ================= -->
+                            <div class="tab-pane show active" id="tabResumen">
 
-                <!-- ===== Top Clientes ===== -->
-                <div class="row mb-3">
-                    <div class="col-lg-6">
-                        <div class="card shadow-sm">
-                            <div class="card-header py-2">
-                                <h5 class="mb-0"><i class="mdi mdi-podium me-1 text-danger"></i>Top Clientes por Honorarios (Contratos Activos)</h5>
-                            </div>
-                            <div class="card-body p-0">
-                                <div id="chartTopClientes" style="min-height:300px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6">
-                        <div class="card shadow-sm">
-                            <div class="card-header py-2">
-                                <h5 class="mb-0"><i class="mdi mdi-account-group me-1 text-info"></i>Ranking por Honorarios</h5>
-                            </div>
-                            <div class="card-body">
-                                <div th:each="item, iter : ${topClientes}" class="d-flex align-items-center mb-3">
-                                    <div class="me-3 fw-bold text-muted" style="width:24px;" th:text="${iter.index + 1}"></div>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold" th:text="${item.nombre}"></div>
-                                        <div class="progress mt-1" style="height:5px;">
-                                            <div class="progress-bar bg-primary"
-                                                 th:style="'width:' + ${item.porcentaje} + '%'"></div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="card border shadow-none">
+                                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                                                <h5 class="mb-0"><i class="mdi mdi-chart-areaspline me-1 text-primary"></i>Evolución de la facturación (12 meses)</h5>
+                                                <small class="text-muted">Facturado vs. cobrado vs. IVA débito</small>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="chartTendencia" style="min-height:320px;"></div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="ms-3 fw-bold text-success" th:text="'$' + ${#numbers.formatDecimal(item.honorarios, 1, 2)}"></div>
                                 </div>
-                                <div th:if="${#lists.isEmpty(topClientes)}" class="text-center text-muted py-4">
-                                    <i class="mdi mdi-account-off font-24 d-block mb-1"></i>Sin datos
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- ===== CARTERA POR CLIENTE (múltiples servicios) ===== -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card shadow-sm">
-                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">
-                                    <i class="mdi mdi-briefcase-account me-1 text-success"></i>
-                                    Cartera de Servicios por Cliente
-                                    <small class="text-muted fw-normal ms-2">— recurrentes + eventuales activos</small>
-                                </h5>
-                                <div class="d-flex gap-2">
-                                    <input type="search" class="form-control form-control-sm" style="width:200px;"
-                                           id="buscarCartera" placeholder="Filtrar cliente..." oninput="filtrarCartera()">
-                                    <button class="btn btn-sm btn-soft-primary" onclick="expandirTodos()">
-                                        <i class="mdi mdi-expand-all me-1"></i>Expandir todos
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="card-body p-0">
-                                <div id="listaCartera">
-                                    <!-- Iterate carteraClientes -->
-                                    <div th:each="entry, iter : ${carteraClientes}"
-                                         class="cliente-cartera-item"
-                                         th:attr="data-nombre=${entry.cliente.nombre}">
-                                        <!-- Cabecera del cliente -->
-                                        <div class="d-flex align-items-center px-3 py-2 border-bottom bg-light cursor-pointer"
-                                             style="cursor:pointer;"
-                                             th:onclick="'toggleCartera(' + ${iter.index} + ')'">
-                                            <div class="me-3">
-                                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold"
-                                                     style="width:36px;height:36px;font-size:13px;"
-                                                     th:text="${#strings.substring(entry.cliente.nombre, 0, 2).toUpperCase()}"></div>
+                                <div class="row">
+                                    <div class="col-lg-5">
+                                        <div class="card border shadow-none h-100">
+                                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                                                <h5 class="mb-0"><i class="mdi mdi-chart-pie me-1 text-primary"></i>Honorarios por categoría</h5>
+                                                <small class="text-muted">Contratos activos</small>
                                             </div>
-                                            <div class="flex-grow-1">
-                                                <div class="fw-semibold" th:text="${entry.cliente.nombre}"></div>
-                                                <div class="d-flex gap-2 mt-1">
-                                                    <span class="badge bg-info" th:if="${entry.cantRecurrentes > 0}"
-                                                          th:text="${entry.cantRecurrentes} + ' recurrente(s)'"></span>
-                                                    <span class="badge bg-warning text-dark" th:if="${entry.cantEventuales > 0}"
-                                                          th:text="${entry.cantEventuales} + ' eventual(es)'"></span>
-                                                    <span class="text-muted small font-monospace" th:text="${entry.cliente.nit}"></span>
+                                            <div class="card-body d-flex align-items-center">
+                                                <div id="chartCategoria" style="width:100%;min-height:280px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-4">
+                                        <div class="card border shadow-none h-100">
+                                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                                                <h5 class="mb-0"><i class="mdi mdi-chart-donut me-1 text-success"></i>Tipo de contrato</h5>
+                                                <small class="text-muted">Activos</small>
+                                            </div>
+                                            <div class="card-body d-flex align-items-center">
+                                                <div id="chartTipo" style="width:100%;min-height:280px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-3">
+                                        <div class="card border shadow-none h-100">
+                                            <div class="card-header py-2">
+                                                <h5 class="mb-0"><i class="mdi mdi-file-chart me-1 text-warning"></i>Estado de facturas</h5>
+                                            </div>
+                                            <div class="card-body d-flex align-items-center">
+                                                <div id="chartEstadoFacturas" style="width:100%;min-height:280px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="card border shadow-none h-100">
+                                            <div class="card-header py-2">
+                                                <h5 class="mb-0"><i class="mdi mdi-podium me-1 text-danger"></i>Ranking por honorarios contratados</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div th:each="item, iter : ${topClientes}" class="d-flex align-items-center mb-3">
+                                                    <div class="me-3 fw-bold text-muted" style="width:24px;" th:text="${iter.index + 1}"></div>
+                                                    <div class="flex-grow-1">
+                                                        <div class="fw-semibold" th:text="${item.nombre}"></div>
+                                                        <div class="progress mt-1" style="height:5px;">
+                                                            <div class="progress-bar bg-primary"
+                                                                 th:style="'width:' + ${item.porcentaje} + '%'"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="ms-3 fw-bold text-success"
+                                                         th:text="'$' + ${#numbers.formatDecimal(item.honorarios, 1, 'COMMA', 2, 'POINT')}"></div>
+                                                </div>
+                                                <div class="empty-state" th:if="${#lists.isEmpty(topClientes)}">
+                                                    <i class="mdi mdi-account-off"></i>Sin contratos activos
                                                 </div>
                                             </div>
-                                            <div class="text-end me-3">
-                                                <div class="fw-bold text-success" th:if="${entry.totalMensual.signum() > 0}"
-                                                     th:text="'Recurrente: $' + ${#numbers.formatDecimal(entry.totalMensual, 1, 2)}"></div>
-                                                <div class="text-warning small" th:if="${entry.totalEventual.signum() > 0}"
-                                                     th:text="'Eventual: $' + ${#numbers.formatDecimal(entry.totalEventual, 1, 2)}"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-6">
+                                        <div class="card border shadow-none h-100">
+                                            <div class="card-header py-2">
+                                                <h5 class="mb-0"><i class="mdi mdi-cash-multiple me-1 text-success"></i>Ranking por monto facturado</h5>
                                             </div>
-                                            <div>
-                                                <i class="mdi mdi-chevron-down text-muted" th:id="'icono_' + ${iter.index}"></i>
+                                            <div class="card-body">
+                                                <div th:each="item, iter : ${topFacturado}" class="d-flex align-items-center mb-3">
+                                                    <div class="me-3 fw-bold text-muted" style="width:24px;" th:text="${iter.index + 1}"></div>
+                                                    <div class="flex-grow-1">
+                                                        <div class="fw-semibold" th:text="${item.nombre}"></div>
+                                                        <div class="progress mt-1" style="height:5px;">
+                                                            <div class="progress-bar bg-success"
+                                                                 th:style="'width:' + ${item.porcentaje} + '%'"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="ms-3 fw-bold text-success"
+                                                         th:text="'$' + ${#numbers.formatDecimal(item.monto, 1, 'COMMA', 2, 'POINT')}"></div>
+                                                </div>
+                                                <div class="empty-state" th:if="${#lists.isEmpty(topFacturado)}">
+                                                    <i class="mdi mdi-file-hidden"></i>Sin facturas emitidas
+                                                </div>
                                             </div>
                                         </div>
-                                        <!-- Servicios del cliente -->
-                                        <div th:id="'servicios_' + ${iter.index}" style="display:none;">
-                                            <div class="table-responsive">
-                                                <table class="table table-sm table-hover mb-0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ================= TAB COBRANZA ================= -->
+                            <div class="tab-pane" id="tabCobranza">
+
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                    <div>
+                                        <h5 class="mb-0">Antigüedad de saldos</h5>
+                                        <small class="text-muted">
+                                            Total pendiente
+                                            <strong class="text-warning"
+                                                    th:text="'$' + ${#numbers.formatDecimal(antiguedad.total, 1, 'COMMA', 2, 'POINT')}"></strong>
+                                            en <span th:text="${antiguedad.cantidad}">0</span> documento(s)
+                                        </small>
+                                    </div>
+                                    <a th:href="@{/reportes/antiguedad-saldos.csv}" class="btn btn-soft-secondary btn-sm">
+                                        <i class="mdi mdi-file-export me-1"></i> Exportar CSV
+                                    </a>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-5">
+                                        <div class="card border shadow-none">
+                                            <div class="card-body">
+                                                <div id="chartAging" style="min-height:280px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-7">
+                                        <div class="card border shadow-none">
+                                            <div class="card-body p-0">
+                                                <table class="table table-sm mb-0">
                                                     <thead class="table-light">
                                                     <tr>
-                                                        <th class="ps-4">Servicio</th>
-                                                        <th>Tipo</th>
-                                                        <th>Honorarios</th>
-                                                        <th>Próx. Facturación</th>
-                                                        <th>Estado</th>
-                                                        <th style="width:80px;">Acciones</th>
+                                                        <th class="ps-3">Tramo</th>
+                                                        <th class="text-center">Documentos</th>
+                                                        <th class="text-end">Monto</th>
+                                                        <th style="width:35%;">Participación</th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
-                                                    <tr th:each="c : ${entry.contratos}">
-                                                        <td class="ps-4">
-                                                            <span class="fw-semibold" th:text="${c.servicio?.nombre}"></span>
-                                                            <br>
-                                                            <small class="text-muted" th:text="${c.servicio?.categoria}"></small>
-                                                        </td>
+                                                    <tr th:each="t, iter : ${antiguedad.tramos}">
+                                                        <td class="ps-3 fw-semibold" th:text="${t.tramo}"></td>
+                                                        <td class="text-center" th:text="${t.cantidad}"></td>
+                                                        <td class="text-end fw-bold"
+                                                            th:text="'$' + ${#numbers.formatDecimal(t.monto, 1, 'COMMA', 2, 'POINT')}"></td>
                                                         <td>
-                                                            <span class="badge bg-info" th:if="${c.tipoFacturacion == 'RECURRENTE'}">
-                                                                <i class="mdi mdi-refresh me-1"></i>Recurrente
-                                                            </span>
-                                                            <span class="badge bg-warning text-dark" th:if="${c.tipoFacturacion == 'PAGO_UNICO'}">
-                                                                <i class="mdi mdi-star me-1"></i>Eventual
-                                                            </span>
-                                                            <span class="badge bg-dark" th:if="${c.tipoFacturacion == 'POR_HORA'}">
-                                                                <i class="mdi mdi-clock me-1"></i>Por Hora
-                                                            </span>
-                                                        </td>
-                                                        <td class="fw-bold text-success"
-                                                            th:text="'$' + ${#numbers.formatDecimal(c.honorariosPactados, 1, 2)}"></td>
-                                                        <td th:text="${c.fechaProximaFacturacion != null ? #temporals.format(c.fechaProximaFacturacion, 'dd/MM/yyyy') : '-'}"></td>
-                                                        <td>
-                                                            <span class="badge bg-success" th:if="${c.estado == 'ACTIVO'}">Activo</span>
-                                                            <span class="badge bg-warning text-dark" th:if="${c.estado == 'SUSPENDIDO'}">Suspendido</span>
-                                                        </td>
-                                                        <td>
-                                                            <a th:href="@{/contratos}" class="action-icon text-info" title="Ver contratos">
-                                                                <i class="mdi mdi-open-in-new"></i>
-                                                            </a>
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="progress flex-grow-1" style="height:6px;">
+                                                                    <div class="progress-bar"
+                                                                         th:classappend="${iter.index == 0} ? 'bg-success' : (${iter.index == 1} ? 'bg-info' : (${iter.index == 2} ? 'bg-warning' : 'bg-danger'))"
+                                                                         th:style="'width:' + ${t.porcentaje} + '%'"></div>
+                                                                </div>
+                                                                <small class="ms-2 text-muted" th:text="${t.porcentaje} + '%'"></small>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                     </tbody>
-                                                    <tfoot class="table-light">
-                                                    <tr>
-                                                        <td colspan="2" class="ps-4 fw-bold">Total del cliente:</td>
-                                                        <td class="fw-bold text-success"
-                                                            th:text="'$' + ${#numbers.formatDecimal(entry.totalMensual.add(entry.totalEventual), 1, 2)}"></td>
-                                                        <td colspan="3"></td>
-                                                    </tr>
-                                                    </tfoot>
                                                 </table>
                                             </div>
                                         </div>
                                     </div>
-                                    <div th:if="${#lists.isEmpty(carteraClientes)}" class="text-center text-muted py-5">
-                                        <i class="mdi mdi-briefcase-off font-36 d-block mb-2"></i>
-                                        No hay contratos activos registrados
+                                </div>
+
+                                <div class="card border shadow-none">
+                                    <div class="card-header py-2">
+                                        <h5 class="mb-0"><i class="mdi mdi-format-list-bulleted me-1 text-warning"></i>Detalle de documentos pendientes</h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover mb-0" id="tablaAging">
+                                                <thead class="table-light">
+                                                <tr>
+                                                    <th class="ps-3">N° Documento</th>
+                                                    <th>Cliente</th>
+                                                    <th>Emisión</th>
+                                                    <th>Vencimiento</th>
+                                                    <th class="text-center">Días mora</th>
+                                                    <th>Tramo</th>
+                                                    <th class="text-end pe-3">Monto</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr th:each="d : ${antiguedad.detalle}">
+                                                    <td class="ps-3">
+                                                        <a th:href="@{'/facturacion/' + ${d.id} + '/imprimir'}" target="_blank"
+                                                           class="fw-semibold text-body" th:text="${d.numeroFactura}"></a>
+                                                    </td>
+                                                    <td th:text="${d.cliente}"></td>
+                                                    <td th:text="${d.fechaEmision != null ? #temporals.format(d.fechaEmision, 'dd/MM/yyyy') : '-'}"></td>
+                                                    <td th:text="${d.fechaVencimiento != null ? #temporals.format(d.fechaVencimiento, 'dd/MM/yyyy') : '-'}"></td>
+                                                    <td class="text-center">
+                                                        <span class="badge aging-badge"
+                                                              th:classappend="${d.diasMora == 0} ? 'bg-soft-success text-success' :
+                                                                              (${d.diasMora <= 30} ? 'bg-soft-info text-info' :
+                                                                              (${d.diasMora <= 60} ? 'bg-soft-warning text-warning' : 'bg-soft-danger text-danger'))"
+                                                              th:text="${d.diasMora}"></span>
+                                                    </td>
+                                                    <td class="text-muted small" th:text="${d.tramo}"></td>
+                                                    <td class="text-end pe-3 fw-bold"
+                                                        th:text="'$' + ${#numbers.formatDecimal(d.monto, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                </tr>
+                                                <tr th:if="${#lists.isEmpty(antiguedad.detalle)}">
+                                                    <td colspan="7">
+                                                        <div class="empty-state">
+                                                            <i class="mdi mdi-emoticon-happy-outline text-success"></i>
+                                                            No hay documentos pendientes de cobro
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+
+                            <!-- ================= TAB LIBRO DE VENTAS ================= -->
+                            <div class="tab-pane" id="tabLibro">
+
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                    <div>
+                                        <h5 class="mb-0">Libro de ventas <span th:text="${anio}">2026</span></h5>
+                                        <small class="text-muted">
+                                            Resumen fiscal mensual — separa contribuyentes (CCF) de consumidor final
+                                        </small>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <select class="form-select form-select-sm w-auto" id="selectAnio"
+                                                onchange="location.href = window.url('/reportes?tab=libro&anio=' + this.value)">
+                                            <option th:each="a : ${aniosDisponibles}" th:value="${a}" th:text="${a}"
+                                                    th:selected="${a == anio}"></option>
+                                        </select>
+                                        <a th:href="@{/reportes/libro-ventas.csv(anio=${anio})}" class="btn btn-soft-secondary btn-sm">
+                                            <i class="mdi mdi-file-export me-1"></i> Exportar CSV
+                                        </a>
+                                        <button class="btn btn-soft-primary btn-sm no-print" onclick="window.print()">
+                                            <i class="mdi mdi-printer me-1"></i> Imprimir
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="card border shadow-none">
+                                            <div class="card-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-hover table-centered mb-0">
+                                                        <thead class="table-light">
+                                                        <tr>
+                                                            <th class="ps-3">Mes</th>
+                                                            <th class="text-end">Gravado CCF<br><small class="fw-normal text-muted">Contribuyentes</small></th>
+                                                            <th class="text-end">Gravado CF<br><small class="fw-normal text-muted">Consumidor final</small></th>
+                                                            <th class="text-end">Exento</th>
+                                                            <th class="text-end">No sujeto</th>
+                                                            <th class="text-end">IVA débito<br><small class="fw-normal text-muted">13%</small></th>
+                                                            <th class="text-end">Total</th>
+                                                            <th class="text-center pe-3">Docs.</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        <tr th:each="m : ${libroVentas}"
+                                                            th:classappend="${m.documentos == 0} ? 'text-muted' : ''">
+                                                            <td class="ps-3 fw-semibold" th:text="${m.label}"></td>
+                                                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(m.gravadoContribuyente, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(m.gravadoConsumidor, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(m.exento, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(m.noSujeto, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-end text-warning fw-semibold" th:text="'$' + ${#numbers.formatDecimal(m.iva, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-end fw-bold text-success" th:text="'$' + ${#numbers.formatDecimal(m.total, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-center pe-3" th:text="${m.documentos}"></td>
+                                                        </tr>
+                                                        </tbody>
+                                                        <tfoot class="table-light">
+                                                        <tr class="fw-bold">
+                                                            <td class="ps-3">TOTAL <span th:text="${anio}"></span></td>
+                                                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(totalesLibro.gravadoContribuyente, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(totalesLibro.gravadoConsumidor, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(totalesLibro.exento, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(totalesLibro.noSujeto, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-end text-warning" th:text="'$' + ${#numbers.formatDecimal(totalesLibro.iva, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-end text-success" th:text="'$' + ${#numbers.formatDecimal(totalesLibro.total, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                            <td class="text-center pe-3" th:text="${totalesLibro.documentos}"></td>
+                                                        </tr>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="card border shadow-none">
+                                            <div class="card-header py-2">
+                                                <h5 class="mb-0"><i class="mdi mdi-chart-bar me-1 text-primary"></i>Ventas gravadas por mes</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="chartLibro" style="min-height:300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ================= TAB PROYECTOS ================= -->
+                            <div class="tab-pane" id="tabProyectos">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="card border shadow-none h-100">
+                                            <div class="card-header py-2">
+                                                <h5 class="mb-0"><i class="mdi mdi-progress-check me-1 text-primary"></i>Proyectos por estado</h5>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <table class="table table-sm mb-0">
+                                                    <thead class="table-light">
+                                                    <tr>
+                                                        <th class="ps-3">Estado</th>
+                                                        <th class="text-center">Cantidad</th>
+                                                        <th class="text-end pe-3">Presupuesto</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr th:each="e : ${resumenProyectos.porEstado}">
+                                                        <td class="ps-3">
+                                                            <span class="badge"
+                                                                  th:classappend="${e.clave == 'EN_EJECUCION'} ? 'bg-primary' :
+                                                                                  (${e.clave == 'FINALIZADO'} ? 'bg-success' :
+                                                                                  (${e.clave == 'FACTURADO'} ? 'bg-info' :
+                                                                                  (${e.clave == 'CANCELADO'} ? 'bg-danger' : 'bg-warning text-dark')))"
+                                                                  th:text="${e.clave}"></span>
+                                                        </td>
+                                                        <td class="text-center fw-semibold" th:text="${e.cantidad}"></td>
+                                                        <td class="text-end pe-3 fw-bold text-success"
+                                                            th:text="'$' + ${#numbers.formatDecimal(e.monto, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                    </tr>
+                                                    <tr th:if="${#lists.isEmpty(resumenProyectos.porEstado)}">
+                                                        <td colspan="3">
+                                                            <div class="empty-state"><i class="mdi mdi-briefcase-off"></i>Sin proyectos registrados</div>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-6">
+                                        <div class="card border shadow-none h-100">
+                                            <div class="card-header py-2">
+                                                <h5 class="mb-0"><i class="mdi mdi-shape-outline me-1 text-warning"></i>Presupuesto por categoría</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="chartProyectosCategoria" style="min-height:280px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ================= TAB CARTERA ================= -->
+                            <div class="tab-pane" id="tabCartera">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                    <div>
+                                        <h5 class="mb-0">Cartera de servicios por cliente</h5>
+                                        <small class="text-muted">Contratos activos: recurrentes + eventuales</small>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <input type="search" class="form-control form-control-sm" style="width:220px;"
+                                               id="buscarCartera" placeholder="Filtrar cliente..." oninput="filtrarCartera()">
+                                        <button class="btn btn-sm btn-soft-primary" onclick="alternarTodos()">
+                                            <i class="mdi mdi-expand-all me-1"></i><span id="labelExpandir">Expandir todos</span>
+                                        </button>
+                                        <a th:href="@{/reportes/cartera-clientes.csv}" class="btn btn-sm btn-soft-secondary">
+                                            <i class="mdi mdi-file-export me-1"></i> Exportar CSV
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="card border shadow-none">
+                                    <div class="card-body p-0">
+                                        <div id="listaCartera">
+                                            <div th:each="entry, iter : ${carteraClientes}"
+                                                 class="cliente-cartera-item"
+                                                 th:attr="data-nombre=${entry.cliente.nombre}">
+                                                <!-- Cabecera del cliente -->
+                                                <div class="d-flex align-items-center px-3 py-2 border-bottom bg-light fs-toggle-row"
+                                                     th:onclick="'toggleCartera(' + ${iter.index} + ')'">
+                                                    <div class="avatar-initials bg-primary me-3"
+                                                         th:text="${#strings.substring(entry.cliente.nombre, 0, 2).toUpperCase()}"></div>
+                                                    <div class="flex-grow-1">
+                                                        <div class="fw-semibold" th:text="${entry.cliente.nombre}"></div>
+                                                        <div class="d-flex gap-2 mt-1 align-items-center">
+                                                            <span class="badge bg-info" th:if="${entry.cantRecurrentes > 0}"
+                                                                  th:text="${entry.cantRecurrentes} + ' recurrente(s)'"></span>
+                                                            <span class="badge bg-warning text-dark" th:if="${entry.cantEventuales > 0}"
+                                                                  th:text="${entry.cantEventuales} + ' eventual(es)'"></span>
+                                                            <span class="text-muted small font-monospace" th:text="${entry.cliente.nit}"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end me-3">
+                                                        <div class="fw-bold text-success" th:if="${entry.totalMensual.signum() > 0}"
+                                                             th:text="'Recurrente: $' + ${#numbers.formatDecimal(entry.totalMensual, 1, 'COMMA', 2, 'POINT')}"></div>
+                                                        <div class="text-warning small" th:if="${entry.totalEventual.signum() > 0}"
+                                                             th:text="'Eventual: $' + ${#numbers.formatDecimal(entry.totalEventual, 1, 'COMMA', 2, 'POINT')}"></div>
+                                                    </div>
+                                                    <div>
+                                                        <i class="mdi mdi-chevron-down text-muted" th:id="'icono_' + ${iter.index}"></i>
+                                                    </div>
+                                                </div>
+                                                <!-- Servicios del cliente -->
+                                                <div th:id="'servicios_' + ${iter.index}" style="display:none;">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-hover mb-0">
+                                                            <thead class="table-light">
+                                                            <tr>
+                                                                <th class="ps-4">Servicio</th>
+                                                                <th>Tipo</th>
+                                                                <th>Honorarios</th>
+                                                                <th>Próx. facturación</th>
+                                                                <th>Estado</th>
+                                                                <th style="width:80px;">Acciones</th>
+                                                            </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            <tr th:each="c : ${entry.contratos}">
+                                                                <td class="ps-4" style="white-space:normal;">
+                                                                    <span th:each="cs : ${c.servicios}"
+                                                                          class="badge bg-soft-secondary text-secondary me-1"
+                                                                          th:text="${cs.servicio?.nombre}"></span>
+                                                                    <span th:if="${#lists.isEmpty(c.servicios)}" class="text-muted small">—</span>
+                                                                    <br th:if="${not #lists.isEmpty(c.servicios)}">
+                                                                    <small class="text-muted"
+                                                                           th:text="${not #lists.isEmpty(c.servicios) ? c.servicios[0].servicio?.categoria : ''}"></small>
+                                                                </td>
+                                                                <td>
+                                                                    <span class="badge bg-info" th:if="${c.tipoFacturacion == 'RECURRENTE'}">
+                                                                        <i class="mdi mdi-refresh me-1"></i>Recurrente
+                                                                    </span>
+                                                                    <span class="badge bg-warning text-dark" th:if="${c.tipoFacturacion == 'PAGO_UNICO'}">
+                                                                        <i class="mdi mdi-star me-1"></i>Eventual
+                                                                    </span>
+                                                                    <span class="badge bg-dark" th:if="${c.tipoFacturacion == 'POR_HORA'}">
+                                                                        <i class="mdi mdi-clock me-1"></i>Por hora
+                                                                    </span>
+                                                                </td>
+                                                                <td class="fw-bold text-success"
+                                                                    th:text="'$' + ${#numbers.formatDecimal(c.honorariosPactados, 1, 'COMMA', 2, 'POINT')}"></td>
+                                                                <td th:text="${c.fechaProximaFacturacion != null ? #temporals.format(c.fechaProximaFacturacion, 'dd/MM/yyyy') : '-'}"></td>
+                                                                <td>
+                                                                    <span class="badge bg-success" th:if="${c.estado == 'ACTIVO'}">Activo</span>
+                                                                    <span class="badge bg-warning text-dark" th:if="${c.estado == 'SUSPENDIDO'}">Suspendido</span>
+                                                                </td>
+                                                                <td>
+                                                                    <a th:href="@{/contratos}" class="action-icon text-info" title="Ver contratos">
+                                                                        <i class="mdi mdi-open-in-new"></i>
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                            </tbody>
+                                                            <tfoot class="table-light">
+                                                            <tr>
+                                                                <td colspan="2" class="ps-4 fw-bold">Total del cliente:</td>
+                                                                <td class="fw-bold text-success"
+                                                                    th:text="'$' + ${#numbers.formatDecimal(entry.totalMensual.add(entry.totalEventual), 1, 'COMMA', 2, 'POINT')}"></td>
+                                                                <td colspan="3"></td>
+                                                            </tr>
+                                                            </tfoot>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="empty-state" th:if="${#lists.isEmpty(carteraClientes)}">
+                                                <i class="mdi mdi-briefcase-off"></i>
+                                                No hay contratos activos registrados
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div><!-- /tab-content -->
                     </div>
                 </div>
 
@@ -290,126 +618,231 @@
 
 <footer th:replace="~{layout/footer :: footer}"></footer>
 
-<!-- Hidden data for charts -->
 <script th:inline="javascript">
     /*<![CDATA[*/
-    const dataCategorias = /*[[${ingresosPorCategoria}]]*/ {};
-    const dataTipos = /*[[${distribucionTipo}]]*/ {};
-    const dataEstadoFacturas = /*[[${distribucionFacturas}]]*/ {};
-    const dataTopClientes = /*[[${topClientes}]]*/ [];
+    const dataCategorias      = /*[[${ingresosPorCategoria}]]*/ {};
+    const dataTipos           = /*[[${distribucionTipo}]]*/ {};
+    const dataEstadoFacturas  = /*[[${distribucionFacturas}]]*/ {};
+    const dataTendencia       = /*[[${tendencia}]]*/ [];
+    const dataAging           = /*[[${antiguedad.tramos}]]*/ [];
+    const dataLibro           = /*[[${libroVentas}]]*/ [];
+    const dataProyectosCat    = /*[[${resumenProyectos.porCategoria}]]*/ [];
     /*]]>*/
 </script>
 
-<script>
-// ====== CHARTS ======
-$(document).ready(function() {
-    // ---- Pie: Ingresos por Categoría ----
-    const catLabels = Object.keys(dataCategorias);
-    const catValues = catLabels.map(k => parseFloat(dataCategorias[k]) || 0);
+<!-- th:inline="none" evita que Thymeleaf interprete la sintaxis [[...]] de DataTables -->
+<script th:inline="none">
+const PALETA = ['#727cf5', '#0acf97', '#ffbc00', '#fa5c7c', '#39afd1', '#6c757d', '#8f6ed5'];
+const graficasRenderizadas = {};
 
+function vacio(idContenedor, icono, mensaje) {
+    document.getElementById(idContenedor).innerHTML =
+        '<div class="empty-state w-100"><i class="mdi ' + icono + '"></i>' + mensaje + '</div>';
+}
+
+/** ApexCharts no dibuja bien dentro de pestañas ocultas: se renderiza al mostrarlas. */
+function render(id, opciones) {
+    if (graficasRenderizadas[id]) return;
+    const el = document.getElementById(id);
+    if (!el || el.offsetParent === null) return;
+    graficasRenderizadas[id] = new ApexCharts(el, opciones);
+    graficasRenderizadas[id].render();
+}
+
+// ======================= RESUMEN =======================
+function graficasResumen() {
+    const labels = dataTendencia.map(p => p.label);
+    render('chartTendencia', {
+        series: [
+            { name: 'Facturado', type: 'area', data: dataTendencia.map(p => parseFloat(p.facturado) || 0) },
+            { name: 'Cobrado',   type: 'area', data: dataTendencia.map(p => parseFloat(p.cobrado) || 0) },
+            { name: 'IVA débito', type: 'line', data: dataTendencia.map(p => parseFloat(p.iva) || 0) }
+        ],
+        chart: { height: 320, fontFamily: 'inherit', toolbar: { show: false } },
+        colors: ['#727cf5', '#0acf97', '#ffbc00'],
+        stroke: { curve: 'smooth', width: [2, 2, 2], dashArray: [0, 0, 4] },
+        fill: { type: ['gradient', 'gradient', 'solid'], gradient: { opacityFrom: .3, opacityTo: .05 } },
+        dataLabels: { enabled: false },
+        xaxis: { categories: labels },
+        yaxis: { labels: { formatter: v => '$' + v.toFixed(0) } },
+        tooltip: { shared: true, y: { formatter: v => '$' + v.toFixed(2) } },
+        legend: { position: 'top', horizontalAlign: 'right' },
+        grid: { borderColor: '#f0f0f0' }
+    });
+
+    const catLabels = Object.keys(dataCategorias);
     if (catLabels.length > 0) {
-        new ApexCharts(document.getElementById('chartCategoria'), {
-            series: catValues,
+        render('chartCategoria', {
+            series: catLabels.map(k => parseFloat(dataCategorias[k]) || 0),
             labels: catLabels,
             chart: { type: 'pie', height: 280, fontFamily: 'inherit' },
-            colors: ['#727cf5','#fa5c7c','#ffbc00','#0acf97','#39afd1'],
+            colors: PALETA,
             legend: { position: 'bottom', fontSize: '12px' },
-            dataLabels: { formatter: (val) => val.toFixed(1) + '%' },
-            tooltip: {
-                y: { formatter: (val) => '$' + val.toFixed(2) }
-            }
-        }).render();
+            dataLabels: { formatter: v => v.toFixed(1) + '%' },
+            tooltip: { y: { formatter: v => '$' + v.toFixed(2) } }
+        });
     } else {
-        document.getElementById('chartCategoria').innerHTML =
-            '<div class="text-center text-muted py-5"><i class="mdi mdi-chart-arc font-36 d-block mb-2"></i>Sin datos</div>';
+        vacio('chartCategoria', 'mdi-chart-arc', 'Sin datos');
     }
 
-    // ---- Donut: Tipos de Contrato ----
-    const tipoMap = { 'RECURRENTE': 'Recurrente', 'PAGO_UNICO': 'Eventual (Único)', 'POR_HORA': 'Por Hora' };
+    const tipoMap = { 'RECURRENTE': 'Recurrente', 'PAGO_UNICO': 'Eventual (único)', 'POR_HORA': 'Por hora' };
     const tipoLabels = Object.keys(dataTipos).map(k => tipoMap[k] || k);
-    const tipoValues = Object.values(dataTipos).map(v => parseInt(v) || 0);
-
     if (tipoLabels.length > 0) {
-        new ApexCharts(document.getElementById('chartTipo'), {
-            series: tipoValues,
+        render('chartTipo', {
+            series: Object.values(dataTipos).map(v => parseInt(v) || 0),
             labels: tipoLabels,
             chart: { type: 'donut', height: 280, fontFamily: 'inherit' },
-            colors: ['#0acf97','#ffbc00','#39afd1'],
+            colors: ['#0acf97', '#ffbc00', '#39afd1'],
             plotOptions: { pie: { donut: { size: '65%' } } },
             legend: { position: 'bottom', fontSize: '12px' },
-            dataLabels: { formatter: (val, opts) => opts.w.config.series[opts.seriesIndex] }
-        }).render();
+            dataLabels: { formatter: (v, o) => o.w.config.series[o.seriesIndex] }
+        });
     } else {
-        document.getElementById('chartTipo').innerHTML =
-            '<div class="text-center text-muted py-5"><i class="mdi mdi-chart-donut font-36 d-block mb-2"></i>Sin datos</div>';
+        vacio('chartTipo', 'mdi-chart-donut', 'Sin datos');
     }
 
-    // ---- Radialbar: Estado Facturas ----
-    const estadoMap = { 'BORRADOR': '#6c757d', 'EMITIDA': '#ffbc00', 'PAGADA': '#0acf97', 'ANULADA': '#fa5c7c' };
-    const estadoLabels = Object.keys(dataEstadoFacturas).map(k => k.charAt(0) + k.slice(1).toLowerCase());
-    const estadoValues = Object.values(dataEstadoFacturas).map(v => parseInt(v) || 0);
-    const estadoColors = Object.keys(dataEstadoFacturas).map(k => estadoMap[k] || '#727cf5');
-    const totalFacturas = estadoValues.reduce((a, b) => a + b, 0);
-
-    if (estadoLabels.length > 0) {
-        new ApexCharts(document.getElementById('chartEstadoFacturas'), {
-            series: estadoValues,
-            labels: estadoLabels,
+    const estadoColor = { 'BORRADOR': '#6c757d', 'EMITIDA': '#ffbc00', 'PAGADA': '#0acf97', 'ANULADA': '#fa5c7c' };
+    const estadoClaves = Object.keys(dataEstadoFacturas);
+    if (estadoClaves.length > 0) {
+        const valores = Object.values(dataEstadoFacturas).map(v => parseInt(v) || 0);
+        const total = valores.reduce((a, b) => a + b, 0);
+        render('chartEstadoFacturas', {
+            series: valores,
+            labels: estadoClaves.map(k => k.charAt(0) + k.slice(1).toLowerCase()),
             chart: { type: 'donut', height: 280, fontFamily: 'inherit' },
-            colors: estadoColors,
+            colors: estadoClaves.map(k => estadoColor[k] || '#727cf5'),
             plotOptions: { pie: { donut: { size: '70%',
-                labels: { show: true, total: { show: true, label: 'Total', formatter: () => totalFacturas } }
-            }}},
+                labels: { show: true, total: { show: true, label: 'Total', formatter: () => total } } } } },
             legend: { position: 'bottom', fontSize: '11px' }
-        }).render();
+        });
     } else {
-        document.getElementById('chartEstadoFacturas').innerHTML =
-            '<div class="text-center text-muted py-5"><i class="mdi mdi-file-hidden font-36 d-block mb-2"></i>Sin facturas</div>';
+        vacio('chartEstadoFacturas', 'mdi-file-hidden', 'Sin facturas');
+    }
+}
+
+// ======================= COBRANZA =======================
+function graficasCobranza() {
+    const conSaldo = dataAging.filter(t => parseFloat(t.monto) > 0);
+    if (conSaldo.length === 0) {
+        vacio('chartAging', 'mdi-emoticon-happy-outline', 'Sin saldos pendientes');
+        return;
+    }
+    render('chartAging', {
+        series: [{ name: 'Saldo', data: dataAging.map(t => parseFloat(t.monto) || 0) }],
+        chart: { type: 'bar', height: 280, fontFamily: 'inherit', toolbar: { show: false } },
+        plotOptions: { bar: { distributed: true, borderRadius: 4, columnWidth: '55%' } },
+        colors: ['#0acf97', '#39afd1', '#ffbc00', '#fd7e14', '#fa5c7c'],
+        dataLabels: { enabled: true, formatter: v => '$' + v.toFixed(0), style: { fontSize: '10px' } },
+        xaxis: { categories: dataAging.map(t => t.tramo), labels: { style: { fontSize: '10px' } } },
+        yaxis: { labels: { formatter: v => '$' + v.toFixed(0) } },
+        legend: { show: false },
+        tooltip: { y: { formatter: v => '$' + v.toFixed(2) } },
+        grid: { borderColor: '#f0f0f0' }
+    });
+}
+
+// ======================= LIBRO DE VENTAS =======================
+function graficasLibro() {
+    render('chartLibro', {
+        series: [
+            { name: 'Gravado CCF', data: dataLibro.map(m => parseFloat(m.gravadoContribuyente) || 0) },
+            { name: 'Gravado consumidor final', data: dataLibro.map(m => parseFloat(m.gravadoConsumidor) || 0) },
+            { name: 'IVA débito', data: dataLibro.map(m => parseFloat(m.iva) || 0) }
+        ],
+        chart: { type: 'bar', height: 300, stacked: true, fontFamily: 'inherit', toolbar: { show: false } },
+        colors: ['#727cf5', '#39afd1', '#ffbc00'],
+        plotOptions: { bar: { borderRadius: 3, columnWidth: '55%' } },
+        dataLabels: { enabled: false },
+        xaxis: { categories: dataLibro.map(m => m.label) },
+        yaxis: { labels: { formatter: v => '$' + v.toFixed(0) } },
+        tooltip: { shared: true, y: { formatter: v => '$' + v.toFixed(2) } },
+        legend: { position: 'top', horizontalAlign: 'right' },
+        grid: { borderColor: '#f0f0f0' }
+    });
+}
+
+// ======================= PROYECTOS =======================
+function graficasProyectos() {
+    if (dataProyectosCat.length === 0) {
+        vacio('chartProyectosCategoria', 'mdi-briefcase-off', 'Sin proyectos registrados');
+        return;
+    }
+    render('chartProyectosCategoria', {
+        series: [{ name: 'Presupuesto', data: dataProyectosCat.map(c => parseFloat(c.monto) || 0) }],
+        chart: { type: 'bar', height: 280, fontFamily: 'inherit', toolbar: { show: false } },
+        plotOptions: { bar: { horizontal: true, distributed: true, borderRadius: 4 } },
+        colors: PALETA,
+        dataLabels: { enabled: true, formatter: v => '$' + v.toFixed(0), style: { fontSize: '11px' } },
+        xaxis: { categories: dataProyectosCat.map(c => c.clave) },
+        legend: { show: false },
+        tooltip: { y: { formatter: v => '$' + v.toFixed(2) } },
+        grid: { borderColor: '#f0f0f0' }
+    });
+}
+
+const RENDERIZADORES = {
+    resumen: graficasResumen,
+    cobranza: graficasCobranza,
+    libro: graficasLibro,
+    proyectos: graficasProyectos,
+    cartera: () => {}
+};
+
+$(document).ready(function () {
+    // Abrir la pestaña indicada en la URL (?tab=cobranza)
+    const tabSolicitada = new URLSearchParams(location.search).get('tab');
+    if (tabSolicitada) {
+        const enlace = document.querySelector('[data-tab-key="' + tabSolicitada + '"]');
+        if (enlace) bootstrap.Tab.getOrCreateInstance(enlace).show();
     }
 
-    // ---- Bar Horizontal: Top Clientes ----
-    const clienteNombres = dataTopClientes.map(c => c.nombre.length > 20 ? c.nombre.substring(0,20) + '…' : c.nombre);
-    const clienteHonorarios = dataTopClientes.map(c => parseFloat(c.honorarios) || 0);
+    // Renderizar la pestaña visible y las siguientes al mostrarse
+    RENDERIZADORES[tabSolicitada && RENDERIZADORES[tabSolicitada] ? tabSolicitada : 'resumen']();
 
-    if (clienteNombres.length > 0) {
-        new ApexCharts(document.getElementById('chartTopClientes'), {
-            series: [{ name: 'Honorarios', data: clienteHonorarios }],
-            chart: { type: 'bar', height: 300, fontFamily: 'inherit', toolbar: { show: false } },
-            plotOptions: { bar: { horizontal: true, borderRadius: 4, dataLabels: { position: 'top' } } },
-            dataLabels: { enabled: true, formatter: v => '$' + v.toFixed(0), offsetX: 5,
-                style: { fontSize: '11px', colors: ['#333'] } },
-            xaxis: { categories: clienteNombres, labels: { formatter: v => '$' + v } },
-            colors: ['#727cf5'],
-            grid: { borderColor: '#f0f0f0' }
-        }).render();
-    } else {
-        document.getElementById('chartTopClientes').innerHTML =
-            '<div class="text-center text-muted py-5"><i class="mdi mdi-account-off font-36 d-block mb-2"></i>Sin datos</div>';
+    document.querySelectorAll('#tabsReportes a[data-bs-toggle="tab"]').forEach(enlace => {
+        enlace.addEventListener('shown.bs.tab', function () {
+            const clave = this.getAttribute('data-tab-key');
+            if (RENDERIZADORES[clave]) RENDERIZADORES[clave]();
+        });
+    });
+
+    // DataTable del detalle de cobranza
+    if ($('#tablaAging tbody tr').length > 1) {
+        $('#tablaAging').DataTable({
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+            pageLength: 10,
+            order: [[4, 'desc']]
+        });
     }
 });
 
-// ====== CARTERA ACCORDION ======
+// ======================= CARTERA =======================
 function toggleCartera(idx) {
     const panel = document.getElementById('servicios_' + idx);
     const icono = document.getElementById('icono_' + idx);
-    const isOpen = panel.style.display !== 'none';
-    panel.style.display = isOpen ? 'none' : '';
-    icono.className = isOpen ? 'mdi mdi-chevron-down text-muted' : 'mdi mdi-chevron-up text-primary';
+    const abierto = panel.style.display !== 'none';
+    panel.style.display = abierto ? 'none' : '';
+    icono.className = abierto ? 'mdi mdi-chevron-down text-muted' : 'mdi mdi-chevron-up text-primary';
 }
 
-function expandirTodos() {
+let carteraExpandida = false;
+function alternarTodos() {
+    carteraExpandida = !carteraExpandida;
     document.querySelectorAll('[id^="servicios_"]').forEach((el, i) => {
-        el.style.display = '';
+        el.style.display = carteraExpandida ? '' : 'none';
         const icono = document.getElementById('icono_' + i);
-        if (icono) icono.className = 'mdi mdi-chevron-up text-primary';
+        if (icono) icono.className = carteraExpandida
+            ? 'mdi mdi-chevron-up text-primary' : 'mdi mdi-chevron-down text-muted';
     });
+    document.getElementById('labelExpandir').textContent =
+        carteraExpandida ? 'Contraer todos' : 'Expandir todos';
 }
 
 function filtrarCartera() {
     const texto = document.getElementById('buscarCartera').value.toLowerCase();
     document.querySelectorAll('.cliente-cartera-item').forEach(item => {
-        const nombre = item.getAttribute('data-nombre') || '';
-        item.style.display = nombre.toLowerCase().includes(texto) ? '' : 'none';
+        const nombre = (item.getAttribute('data-nombre') || '').toLowerCase();
+        item.style.display = nombre.includes(texto) ? '' : 'none';
     });
 }
 </script>

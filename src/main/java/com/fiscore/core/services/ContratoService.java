@@ -1,10 +1,13 @@
 package com.fiscore.core.services;
 
 import com.fiscore.core.models.Contrato;
+import com.fiscore.core.models.ContratoServicio;
 import com.fiscore.core.repositories.ContratoRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -27,23 +30,69 @@ public class ContratoService {
         return contratoRepository.findById(id);
     }
 
-    public Contrato save(Contrato contrato) {
-        if (contrato.getFechaCreacion() == null) {
-            contrato.setFechaCreacion(LocalDate.now());
-        }
-        if (contrato.getEstado() == null) {
-            contrato.setEstado("ACTIVO");
-        }
-        // Calcular próxima fecha de facturación según tipo
-        if (contrato.getFechaProximaFacturacion() == null && contrato.getFechaInicio() != null) {
-            String tipo = contrato.getTipoFacturacion();
-            if ("RECURRENTE".equals(tipo)) {
-                contrato.setFechaProximaFacturacion(contrato.getFechaInicio().plusMonths(1));
-            } else {
-                contrato.setFechaProximaFacturacion(contrato.getFechaInicio());
+    /**
+     * Guarda o actualiza un contrato con su lista de servicios.
+     * Si el contrato ya existe (tiene ID), carga la entidad gestionada
+     * y actualiza sus campos y la colección de servicios en la misma transacción
+     * para que orphanRemoval elimine los servicios anteriores correctamente.
+     */
+    @Transactional
+    public Contrato save(Contrato contratoNuevo) {
+        Contrato target;
+
+        if (contratoNuevo.getId() != null) {
+            // Actualización: cargar entidad gestionada y modificarla
+            target = contratoRepository.findById(contratoNuevo.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Contrato no encontrado."));
+
+            target.setCliente(contratoNuevo.getCliente());
+            target.setTipoFacturacion(contratoNuevo.getTipoFacturacion());
+            target.setHonorariosPactados(contratoNuevo.getHonorariosPactados());
+            target.setFechaInicio(contratoNuevo.getFechaInicio());
+            target.setNotas(contratoNuevo.getNotas());
+            target.setEstado(contratoNuevo.getEstado() != null ? contratoNuevo.getEstado() : target.getEstado());
+
+            // Reemplazar servicios: orphanRemoval elimina los anteriores
+            target.getServicios().clear();
+            for (ContratoServicio cs : contratoNuevo.getServicios()) {
+                cs.setId(null); // se insertan como filas nuevas del contrato
+                cs.setContrato(target);
+                target.getServicios().add(cs);
+            }
+
+            // Un contrato reactivado sin ciclo programado vuelve a la agenda
+            if (target.getFechaProximaFacturacion() == null && "ACTIVO".equals(target.getEstado())) {
+                target.setFechaProximaFacturacion(calcularPrimeraFacturacion(target));
+            }
+        } else {
+            // Nuevo contrato
+            target = contratoNuevo;
+            if (target.getFechaCreacion() == null) {
+                target.setFechaCreacion(LocalDate.now());
+            }
+            if (target.getEstado() == null) {
+                target.setEstado("ACTIVO");
+            }
+            // Asignar próxima facturación
+            if (target.getFechaProximaFacturacion() == null) {
+                target.setFechaProximaFacturacion(calcularPrimeraFacturacion(target));
+            }
+            // Enlazar servicios al contrato padre antes de persistir
+            for (ContratoServicio cs : target.getServicios()) {
+                cs.setContrato(target);
             }
         }
-        return contratoRepository.save(contrato);
+
+        return contratoRepository.save(target);
+    }
+
+    /**
+     * Primera fecha de facturación de un contrato. Los recurrentes se facturan
+     * desde su fecha de inicio; el resto, de una sola vez, en esa misma fecha.
+     */
+    private LocalDate calcularPrimeraFacturacion(Contrato contrato) {
+        LocalDate inicio = contrato.getFechaInicio() != null ? contrato.getFechaInicio() : LocalDate.now();
+        return inicio;
     }
 
     public void deleteById(Long id) {
@@ -58,7 +107,18 @@ public class ContratoService {
         return contratoRepository.findActivosConDetalle();
     }
 
-    public java.math.BigDecimal sumHonorariosActivos() {
+    public BigDecimal sumHonorariosActivos() {
         return contratoRepository.sumHonorariosActivos();
+    }
+
+    /** Contratos activos con la facturación del ciclo ya vencida. */
+    public List<Contrato> findPendientesDeFacturar() {
+        return contratoRepository.findPorFacturarHasta(LocalDate.now());
+    }
+
+    /** Agenda de facturación de los próximos {@code dias} días. */
+    public List<Contrato> findAgendaFacturacion(int dias) {
+        LocalDate hoy = LocalDate.now();
+        return contratoRepository.findAgendaFacturacion(hoy, hoy.plusDays(dias));
     }
 }

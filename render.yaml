@@ -1,0 +1,77 @@
+# ============================================================
+# Fiscore — Configuración de despliegue en Render (plan gratuito)
+# https://render.com/docs/yaml-spec
+#
+# La base de datos NO se declara aquí: se usa Neon (PostgreSQL
+# serverless con capa gratuita permanente). El PostgreSQL gratuito
+# de Render caduca a los 30 días, por eso queda fuera.
+#
+# Límites del plan free de Render a tener presentes:
+#   · 512 MB de RAM / 0.1 CPU
+#   · El servicio se suspende tras 15 min sin tráfico; la visita
+#     siguiente sufre un arranque en frío de 40-60 s.
+#   · Sin disco persistente (la aplicación no guarda ficheros).
+# ============================================================
+
+services:
+  - type: web
+    name: fiscore
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    # Debe emparejarse con la región de Neon: el proyecto está en
+    # AWS us-east-2, así que aquí va 'ohio'. Cada consulta paga esa
+    # distancia, y cruzar de región añade decenas de milisegundos.
+    region: ohio
+    # /login es público: sirve de sonda sin necesitar sesión.
+    healthCheckPath: /login
+    autoDeploy: true
+
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      # CONTEXT_PATH no se declara a propósito: el perfil 'prod' ya sirve la
+      # aplicación desde la raíz. Definirlo aquí con el valor "/" impide el
+      # arranque, porque Spring exige cadena vacía para la raíz
+      # ("ContextPath must start with '/' and not end with '/'").
+
+      # ── Neon ────────────────────────────────────────────────
+      # Se rellenan a mano en el panel de Render (sync: false).
+      # DB_URL debe ir en formato JDBC y validando el certificado TLS:
+      #   jdbc:postgresql://ep-xxx.us-east-1.aws.neon.tech/fiscore?sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory
+      # Usar el endpoint DIRECTO (sin el sufijo '-pooler'): HikariCP ya
+      # agrupa conexiones, y el pooler de Neon rompe los prepared statements
+      # de Hibernate salvo que se añada &prepareThreshold=0.
+      # NO copiar 'channel_binding' de la cadena que da Neon: es un parámetro
+      # de libpq y el driver JDBC lo ignora.
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+      # Pool pequeño: 512 MB de RAM y una BD serverless a la que conviene
+      # dejar dormir. El resto de ajustes van en application-prod.properties.
+      - key: DB_POOL_SIZE
+        value: "5"
+
+      # ── Primer arranque ─────────────────────────────────────
+      # Contraseña del usuario administrador inicial. Solo se aplica si la
+      # tabla ADM_USUARIOS está vacía; si la base ya trae usuarios, este
+      # valor no tiene efecto. Render la genera y se consulta en el panel.
+      - key: SEED_ADMIN_PASS
+        generateValue: true
+      - key: SEED_ADMIN_USER
+        value: admin
+      - key: SEED_ADMIN_MAIL
+        sync: false
+
+      # Crea el esquema en el primer despliegue y añade columnas nuevas en
+      # los siguientes; nunca borra. Ver DEPLOY.md §6.
+      - key: DDL_AUTO
+        value: update
+
+      - key: LOG_LEVEL_APP
+        value: INFO

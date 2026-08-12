@@ -49,6 +49,11 @@ public class AdmUsuario {
     @Column(name = "USER_ESTADO", precision = 1)
     private BigDecimal userEstado;
 
+    /** Rol de acceso: CDSF-ADMIN o CDSF-ACCESS (ver SecurityConfig). */
+    @ColumnDefault("'CDSF-ACCESS'")
+    @Column(name = "USER_ROL", length = 50)
+    private String userRol;
+
     @Column(name = "USER_USUARIO_REGISTRA", length = 100)
     private String userUsuarioRegistra;
 

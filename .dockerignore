@@ -1,0 +1,32 @@
+# Control de versiones
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+*.iml
+.vscode
+.classpath
+.project
+.settings
+
+# Artefactos de compilación: el Dockerfile los genera dentro de la imagen
+target/
+
+# Entorno local (nunca debe entrar en la imagen)
+.env
+*.env.local
+
+# Documentación y utilidades que no hacen falta en la imagen
+*.md
+docker-compose*.yml
+.claude/
+
+# Registros
+*.log
+logs/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
