@@ -226,45 +226,121 @@ docker run --rm -p 8080:8080 \
 
 ## 9. Copiar datos de la base local a Neon
 
-No hace falta tener `psql` instalado: sirve una imagen de PostgreSQL en Docker.
-
 **Cuidado con el alcance.** La base local `contasuite` comparte espacio con las
 tablas de otro proyecto (gestión de riesgos: `ambito_riesgo`, `control`,
-`evaluacion_riesgo`…). Hay que copiar **solo** las de Fiscore, nunca la base
-entera.
+`evaluacion_riesgo`…). Hay que copiar **solo** las doce de Fiscore, nunca la
+base entera.
 
-```bash
-LOCAL="-h host.docker.internal -U postgres -d contasuite"
-NEON="postgresql://neondb_owner@<host-directo>/neondb?sslmode=require"
+Si el puerto 5432 saliente está abierto, lo directo es `pg_dump | psql` contra
+Neon y no hace falta nada más. En una **red corporativa ese puerto suele estar
+cerrado** —el intento muere con `SQLState 08001` / `Connect timed out`—, y
+entonces sirve el procedimiento de abajo, que carga por HTTPS.
 
-# 1. Volcar tabla por tabla EN ORDEN DE DEPENDENCIAS. Un volcado único no sirve:
-#    pg_dump ordena alfabéticamente y las claves foráneas fallarían
-#    (detalle_factura iría antes que factura, contrato_servicio antes que servicio).
-for t in adm_usuarios cliente servicio dte_parametro contrato \
-         contrato_servicio proyecto factura detalle_factura; do
-  docker run --rm -e PGPASSWORD=<clave-local> postgres:17-alpine \
-    pg_dump $LOCAL --data-only --column-inserts -t public.$t \
-    | grep '^INSERT INTO' >> datos.sql
-done
+### 1. Volcar los datos locales
 
-# 2. Cargar con --single-transaction, precedido de los DELETE en orden inverso.
-cat migracion.sql | docker run -i --rm -e PGPASSWORD=<clave-neon> postgres:17-alpine \
-  psql "$NEON" -v ON_ERROR_STOP=1 --single-transaction -f -
+Las binarios están en la instalación de PostgreSQL, que en Windows no queda en
+el PATH (`C:\Program Files\PostgreSQL\<version>\bin`). Hay que volcar **tabla
+por tabla y en orden de dependencias**: un volcado único no sirve, porque
+`pg_dump` ordena alfabéticamente y las claves foráneas fallarían
+(`detalle_factura` iría antes que `factura`, `contrato_servicio` antes que
+`servicio`).
+
+```powershell
+$env:PGPASSWORD='<clave-local>'; $env:PGCLIENTENCODING='UTF8'
+$dump='C:\Program Files\PostgreSQL\14\bin\pg_dump.exe'
+$tablas = @('adm_usuarios','cliente','servicio','dte_parametro','dte_catalogo',
+            'contrato','contrato_servicio','proyecto','factura',
+            'detalle_factura','dte_correlativo','dte_token')
+foreach ($t in $tablas) {
+  & $dump -h localhost -U postgres -d contasuite --data-only --column-inserts `
+          --no-owner --no-privileges -t "public.$t" |
+    Where-Object { $_ -like 'INSERT INTO*' } |
+    Add-Content -Path inserts.sql -Encoding utf8
+}
 ```
 
-Dos cosas que hay que hacer **después de cargar**, o el primer alta falla:
+### 2. Envolverlo en un único bloque `DO`
+
+El endpoint SQL sobre HTTPS de Neon ejecuta **una sentencia por petición**, así
+que todo tiene que caber en una. Un bloque `DO` lo consigue y además es
+**atómico**: si una columna no coincide entre los dos esquemas, no queda nada
+aplicado a medias.
 
 ```sql
--- Los contadores de identidad quedan en 1 tras insertar ids explícitos:
---   sin esto, el siguiente registro choca con uno existente.
-SELECT setval(pg_get_serial_sequence('cliente','id'),
-              COALESCE((SELECT MAX(id) FROM cliente),0)+1, false);
--- ... y lo mismo para servicio, contrato, contrato_servicio, proyecto,
---     factura, detalle_factura y dte_parametro.
+DO $mig$
+DECLARE r record;
+BEGIN
+  -- Vaciar en orden INVERSO de dependencias. Es imprescindible: tras el primer
+  -- arranque Neon ya trae el admin sembrado, los parámetros y los correlativos.
+  DELETE FROM public.dte_token;  -- ... hasta public.adm_usuarios
 
--- Los correlativos de DTE conviene derivarlos de las facturas cargadas en vez
--- de copiarlos: así quedan coherentes aunque el origen estuviera desfasado, y
--- se conservan las filas de los cinco tipos de documento.
+  -- Aquí van los INSERT del paso 1.
+
+  -- Reajustar las secuencias: al insertar ids explícitos los contadores quedan
+  -- en 1 y el siguiente alta chocaría con una fila existente. El bucle las
+  -- localiza solas, sin tener que enumerar los nombres de clave primaria.
+  FOR r IN
+    SELECT c.oid::regclass::text AS tabla, a.attname AS col
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+     WHERE n.nspname = 'public' AND c.relkind = 'r'
+       AND pg_get_serial_sequence(c.oid::regclass::text, a.attname) IS NOT NULL
+  LOOP
+    EXECUTE format(
+      'SELECT setval(pg_get_serial_sequence(%L,%L), COALESCE((SELECT MAX(%I) FROM %s),0)+1, false)',
+      r.tabla, r.col, r.col, r.tabla);
+  END LOOP;
+END
+$mig$;
+```
+
+### 3. Enviarlo por HTTPS
+
+El cuerpo es `{"query": "<el bloque>", "params": []}`. **Cuidado al construir
+ese JSON en PowerShell**: `Get-Content -Raw` devuelve una cadena decorada con
+propiedades (`PSPath`, `PSProvider`…), y `ConvertTo-Json` serializa el objeto
+entero, no el texto. El resultado es un cuerpo que Neon rechaza con
+`could not parse the HTTP request body: data did not match any variant of
+untagged enum Payload`. Se evita forzando el tipo:
+
+```powershell
+[string]$sql = [System.IO.File]::ReadAllText('migracion.sql')
+[string]$q   = ConvertTo-Json -InputObject $sql
+$json = '{"query":' + $q + ',"params":[]}'
+[System.IO.File]::WriteAllText('payload.json', $json, (New-Object System.Text.UTF8Encoding $false))
+```
+
+```bash
+curl -s -X POST "https://<host>/sql" \
+  -H "Neon-Connection-String: postgresql://<usuario>:<clave>@<host>/<base>?sslmode=require" \
+  -H "Content-Type: application/json" \
+  --data-binary @payload.json
+```
+
+Una respuesta `{"command":"DO", ...}` con HTTP 200 significa que entró entero.
+
+### 4. Comprobar
+
+Los recuentos deben coincidir con el origen, y las secuencias apuntar a
+`max(id)+1`:
+
+```sql
+select (select last_value from cliente_id_seq)  cliente,
+       (select last_value from factura_id_seq)  factura,
+       (select last_value from dte_parametro_dtpa_id_seq) parametro;
+```
+
+Hay que leerlas **así, directamente**. La vista `pg_sequences` devuelve
+`last_value` en NULL cuando `is_called` es falso, que es justo como las deja el
+`setval` anterior: parece que no se aplicó nada cuando en realidad está bien.
+
+Por último, los correlativos deben cuadrar con las facturas cargadas. Si se
+quedan cortos, la siguiente emisión repite número y la rechaza el índice único
+`uk_factura_numero_control`. Conviene derivarlos en vez de confiar en el
+origen:
+
+```sql
 UPDATE dte_correlativo c
    SET dtco_ultimo = COALESCE((
          SELECT MAX(CAST(regexp_replace(f.numero_factura,'\D','','g') AS bigint))
@@ -272,9 +348,6 @@ UPDATE dte_correlativo c
           WHERE f.tipo_dte = c.dtco_tipo_dte
             AND f.numero_factura ~ '[0-9]'), 0);
 ```
-
-Si el correlativo se queda corto, la siguiente emisión repite número y la
-rechaza el índice único `uk_factura_numero_control`.
 
 ---
 
