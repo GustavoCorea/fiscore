@@ -1,0 +1,193 @@
+/* =====================================================================
+   Fiscore - estilos propios (complementan la plantilla Hyper)
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   Identidad
+   El símbolo es un SVG; la palabra se compone con texto para que use la
+   tipografía de la aplicación y tome el color del fondo sobre el que va.
+   --------------------------------------------------------------------- */
+.fs-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    text-decoration: none;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.fs-logo-mark {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    display: block;
+}
+
+.fs-logo-text {
+    font-family: Nunito, "Segoe UI", system-ui, sans-serif;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: #313a46;
+}
+
+/* Sufijo discreto para dar contexto al nombre */
+.fs-logo-text small {
+    display: block;
+    font-size: .55rem;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    opacity: .55;
+    margin-top: 1px;
+}
+
+/* Sobre barras oscuras (topbar oscura, pantalla de acceso) */
+.logo-light .fs-logo-text,
+.fs-logo-invertido .fs-logo-text {
+    color: #fff;
+}
+
+/* Tamaños según el contexto */
+.fs-logo-sm .fs-logo-mark { width: 26px; height: 26px; }
+.fs-logo-sm .fs-logo-text { font-size: 1.05rem; }
+
+.fs-logo-lg .fs-logo-mark { width: 40px; height: 40px; }
+.fs-logo-lg .fs-logo-text { font-size: 1.6rem; }
+
+/* El símbolo suelto (menú plegado) se centra sin necesitar el contenedor flex */
+.logo-sm > .fs-logo-mark {
+    margin: 0 auto;
+}
+
+
+/* --- Tarjetas KPI con banda de color lateral --- */
+.kpi-card {
+    border: 0;
+    border-left: 4px solid var(--kpi-color, #727cf5);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .08) !important;
+}
+
+.kpi-card .kpi-label {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: #98a6ad;
+}
+
+.kpi-card .kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.kpi-card .kpi-icon {
+    font-size: 2rem;
+    opacity: .35;
+    color: var(--kpi-color, #727cf5);
+}
+
+/* --- Avatar circular con iniciales --- */
+.avatar-initials {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* --- Filas plegables (cartera / agrupaciones) --- */
+.fs-toggle-row {
+    cursor: pointer;
+    user-select: none;
+}
+
+.fs-toggle-row:hover {
+    background-color: rgba(114, 124, 245, .06) !important;
+}
+
+/* --- Estado vacío --- */
+.empty-state {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: #98a6ad;
+}
+
+.empty-state i {
+    display: block;
+    font-size: 2.25rem;
+    margin-bottom: .5rem;
+    opacity: .6;
+}
+
+/* --- Menú lateral: item activo --- */
+.side-nav .side-nav-item > .side-nav-link.active {
+    color: #727cf5;
+    font-weight: 600;
+    background-color: rgba(114, 124, 245, .08);
+    border-left: 3px solid #727cf5;
+}
+
+/* --- Semáforo de vencimiento de facturas --- */
+.aging-badge {
+    font-size: .7rem;
+    font-weight: 600;
+}
+
+/* =====================================================================
+   Vista de impresión (DTE)
+   ===================================================================== */
+.print-sheet {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 2rem;
+}
+
+.print-sheet .doc-title {
+    letter-spacing: .04em;
+}
+
+@media print {
+    .no-print,
+    .navbar-custom,
+    .leftside-menu,
+    .footer,
+    header,
+    aside {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+    }
+
+    .content-page,
+    .print-sheet {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        box-shadow: none !important;
+    }
+
+    .card {
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    a[href]:after {
+        content: none !important;
+    }
+}

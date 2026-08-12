@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{layout/layout :: head}"></head>
+<body>
+<div class="wrapper">
+    <header th:replace="~{layout/header :: header}"></header>
+    <aside th:replace="~{layout/menu :: aside}"></aside>
+
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+
+                <!-- Breadcrumb -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box">
+                            <div class="page-title-right">
+                                <ol class="breadcrumb m-0">
+                                    <li class="breadcrumb-item"><a th:href="@{/inicio}">Inicio</a></li>
+                                    <li class="breadcrumb-item active">Parámetros DTE</li>
+                                </ol>
+                            </div>
+                            <h4 class="page-title">
+                                <i class="mdi mdi-cog-outline me-2 text-primary"></i>Configuración de Emisión DTE
+                                <small class="text-muted fw-normal ms-2">Ministerio de Hacienda · El Salvador</small>
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado de la configuración -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert d-flex align-items-center"
+                             th:classappend="${ambiente == 'Producción'} ? 'alert-danger' : 'alert-info'">
+                            <i class="mdi me-2 font-20"
+                               th:classappend="${ambiente == 'Producción'} ? 'mdi-alert-octagon' : 'mdi-flask-outline'"></i>
+                            <div class="flex-grow-1">
+                                Ambiente activo: <strong th:text="${ambiente}">Pruebas</strong>.
+                                <span th:if="${ambiente == 'Producción'}">
+                                    Los documentos que emita se transmitirán como reales ante Hacienda.
+                                </span>
+                                <span th:unless="${ambiente == 'Producción'}">
+                                    Los documentos no tienen validez fiscal mientras esté en pruebas.
+                                </span>
+                            </div>
+                            <span class="badge ms-2"
+                                  th:classappend="${conexionConfigurada} ? 'bg-success' : 'bg-warning text-dark'"
+                                  th:text="${conexionConfigurada} ? 'Credenciales configuradas' : 'Faltan credenciales'"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+
+                        <!-- Barra de acciones -->
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="search" class="form-control form-control-sm" style="width:260px;"
+                                       id="buscarParametro" placeholder="Buscar parámetro..." oninput="filtrarParametros()">
+                                <span class="text-muted small" id="contadorFiltro"></span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <span class="text-warning small align-self-center d-none" id="avisoCambios">
+                                    <i class="mdi mdi-circle-medium"></i>Hay cambios sin guardar
+                                </span>
+                                <button class="btn btn-sm btn-light" onclick="location.reload()">
+                                    <i class="mdi mdi-refresh me-1"></i>Descartar
+                                </button>
+                                <button class="btn btn-sm btn-primary" id="btnGuardar" onclick="guardarConfiguracion()">
+                                    <i class="mdi mdi-content-save me-1"></i>Guardar cambios
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Pestañas por grupo -->
+                        <ul class="nav nav-tabs nav-bordered mb-3">
+                            <li class="nav-item" th:each="entrada, iter : ${grupos}">
+                                <a th:href="'#grupo_' + ${entrada.key.nombre}" data-bs-toggle="tab"
+                                   class="nav-link" th:classappend="${iter.first} ? 'active'">
+                                    <i class="mdi me-1" th:classappend="${entrada.key.icono}"></i>
+                                    <span th:text="${entrada.key.titulo}"></span>
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div class="tab-pane" th:each="entrada, iter : ${grupos}"
+                                 th:classappend="${iter.first} ? 'show active'"
+                                 th:id="'grupo_' + ${entrada.key.nombre}">
+
+                                <p class="text-muted small mb-3" th:text="${entrada.key.descripcion}"></p>
+
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3" th:each="campo : ${entrada.value}"
+                                         th:attr="data-busqueda=${#strings.toLowerCase(campo.etiqueta + ' ' + campo.clave + ' ' + campo.descripcion)}"
+                                         th:classappend="'campo-parametro'">
+                                        <label class="form-label fw-semibold mb-1" th:for="${campo.clave}">
+                                            <span th:text="${campo.etiqueta}"></span>
+                                            <span class="text-danger" th:if="${campo.obligatorio}">*</span>
+                                        </label>
+
+                                        <!-- Desplegable -->
+                                        <select th:if="${campo.tipo == 'SELECCION'}"
+                                                class="form-select param-input"
+                                                th:id="${campo.clave}" th:attr="data-clave=${campo.clave}">
+                                            <option th:each="op : ${campo.opciones}"
+                                                    th:value="${op.valor}" th:text="${op.etiqueta}"
+                                                    th:selected="${op.valor == campo.valor}"></option>
+                                        </select>
+
+                                        <!-- Booleano -->
+                                        <div th:if="${campo.tipo == 'BOOLEANO'}" class="form-check form-switch mt-1">
+                                            <input class="form-check-input param-input" type="checkbox"
+                                                   th:id="${campo.clave}" th:attr="data-clave=${campo.clave}"
+                                                   th:checked="${campo.valor == 'true'}">
+                                            <label class="form-check-label text-muted small" th:for="${campo.clave}">
+                                                Activado
+                                            </label>
+                                        </div>
+
+                                        <!-- Secreto -->
+                                        <div th:if="${campo.tipo == 'SECRETO'}" class="input-group">
+                                            <input type="password" class="form-control param-input"
+                                                   th:id="${campo.clave}" th:attr="data-clave=${campo.clave}"
+                                                   th:placeholder="${campo.configurado} ? 'Configurado — escriba para reemplazar' : 'Sin configurar'"
+                                                   autocomplete="new-password">
+                                            <button class="btn btn-light" type="button"
+                                                    th:attr="data-objetivo=${campo.clave}"
+                                                    onclick="alternarVisibilidad(this.dataset.objetivo)">
+                                                <i class="mdi mdi-eye-outline"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Numéricos y texto -->
+                                        <input th:if="${campo.tipo == 'ENTERO'}" type="number" min="0" step="1"
+                                               class="form-control param-input"
+                                               th:id="${campo.clave}" th:attr="data-clave=${campo.clave}"
+                                               th:value="${campo.valor}">
+                                        <input th:if="${campo.tipo == 'DECIMAL'}" type="number" min="0" step="0.0001"
+                                               class="form-control param-input"
+                                               th:id="${campo.clave}" th:attr="data-clave=${campo.clave}"
+                                               th:value="${campo.valor}">
+                                        <input th:if="${campo.tipo == 'TEXTO'}" type="text" maxlength="500"
+                                               class="form-control param-input"
+                                               th:id="${campo.clave}" th:attr="data-clave=${campo.clave}"
+                                               th:value="${campo.valor}">
+
+                                        <div class="d-flex justify-content-between align-items-start mt-1">
+                                            <small class="form-text text-muted" th:text="${campo.descripcion}"></small>
+                                            <a href="javascript:void(0);" class="small text-muted ms-2 text-nowrap"
+                                               th:attr="data-clave=${campo.clave}"
+                                               onclick="restaurarParametro(this.dataset.clave)" title="Valor por defecto">
+                                                <i class="mdi mdi-backup-restore"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="alert alert-light border d-flex align-items-start">
+                    <i class="mdi mdi-information-outline me-2 font-18 text-primary"></i>
+                    <div class="small text-muted">
+                        Las tasas se expresan como proporción (<code>0.13</code> = 13 %), no como porcentaje.
+                        Las claves y contraseñas se guardan pero nunca se devuelven a esta pantalla:
+                        deje el campo vacío para conservar el valor actual.
+                        Los cambios afectan a los documentos que se emitan a partir de ahora; los ya emitidos
+                        conservan los datos con los que se generaron.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{layout/footer :: footer}"></footer>
+
+<script th:inline="none">
+let hayCambios = false;
+
+$(document).ready(function () {
+    document.querySelectorAll('.param-input').forEach(function (input) {
+        input.addEventListener('input', marcarCambio);
+        input.addEventListener('change', marcarCambio);
+    });
+    // Avisar si se abandona la página con cambios pendientes
+    window.addEventListener('beforeunload', function (e) {
+        if (hayCambios) { e.preventDefault(); e.returnValue = ''; }
+    });
+});
+
+function marcarCambio() {
+    hayCambios = true;
+    document.getElementById('avisoCambios').classList.remove('d-none');
+}
+
+function alternarVisibilidad(clave) {
+    const input = document.getElementById(clave);
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+/** Recoge el valor de cada control según su tipo. */
+function recolectarValores() {
+    const valores = {};
+    document.querySelectorAll('.param-input').forEach(function (input) {
+        const clave = input.dataset.clave;
+        if (input.type === 'checkbox') {
+            valores[clave] = input.checked ? 'true' : 'false';
+        } else if (input.type === 'password') {
+            // Vacío significa "no cambiar": no se envía.
+            if (input.value.trim() !== '') valores[clave] = input.value;
+        } else {
+            valores[clave] = input.value;
+        }
+    });
+    return valores;
+}
+
+async function guardarConfiguracion() {
+    const boton = document.getElementById('btnGuardar');
+    boton.disabled = true;
+    try {
+        const respuesta = await fetch(window.url('/configuracion/dte/guardar'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(recolectarValores())
+        });
+        const datos = await respuesta.json();
+        if (!respuesta.ok || datos.error) throw new Error(datos.error || 'Error ' + respuesta.status);
+
+        hayCambios = false;
+        document.getElementById('avisoCambios').classList.add('d-none');
+        await Swal.fire({
+            icon: 'success', title: 'Configuración guardada', text: datos.message,
+            timer: 1800, showConfirmButton: false
+        });
+        location.reload();
+    } catch (e) {
+        Swal.fire('No se pudo guardar', e.message, 'error');
+    } finally {
+        boton.disabled = false;
+    }
+}
+
+async function restaurarParametro(clave) {
+    const confirmacion = await Swal.fire({
+        title: '¿Restaurar el valor por defecto?',
+        text: 'Se descartará el valor actual de este parámetro.',
+        icon: 'question', showCancelButton: true,
+        cancelButtonText: 'Cancelar', confirmButtonText: 'Restaurar'
+    });
+    if (!confirmacion.isConfirmed) return;
+
+    try {
+        const respuesta = await fetch(window.url('/configuracion/dte/restaurar/' + clave), { method: 'POST' });
+        const datos = await respuesta.json();
+        if (!respuesta.ok || datos.error) throw new Error(datos.error || 'Error ' + respuesta.status);
+
+        hayCambios = false;
+        location.reload();
+    } catch (e) {
+        Swal.fire('No se pudo restaurar', e.message, 'error');
+    }
+}
+
+function filtrarParametros() {
+    const texto = document.getElementById('buscarParametro').value.toLowerCase().trim();
+    let visibles = 0;
+    document.querySelectorAll('.campo-parametro').forEach(function (campo) {
+        const coincide = !texto || (campo.dataset.busqueda || '').includes(texto);
+        campo.style.display = coincide ? '' : 'none';
+        if (coincide) visibles++;
+    });
+    document.getElementById('contadorFiltro').textContent =
+        texto ? visibles + ' coincidencia(s) — revise todas las pestañas' : '';
+}
+</script>
+</body>
+</html>
