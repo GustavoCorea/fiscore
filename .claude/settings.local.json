@@ -12,7 +12,9 @@
       "Bash(JAVA_HOME=/c/Users/gustavo.cruz/.jdks/corretto-17.0.17 ./mvnw compile -q 2>&1 | tail -20)",
       "Bash(JAVA_HOME=/c/Users/gustavo.cruz/.jdks/corretto-17.0.17 ./mvnw -q -o clean compile)",
       "Bash(JAVA_HOME=/c/Users/gustavo.cruz/.jdks/corretto-17.0.17 ./mvnw -q clean compile)",
-      "Bash(JAVA_HOME=/c/Users/gustavo.cruz/.jdks/corretto-17.0.17 ./mvnw -q -o compile)"
+      "Bash(JAVA_HOME=/c/Users/gustavo.cruz/.jdks/corretto-17.0.17 ./mvnw -q -o compile)",
+      "Bash(docker --version)",
+      "Bash(psql --version)"
     ]
   }
 }

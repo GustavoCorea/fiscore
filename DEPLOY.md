@@ -224,11 +224,66 @@ docker run --rm -p 8080:8080 \
 
 ---
 
-## 9. Si algo falla
+## 9. Copiar datos de la base local a Neon
+
+No hace falta tener `psql` instalado: sirve una imagen de PostgreSQL en Docker.
+
+**Cuidado con el alcance.** La base local `contasuite` comparte espacio con las
+tablas de otro proyecto (gestión de riesgos: `ambito_riesgo`, `control`,
+`evaluacion_riesgo`…). Hay que copiar **solo** las de Fiscore, nunca la base
+entera.
+
+```bash
+LOCAL="-h host.docker.internal -U postgres -d contasuite"
+NEON="postgresql://neondb_owner@<host-directo>/neondb?sslmode=require"
+
+# 1. Volcar tabla por tabla EN ORDEN DE DEPENDENCIAS. Un volcado único no sirve:
+#    pg_dump ordena alfabéticamente y las claves foráneas fallarían
+#    (detalle_factura iría antes que factura, contrato_servicio antes que servicio).
+for t in adm_usuarios cliente servicio dte_parametro contrato \
+         contrato_servicio proyecto factura detalle_factura; do
+  docker run --rm -e PGPASSWORD=<clave-local> postgres:17-alpine \
+    pg_dump $LOCAL --data-only --column-inserts -t public.$t \
+    | grep '^INSERT INTO' >> datos.sql
+done
+
+# 2. Cargar con --single-transaction, precedido de los DELETE en orden inverso.
+cat migracion.sql | docker run -i --rm -e PGPASSWORD=<clave-neon> postgres:17-alpine \
+  psql "$NEON" -v ON_ERROR_STOP=1 --single-transaction -f -
+```
+
+Dos cosas que hay que hacer **después de cargar**, o el primer alta falla:
+
+```sql
+-- Los contadores de identidad quedan en 1 tras insertar ids explícitos:
+--   sin esto, el siguiente registro choca con uno existente.
+SELECT setval(pg_get_serial_sequence('cliente','id'),
+              COALESCE((SELECT MAX(id) FROM cliente),0)+1, false);
+-- ... y lo mismo para servicio, contrato, contrato_servicio, proyecto,
+--     factura, detalle_factura y dte_parametro.
+
+-- Los correlativos de DTE conviene derivarlos de las facturas cargadas en vez
+-- de copiarlos: así quedan coherentes aunque el origen estuviera desfasado, y
+-- se conservan las filas de los cinco tipos de documento.
+UPDATE dte_correlativo c
+   SET dtco_ultimo = COALESCE((
+         SELECT MAX(CAST(regexp_replace(f.numero_factura,'\D','','g') AS bigint))
+           FROM factura f
+          WHERE f.tipo_dte = c.dtco_tipo_dte
+            AND f.numero_factura ~ '[0-9]'), 0);
+```
+
+Si el correlativo se queda corto, la siguiente emisión repite número y la
+rechaza el índice único `uk_factura_numero_control`.
+
+---
+
+## 10. Si algo falla
 
 | Síntoma | Causa habitual |
 |---|---|
-| `FATAL: password authentication failed` | El usuario y la contraseña siguen dentro de `DB_URL`; deben ir en `DB_USERNAME` y `DB_PASSWORD` |
+| `FATAL: password authentication failed for user "x"` (comillas **dobles**) | Lo dice PostgreSQL. El usuario y la contraseña siguen dentro de `DB_URL`; deben ir en `DB_USERNAME` y `DB_PASSWORD` |
+| `ERROR: password authentication failed for user 'x'` (comillas **simples**, `SQLState 28P01`) | Lo dice el proxy de Neon, no PostgreSQL. La conexión llegó bien —host, DNS y TLS correctos—, así que solo falla la credencial: `DB_PASSWORD` regenerada en Neon, pegada en Render con un espacio o un salto de línea de más, o copiada todavía percent-encoded de la cadena de `libpq` (`%2F` es `/`, `%2B` es `+`). Neon devuelve este mismo mensaje genérico cuando el rol no existe en el endpoint indicado, así que conviene comprobar también que el host de `DB_URL` sigue siendo el de la rama actual |
 | `The server does not support SSL` | Falta `sslmode` en la cadena, o se usó `postgresql://` en lugar de `jdbc:postgresql://` |
 | `PKIX path building failed` | `verify-full` sin `sslfactory=...DefaultJavaSSLFactory` |
 | `prepared statement "S_1" already exists` | Se está usando el endpoint `-pooler`; cambiar al directo o añadir `&prepareThreshold=0` |
@@ -238,3 +293,41 @@ docker run --rm -p 8080:8080 \
 | `ContextPath must start with '/' and not end with '/'` | Se definió `CONTEXT_PATH=/`; para la raíz debe quedar **vacío** (el perfil `prod` ya lo hace) |
 | No se puede entrar con `admin` | La tabla `ADM_USUARIOS` ya tenía usuarios, así que `SEED_ADMIN_PASS` no se aplicó |
 | Los POST devuelven 403 | La cookie `XSRF-TOKEN` no llega; comprobar que `CONTEXT_PATH` coincide con la ruta real |
+
+### Comprobar la credencial de Neon sin usar el puerto 5432
+
+Ante un `28P01` lo primero es saber si la contraseña es mala o si lo que está
+mal es el valor guardado en Render. Cada intento de redespliegue cuesta varios
+minutos de compilación, así que conviene resolver la duda fuera de Render.
+
+El camino obvio —`psql` o una prueba JDBC— **no siempre está disponible**: en una
+red corporativa el puerto 5432 saliente suele estar bloqueado, y entonces la
+prueba falla con `SQLState 08001` / `Connect timed out` sin llegar a decir nada
+sobre la contraseña. Ese timeout es del firewall local; no significa que la
+credencial sea incorrecta ni que Neon esté caído.
+
+Neon expone además un endpoint **SQL sobre HTTPS** (el que usa su driver
+*serverless*), que va por el 443 y por tanto atraviesa esos firewalls:
+
+```bash
+curl -s -X POST "https://<host>/sql" \
+  -H "Neon-Connection-String: postgresql://<usuario>:<clave>@<host>/<base>?sslmode=require" \
+  -H "Neon-Raw-Text-Output: true" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"select current_user, current_database()","params":[]}'
+```
+
+Responde con las filas en JSON si la credencial es buena, y con un error de
+autenticación si no lo es. Sirve con el host directo y con el `-pooler`, lo que
+de paso confirma que ambos endpoints existen antes de fijar `DB_URL`.
+
+Dos advertencias:
+
+- **No recorre el mismo camino que la aplicación.** Valida la credencial, no la
+  ruta TCP al 5432 desde Render. Es suficiente cuando el error de Render fue un
+  `28P01`, porque ese código ya prueba que la petición llegó al proxy de Neon y
+  que lo único en discusión era la contraseña. Ante un error de red en Render,
+  esta comprobación no dice nada.
+- **La clave viaja en la línea de órdenes**, y queda en el historial del intérprete
+  y en la lista de procesos. Conviene pasarla por variable de entorno y borrar la
+  entrada del historial después.
