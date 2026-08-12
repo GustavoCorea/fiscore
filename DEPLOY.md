@@ -293,3 +293,41 @@ rechaza el índice único `uk_factura_numero_control`.
 | `ContextPath must start with '/' and not end with '/'` | Se definió `CONTEXT_PATH=/`; para la raíz debe quedar **vacío** (el perfil `prod` ya lo hace) |
 | No se puede entrar con `admin` | La tabla `ADM_USUARIOS` ya tenía usuarios, así que `SEED_ADMIN_PASS` no se aplicó |
 | Los POST devuelven 403 | La cookie `XSRF-TOKEN` no llega; comprobar que `CONTEXT_PATH` coincide con la ruta real |
+
+### Comprobar la credencial de Neon sin usar el puerto 5432
+
+Ante un `28P01` lo primero es saber si la contraseña es mala o si lo que está
+mal es el valor guardado en Render. Cada intento de redespliegue cuesta varios
+minutos de compilación, así que conviene resolver la duda fuera de Render.
+
+El camino obvio —`psql` o una prueba JDBC— **no siempre está disponible**: en una
+red corporativa el puerto 5432 saliente suele estar bloqueado, y entonces la
+prueba falla con `SQLState 08001` / `Connect timed out` sin llegar a decir nada
+sobre la contraseña. Ese timeout es del firewall local; no significa que la
+credencial sea incorrecta ni que Neon esté caído.
+
+Neon expone además un endpoint **SQL sobre HTTPS** (el que usa su driver
+*serverless*), que va por el 443 y por tanto atraviesa esos firewalls:
+
+```bash
+curl -s -X POST "https://<host>/sql" \
+  -H "Neon-Connection-String: postgresql://<usuario>:<clave>@<host>/<base>?sslmode=require" \
+  -H "Neon-Raw-Text-Output: true" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"select current_user, current_database()","params":[]}'
+```
+
+Responde con las filas en JSON si la credencial es buena, y con un error de
+autenticación si no lo es. Sirve con el host directo y con el `-pooler`, lo que
+de paso confirma que ambos endpoints existen antes de fijar `DB_URL`.
+
+Dos advertencias:
+
+- **No recorre el mismo camino que la aplicación.** Valida la credencial, no la
+  ruta TCP al 5432 desde Render. Es suficiente cuando el error de Render fue un
+  `28P01`, porque ese código ya prueba que la petición llegó al proxy de Neon y
+  que lo único en discusión era la contraseña. Ante un error de red en Render,
+  esta comprobación no dice nada.
+- **La clave viaja en la línea de órdenes**, y queda en el historial del intérprete
+  y en la lista de procesos. Conviene pasarla por variable de entorno y borrar la
+  entrada del historial después.
