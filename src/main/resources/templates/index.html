@@ -329,12 +329,17 @@
                             <div class="card-body py-3">
                                 <div class="d-flex flex-wrap align-items-center gap-2">
                                     <span class="text-muted me-2 fw-semibold">Accesos rápidos:</span>
-                                    <a th:href="@{/clientes}" class="btn btn-outline-primary btn-sm"><i class="mdi mdi-account-plus me-1"></i>Clientes</a>
+                                    <!-- Todos en gris a proposito. El color aqui es semantico en el resto
+                                         del panel (rojo = vencido, amarillo = pendiente, verde = cobrado);
+                                         gastarlo en enlaces de navegacion lo vacia de significado y hacia
+                                         que "Facturacion" en rojo se leyera como una alerta. El icono ya
+                                         basta para distinguirlos de un vistazo. -->
+                                    <a th:href="@{/clientes}" class="btn btn-outline-secondary btn-sm"><i class="mdi mdi-account-plus me-1"></i>Clientes</a>
                                     <a th:href="@{/servicios}" class="btn btn-outline-secondary btn-sm"><i class="mdi mdi-briefcase-outline me-1"></i>Servicios</a>
-                                    <a th:href="@{/contratos}" class="btn btn-outline-success btn-sm"><i class="mdi mdi-file-sign me-1"></i>Contratos</a>
-                                    <a th:href="@{/proyectos}" class="btn btn-outline-warning btn-sm"><i class="mdi mdi-briefcase-plus me-1"></i>Proyectos</a>
-                                    <a th:href="@{/facturacion}" class="btn btn-outline-danger btn-sm"><i class="mdi mdi-cash-register me-1"></i>Facturación</a>
-                                    <a th:href="@{/reportes}" class="btn btn-outline-info btn-sm"><i class="mdi mdi-chart-bar me-1"></i>Reportes</a>
+                                    <a th:href="@{/contratos}" class="btn btn-outline-secondary btn-sm"><i class="mdi mdi-file-sign me-1"></i>Contratos</a>
+                                    <a th:href="@{/proyectos}" class="btn btn-outline-secondary btn-sm"><i class="mdi mdi-briefcase-plus me-1"></i>Proyectos</a>
+                                    <a th:href="@{/facturacion}" class="btn btn-outline-secondary btn-sm"><i class="mdi mdi-cash-register me-1"></i>Facturación</a>
+                                    <a th:href="@{/reportes}" class="btn btn-outline-secondary btn-sm"><i class="mdi mdi-chart-bar me-1"></i>Reportes</a>
                                 </div>
                             </div>
                         </div>
@@ -370,7 +375,13 @@ $(document).ready(function () {
         chart: { type: 'area', height: 290, fontFamily: 'inherit', toolbar: { show: false } },
         colors: ['#727cf5', '#0acf97'],
         dataLabels: { enabled: false },
-        stroke: { curve: 'smooth', width: 2 },
+        // 'straight' y no 'smooth': el suavizado inventa valores intermedios que
+        // nunca existieron. Con datos mensuales dispersos dibujaba una curva
+        // ascendente entre dos meses en cero, sugiriendo una tendencia falsa.
+        stroke: { curve: 'straight', width: 2 },
+        // Los puntos hacen visibles los meses sueltos; sin ellos, un unico mes con
+        // datos queda como una linea casi plana imposible de leer.
+        markers: { size: 4, strokeWidth: 0, hover: { size: 6 } },
         fill: { type: 'gradient', gradient: { opacityFrom: .35, opacityTo: .05 } },
         xaxis: { categories: labels },
         yaxis: { labels: { formatter: v => '$' + v.toFixed(0) } },
