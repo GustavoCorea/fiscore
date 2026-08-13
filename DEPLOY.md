@@ -124,37 +124,52 @@ Acto seguido la aplicación siembra por su cuenta:
 
 ---
 
-## 6. Sobre el esquema: `update` frente a migraciones versionadas
+## 6. El esquema: migraciones versionadas
 
-Aquí hay una **diferencia deliberada con el proyecto FoodStop**, que usa Flyway
-con `ddl-auto=validate`.
+El esquema lo gobierna **Flyway**, y Hibernate solo lo valida
+(`ddl-auto=validate`). Hasta agosto de 2026 se usó `ddl-auto=update`, que fue lo
+que creó las doce tablas; el cambio se hizo justo antes de que entraran datos de
+clientes reales, que es cuando sale barato.
 
-Fiscore está construido hoy sobre `ddl-auto=update`: es lo que ha venido creando
-las tablas y añadiendo columnas (`USER_ROL`, los índices únicos de `factura`, la
-tabla `DTE_CORRELATIVO`). Escribir a mano una migración base para las doce
-tablas antes del primer despliegue añadía un riesgo real —si un solo tipo o
-restricción no coincide, `validate` impide que la aplicación arranque— sin
-resolver ningún problema inmediato.
+`update` tenía un límite conocido: **creaba y ampliaba, pero nunca borraba ni
+modificaba**. Al renombrar una columna o cambiar un tipo, el cambio no se
+aplicaba y el esquema se desviaba en silencio. Con `validate`, una discrepancia
+detiene el arranque en lugar de esconderse.
 
-`update` tiene un límite conocido: **crea y amplía, pero nunca borra ni
-modifica**. Si se renombra una columna o se cambia un tipo, el cambio no se
-aplica y el esquema se va desviando en silencio.
+### Cómo está montado
 
-Cuando la aplicación tenga datos que no se puedan perder, conviene pasar a
-migraciones versionadas:
+| Fichero | Qué hace |
+|---|---|
+| `db/migration/V1__esquema_inicial.sql` | Las doce tablas tal como las dejó `ddl-auto`. Volcado del esquema real, no escrito a mano |
+| `db/migration/V2__auditoria.sql` | Añade `creado_por`, `creado_en`, `modificado_por` y `modificado_en` a las cinco entidades de negocio |
 
-1. Generar el esquema actual:
-   ```
-   ./mvnw spring-boot:run \
-     -Dspring-boot.run.jvmArguments="-Dspring.jpa.properties.jakarta.persistence.schema-generation.scripts.action=create -Dspring.jpa.properties.jakarta.persistence.schema-generation.scripts.create-target=esquema.sql"
-   ```
-2. Guardarlo como `src/main/resources/db/migration/V1__esquema_inicial.sql`.
-3. Añadir la dependencia `flyway-core` (y `flyway-database-postgresql`).
-4. Poner `spring.flyway.baseline-on-migrate=true` para que adopte la base ya
-   existente sin volver a crearla.
-5. Cambiar la variable `DDL_AUTO` a `validate` en Render.
+`spring.flyway.baseline-on-migrate=true` es la pieza que permite adoptar la base
+de Neon sin recrearla: como ya tiene tablas, Flyway la marca en la versión 1 y
+**salta el `V1`**, continuando desde el `V2`. Sobre una base vacía —una
+instalación nueva— sí ejecuta todas desde el principio. Los dos caminos acaban
+en el mismo esquema.
 
-Al estar el valor en una variable de entorno, el cambio no exige tocar código.
+Por eso el `V1` refleja el esquema **anterior** a la auditoría: si hubiera
+incluido esas columnas, en Neon nunca se habrían creado (el `V1` se salta) y
+`validate` habría impedido el arranque.
+
+### Añadir una migración
+
+1. Crear `V3__lo_que_sea.sql` en `db/migration`. La numeración no se reutiliza.
+2. Cambiar las entidades para que coincidan.
+3. `./mvnw test` y arrancar en local: `validate` avisa de cualquier desajuste
+   antes de que llegue a Render.
+
+**Nunca se edita una migración ya aplicada.** Flyway guarda su suma de
+comprobación y se niega a arrancar si cambia. Para corregir algo, otra
+migración encima.
+
+### En las pruebas
+
+Flyway está desactivado (`spring.flyway.enabled=false` en
+`application-test.properties`): las migraciones están en DDL de PostgreSQL y la
+base de pruebas es H2. Allí el esquema lo levanta Hibernate con `create-drop`,
+que además deja limpia cada ejecución.
 
 ---
 
