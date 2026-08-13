@@ -1,0 +1,94 @@
+# ============================================================
+# Respaldo diario de la base de Neon.
+#
+# Va aquí y no dentro de la aplicación por tres razones: en el plan
+# gratuito Render suspende el servicio tras 15 min sin tráfico —una
+# tarea programada dentro no llegaría a ejecutarse—, no hay disco
+# persistente donde dejar el volcado, y el contenedor tiene 512 MB que
+# no conviene gastar comprimiendo copias.
+#
+# Requiere un secreto de repositorio:
+#   NEON_DATABASE_URL = postgresql://usuario:clave@<host>/neondb?sslmode=require
+# Se crea en Settings → Secrets and variables → Actions.
+# ============================================================
+name: Respaldo de la base
+
+on:
+  schedule:
+    # 07:00 UTC = 01:00 en El Salvador: fuera de horario de oficina.
+    - cron: "0 7 * * *"
+  # Permite lanzarlo a mano antes de un despliegue arriesgado.
+  workflow_dispatch:
+
+# Si un respaldo se solapa con el siguiente, gana el nuevo.
+concurrency:
+  group: respaldo-neon
+  cancel-in-progress: false
+
+jobs:
+  volcado:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Instalar cliente de PostgreSQL 17
+        # Los runners traen el cliente 16 y Neon corre PostgreSQL 17.
+        # pg_dump se niega a volcar un servidor de version mayor que la
+        # suya, asi que sin este paso el respaldo falla el primer dia.
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] \
+            https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          pg_dump --version
+
+      - name: Volcar la base
+        env:
+          URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          test -n "$URL" || { echo "Falta el secreto NEON_DATABASE_URL"; exit 1; }
+          FICHERO="fiscore-$(date -u +%Y%m%d-%H%M).dump"
+          echo "FICHERO=$FICHERO" >> "$GITHUB_ENV"
+
+          # -Fc: formato propio, comprimido y restaurable por tablas sueltas.
+          # Sin owner ni privilegios: los roles de Neon no existen en destino.
+          pg_dump "$URL" --format=custom --no-owner --no-privileges --file="$FICHERO"
+
+          ls -lh "$FICHERO"
+
+      - name: Comprobar que el volcado es restaurable
+        # Un respaldo que nadie ha comprobado no es un respaldo. pg_restore
+        # --list lee el indice del archivo: si estuviera truncado o fuera
+        # una pagina de error en vez de un volcado, falla aqui y no dentro
+        # de seis meses, cuando haga falta de verdad.
+        run: |
+          set -euo pipefail
+          TAM=$(stat -c%s "$FICHERO")
+          echo "Tamaño: $TAM bytes"
+          test "$TAM" -gt 4096 || { echo "El volcado es sospechosamente pequeño"; exit 1; }
+
+          pg_restore --list "$FICHERO" > indice.txt
+          TABLAS=$(grep -c "TABLE DATA" indice.txt || true)
+          echo "Tablas con datos en el volcado: $TABLAS"
+
+          # Las doce de Fiscore mas flyway_schema_history. Se exige un
+          # minimo por si el volcado saliera vacio con codigo de exito.
+          test "$TABLAS" -ge 10 || { echo "Faltan tablas en el volcado"; exit 1; }
+
+          echo "--- contenido ---"
+          grep "TABLE DATA" indice.txt | awk '{print $NF}' | sort
+
+      - name: Guardar el respaldo
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.FICHERO }}
+          path: ${{ env.FICHERO }}
+          # 90 días es el máximo por defecto de GitHub. Ver DEPLOY.md §11:
+          # esto es una red de seguridad reciente, no un archivo fiscal.
+          retention-days: 90
+          if-no-files-found: error
