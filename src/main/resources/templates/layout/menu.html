@@ -133,16 +133,19 @@
                     </a>
                 </li>
 
-                <!-- Configuración -->
-                <li class="side-nav-title">Configuración</li>
+                <!-- Configuración: reservada al administrador. Se oculta al resto
+                     porque el enlace acabaria en un 403 (ver SecurityConfig). -->
+                <th:block th:if="${esAdmin}">
+                    <li class="side-nav-title">Configuración</li>
 
-                <li class="side-nav-item">
-                    <a th:href="@{/configuracion/dte}" class="side-nav-link"
-                       th:classappend="${menuActivo == 'configuracion'} ? 'active'">
-                        <i class="mdi mdi-cog-outline"></i>
-                        <span>Parámetros DTE</span>
-                    </a>
-                </li>
+                    <li class="side-nav-item">
+                        <a th:href="@{/configuracion/dte}" class="side-nav-link"
+                           th:classappend="${menuActivo == 'configuracion'} ? 'active'">
+                            <i class="mdi mdi-cog-outline"></i>
+                            <span>Parámetros DTE</span>
+                        </a>
+                    </li>
+                </th:block>
 
             </ul>
             <div class="clearfix"></div>

@@ -6,6 +6,10 @@ import com.fiscore.core.models.Proyecto;
 import com.fiscore.core.services.ContratoService;
 import com.fiscore.core.services.FacturacionService;
 import com.fiscore.core.services.ProyectoService;
+import com.fiscore.core.services.UsuarioService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -77,6 +81,24 @@ public class LayoutAdvice {
         }
 
         return avisos.size() > MAX_AVISOS ? avisos.subList(0, MAX_AVISOS) : avisos;
+    }
+
+    /**
+     * Indica si la sesión actual manda sobre las opciones reservadas al administrador.
+     * El menú lo consulta para no ofrecer enlaces que acabarían en un 403.
+     *
+     * DEV-ADMIN es el rol sintético del modo sin autenticación (ver SecurityConfig):
+     * se incluye para que la configuración siga visible al trabajar en local.
+     */
+    @ModelAttribute("esAdmin")
+    public boolean esAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return false;
+        }
+        return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> UsuarioService.ROL_ADMIN.equals(a) || "DEV-ADMIN".equals(a));
     }
 
     /** Total real de avisos, aunque el desplegable solo muestre los primeros. */
