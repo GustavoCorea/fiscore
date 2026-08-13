@@ -79,6 +79,11 @@
     letter-spacing: .03em;
     text-transform: uppercase;
     color: #98a6ad;
+    line-height: 1.25;
+    /* Reserva dos lineas de rotulo. "Honorarios recurrentes / mes" ocupa dos y los
+       demas una sola, asi que sin esta reserva los cuatro importes de la fila no
+       comparten linea base y la cabecera del panel se ve descuadrada. */
+    min-height: 1.8rem;
 }
 
 .kpi-card .kpi-value {

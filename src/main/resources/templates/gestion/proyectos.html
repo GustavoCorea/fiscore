@@ -521,7 +521,7 @@
 <script th:inline="none">
 $(document).ready(function() {
     $('#proyectos-datatable').DataTable({
-        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+        language: { url: window.url('/assets/vendor/datatables.net/i18n/es-ES.json') },
         pageLength: 15,
         columnDefs: [{ orderable: false, targets: 7 }]
     });
