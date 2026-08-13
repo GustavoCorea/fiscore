@@ -2,6 +2,7 @@ package com.fiscore.core.services;
 
 import com.fiscore.core.entities.AdmUsuario;
 import com.fiscore.core.repositories.AdmUsuarioRepository;
+import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -35,10 +36,24 @@ public class UsuarioService implements UserDetailsService {
 
     private final AdmUsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final AuditorAware<String> auditor;
 
-    public UsuarioService(AdmUsuarioRepository usuarioRepository, BCryptPasswordEncoder passwordEncoder) {
+    public UsuarioService(AdmUsuarioRepository usuarioRepository,
+                          BCryptPasswordEncoder passwordEncoder,
+                          AuditorAware<String> auditor) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.auditor = auditor;
+    }
+
+    /**
+     * Quién está actuando. Se reutiliza el AuditorAware de la auditoría en vez
+     * de repetir aquí la lectura del contexto de seguridad: así las columnas
+     * USER_USUARIO_REGISTRA y USER_USUARIO_MODIFICA dicen lo mismo que
+     * CREADO_POR y MODIFICADO_POR en el resto de tablas.
+     */
+    private String actorActual() {
+        return auditor.getCurrentAuditor().orElse("sistema");
     }
 
     @Override
@@ -108,7 +123,7 @@ public class UsuarioService implements UserDetailsService {
         usuario.setUserCorreo(correo);
         usuario.setUserRol(rol != null && !rol.isBlank() ? rol : ROL_ACCESO);
         usuario.setUserEstado(ACTIVO);
-        usuario.setUserUsuarioRegistra("sistema");
+        usuario.setUserUsuarioRegistra(actorActual());
         usuario.setUserFchRegistro(LocalDate.now());
         return usuarioRepository.save(usuario);
     }
@@ -119,7 +134,7 @@ public class UsuarioService implements UserDetailsService {
         AdmUsuario usuario = usuarioRepository.findByUserUsernameIgnoreCase(username)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + username));
         usuario.setUserPassword(passwordEncoder.encode(passwordEnClaro));
-        usuario.setUserUsuarioModifica("sistema");
+        usuario.setUserUsuarioModifica(actorActual());
         usuario.setUserFchModifica(LocalDate.now());
         return usuarioRepository.save(usuario);
     }
@@ -130,5 +145,120 @@ public class UsuarioService implements UserDetailsService {
                 .filter(java.util.Objects::nonNull)
                 .max(Long::compareTo)
                 .orElse(0L) + 1L;
+    }
+
+    // =================================================================
+    // Pantalla de gestión
+    // =================================================================
+
+    @Transactional(readOnly = true)
+    public List<AdmUsuario> listar() {
+        return usuarioRepository.findAll().stream()
+                .sorted(java.util.Comparator.comparing(
+                        AdmUsuario::getUserUsername, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<AdmUsuario> buscarPorId(Long id) {
+        return usuarioRepository.findById(id);
+    }
+
+    /** Datos de contacto y rol. La contraseña se cambia por separado. */
+    @Transactional
+    public AdmUsuario actualizar(Long id, String nombres, String apellidos, String correo,
+                                 String telefono, String rol) {
+        AdmUsuario usuario = exigir(id);
+        String rolNuevo = normalizarRol(rol);
+
+        if (!ROL_ADMIN.equals(rolNuevo)) {
+            noContraUnoMismo(usuario, "quitarte a ti mismo el rol de administrador");
+            exigirQueQuedeUnAdministrador(usuario);
+        }
+
+        usuario.setUserNombres(nombres);
+        usuario.setUserApellidos(apellidos);
+        usuario.setUserCorreo(correo);
+        usuario.setUserTelefono(telefono);
+        usuario.setUserRol(rolNuevo);
+        marcarModificado(usuario);
+        return usuarioRepository.save(usuario);
+    }
+
+    /**
+     * Habilita o deshabilita la cuenta. No se borran usuarios: su nombre queda
+     * escrito en las columnas de auditoría de facturas y contratos, y un
+     * registro que apunta a alguien que ya no existe no se puede interpretar.
+     */
+    @Transactional
+    public AdmUsuario cambiarEstado(Long id, boolean activo) {
+        AdmUsuario usuario = exigir(id);
+
+        if (!activo) {
+            noContraUnoMismo(usuario, "desactivar tu propia cuenta");
+            exigirQueQuedeUnAdministrador(usuario);
+        }
+
+        usuario.setUserEstado(activo ? ACTIVO : BigDecimal.ZERO);
+        marcarModificado(usuario);
+        return usuarioRepository.save(usuario);
+    }
+
+    @Transactional
+    public AdmUsuario restablecerPassword(Long id, String passwordEnClaro) {
+        if (passwordEnClaro == null || passwordEnClaro.isBlank()) {
+            throw new IllegalArgumentException("La contraseña no puede estar vacía.");
+        }
+        AdmUsuario usuario = exigir(id);
+        usuario.setUserPassword(passwordEncoder.encode(passwordEnClaro));
+        marcarModificado(usuario);
+        return usuarioRepository.save(usuario);
+    }
+
+    // ---- Salvaguardas ----
+
+    /**
+     * Impide quedarse sin nadie que pueda administrar. Sin esto, degradar o
+     * desactivar al último administrador deja la configuración fiscal y la
+     * propia gestión de usuarios fuera del alcance de todos, y solo se sale
+     * de ahí tocando la base a mano.
+     */
+    private void exigirQueQuedeUnAdministrador(AdmUsuario objetivo) {
+        boolean quedaOtro = usuarioRepository.findAll().stream()
+                .filter(u -> !java.util.Objects.equals(u.getId(), objetivo.getId()))
+                .anyMatch(this::esAdministradorActivo);
+
+        if (!quedaOtro) {
+            throw new IllegalStateException(
+                    "Es el último administrador activo. Nombra a otro antes de cambiar este.");
+        }
+    }
+
+    /** Las dos operaciones que podrían dejar fuera a quien las ejecuta. */
+    private void noContraUnoMismo(AdmUsuario objetivo, String accion) {
+        if (objetivo.getUserUsername() != null
+                && objetivo.getUserUsername().equalsIgnoreCase(actorActual())) {
+            throw new IllegalStateException("No puedes " + accion + ".");
+        }
+    }
+
+    private boolean esAdministradorActivo(AdmUsuario u) {
+        boolean activo = u.getUserEstado() == null || u.getUserEstado().compareTo(ACTIVO) == 0;
+        return activo && ROL_ADMIN.equals(normalizarRol(u.getUserRol()));
+    }
+
+    private String normalizarRol(String rol) {
+        String limpio = rol != null ? rol.trim().toUpperCase() : "";
+        return ROL_ADMIN.equals(limpio) ? ROL_ADMIN : ROL_ACCESO;
+    }
+
+    private AdmUsuario exigir(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + id));
+    }
+
+    private void marcarModificado(AdmUsuario usuario) {
+        usuario.setUserUsuarioModifica(actorActual());
+        usuario.setUserFchModifica(LocalDate.now());
     }
 }

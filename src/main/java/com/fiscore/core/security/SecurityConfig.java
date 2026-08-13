@@ -77,6 +77,9 @@ public class SecurityConfig {
                     // ROL_ADMIN recibe ademas ROL_ACCESO (ver UsuarioService), asi que
                     // el administrador conserva acceso a todo lo demas.
                     .requestMatchers("/configuracion/**").hasAuthority(UsuarioService.ROL_ADMIN)
+                    // Quien gestiona usuarios puede concederse cualquier permiso,
+                    // asi que la pantalla vale tanto como la configuracion fiscal.
+                    .requestMatchers("/usuarios", "/usuarios/**").hasAuthority(UsuarioService.ROL_ADMIN)
                     .requestMatchers(HttpMethod.DELETE,
                             "/clientes/**", "/servicios/**", "/contratos/**",
                             "/proyectos/**", "/facturacion/**").hasAuthority(UsuarioService.ROL_ADMIN)

@@ -139,6 +139,14 @@
                     <li class="side-nav-title">Configuración</li>
 
                     <li class="side-nav-item">
+                        <a th:href="@{/usuarios}" class="side-nav-link"
+                           th:classappend="${menuActivo == 'usuarios'} ? 'active'">
+                            <i class="mdi mdi-account-key"></i>
+                            <span>Usuarios</span>
+                        </a>
+                    </li>
+
+                    <li class="side-nav-item">
                         <a th:href="@{/configuracion/dte}" class="side-nav-link"
                            th:classappend="${menuActivo == 'configuracion'} ? 'active'">
                             <i class="mdi mdi-cog-outline"></i>
