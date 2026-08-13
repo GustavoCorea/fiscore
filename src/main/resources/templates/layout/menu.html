@@ -28,10 +28,10 @@
         </a>
         <!-- Toggle Buttons -->
         <div class="button-sm-hover" data-bs-toggle="tooltip" data-bs-placement="right" title="Ampliar Sidebar">
-            <i class="ri-checkbox-blank-circle-line align-middle"></i>
+            <i class="mdi mdi-checkbox-blank-circle-outline align-middle"></i>
         </div>
         <div class="button-close-fullsidebar">
-            <i class="ri-close-fill align-middle"></i>
+            <i class="mdi mdi-close align-middle"></i>
         </div>
 
         <!-- Sidebar Content -->
@@ -43,7 +43,7 @@
                 <li class="side-nav-item">
                     <a th:href="@{/inicio}" class="side-nav-link"
                        th:classappend="${menuActivo == 'inicio'} ? 'active'">
-                        <i class="uil-home-alt"></i>
+                        <i class="mdi mdi-view-dashboard-outline"></i>
                         <span>Panel de Control</span>
                     </a>
                 </li>
@@ -54,7 +54,7 @@
                 <li class="side-nav-item">
                     <a th:href="@{/clientes}" class="side-nav-link"
                        th:classappend="${menuActivo == 'clientes'} ? 'active'">
-                        <i class="uil-users-alt"></i>
+                        <i class="mdi mdi-account-group-outline"></i>
                         <span>Clientes</span>
                     </a>
                 </li>
@@ -62,7 +62,7 @@
                 <li class="side-nav-item">
                     <a th:href="@{/servicios}" class="side-nav-link"
                        th:classappend="${menuActivo == 'servicios'} ? 'active'">
-                        <i class="uil-briefcase-alt"></i>
+                        <i class="mdi mdi-briefcase-outline"></i>
                         <span>Catálogo de Servicios</span>
                     </a>
                 </li>
@@ -70,7 +70,7 @@
                 <li class="side-nav-item">
                     <a th:href="@{/contratos}" class="side-nav-link"
                        th:classappend="${menuActivo == 'contratos'} ? 'active'">
-                        <i class="uil-file-check-alt"></i>
+                        <i class="mdi mdi-file-check-outline"></i>
                         <span>Contratos</span>
                     </a>
                 </li>
@@ -78,7 +78,7 @@
                 <li class="side-nav-item">
                     <a th:href="@{/proyectos}" class="side-nav-link"
                        th:classappend="${menuActivo == 'proyectos'} ? 'active'">
-                        <i class="uil-moneybag"></i>
+                        <i class="mdi mdi-sack"></i>
                         <span>Proyectos y Casos</span>
                     </a>
                 </li>
@@ -89,14 +89,14 @@
                 <li class="side-nav-item">
                     <a th:href="@{/facturacion}" class="side-nav-link"
                        th:classappend="${menuActivo == 'facturacion'} ? 'active'">
-                        <i class="uil-receipt-alt"></i>
+                        <i class="mdi mdi-receipt"></i>
                         <span>Emisión de Facturas</span>
                     </a>
                 </li>
 
                 <li class="side-nav-item">
                     <a th:href="@{/facturacion(tab='historial')}" class="side-nav-link">
-                        <i class="uil-history"></i>
+                        <i class="mdi mdi-history"></i>
                         <span>Historial de DTE</span>
                     </a>
                 </li>
@@ -107,28 +107,28 @@
                 <li class="side-nav-item">
                     <a th:href="@{/reportes}" class="side-nav-link"
                        th:classappend="${menuActivo == 'reportes'} ? 'active'">
-                        <i class="uil-chart-bar"></i>
+                        <i class="mdi mdi-chart-bar"></i>
                         <span>Reportes</span>
                     </a>
                 </li>
 
                 <li class="side-nav-item">
                     <a th:href="@{/reportes(tab='cobranza')}" class="side-nav-link">
-                        <i class="uil-clock-three"></i>
+                        <i class="mdi mdi-clock-outline"></i>
                         <span>Cuentas por Cobrar</span>
                     </a>
                 </li>
 
                 <li class="side-nav-item">
                     <a th:href="@{/reportes(tab='libro')}" class="side-nav-link">
-                        <i class="uil-book-open"></i>
+                        <i class="mdi mdi-book-open-outline"></i>
                         <span>Libro de Ventas</span>
                     </a>
                 </li>
 
                 <li class="side-nav-item">
                     <a th:href="@{/reportes(tab='cartera')}" class="side-nav-link">
-                        <i class="uil-briefcase-alt"></i>
+                        <i class="mdi mdi-briefcase-outline"></i>
                         <span>Cartera por Cliente</span>
                     </a>
                 </li>
@@ -139,7 +139,7 @@
                 <li class="side-nav-item">
                     <a th:href="@{/configuracion/dte}" class="side-nav-link"
                        th:classappend="${menuActivo == 'configuracion'} ? 'active'">
-                        <i class="uil-cog"></i>
+                        <i class="mdi mdi-cog-outline"></i>
                         <span>Parámetros DTE</span>
                     </a>
                 </li>
