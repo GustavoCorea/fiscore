@@ -15,6 +15,7 @@ aplicación y Neon con los datos.
 |---|---|
 | `Dockerfile` | Compila el WAR y produce una imagen ajustada a 512 MB de RAM |
 | `render.yaml` | Declara el servicio web y sus variables de entorno |
+| `.github/workflows/respaldo.yml` | Vuelca la base de Neon a diario y comprueba que el volcado sea restaurable (§11) |
 | `.dockerignore` | Mantiene fuera de la imagen el `target/`, el `.git` y los `.env` |
 | `.env.example` | Plantilla de variables; copiar a `.env` para trabajar en local |
 | `src/main/resources/application.properties` | Configuración base, toda parametrizada |
@@ -419,3 +420,68 @@ Dos advertencias:
 - **La clave viaja en la línea de órdenes**, y queda en el historial del intérprete
   y en la lista de procesos. Conviene pasarla por variable de entorno y borrar la
   entrada del historial después.
+
+---
+
+## 11. Respaldo y restauración
+
+`.github/workflows/respaldo.yml` vuelca la base **todos los días a las 07:00 UTC**
+(01:00 en El Salvador) y guarda el resultado como artefacto de la ejecución.
+También se puede lanzar a mano desde la pestaña **Actions** → *Respaldo de la
+base* → *Run workflow*, que es lo sensato antes de un despliegue que toque el
+esquema.
+
+Va en GitHub Actions y no dentro de la aplicación por tres razones: Render
+suspende el servicio tras 15 minutos sin tráfico y una tarea programada dentro
+no llegaría a ejecutarse; no hay disco persistente donde dejar el fichero; y el
+contenedor tiene 512 MB que no conviene gastar comprimiendo copias.
+
+### Puesta en marcha
+
+Un único secreto, en **Settings → Secrets and variables → Actions**:
+
+| Secreto | Valor |
+|---|---|
+| `NEON_DATABASE_URL` | `postgresql://usuario:clave@<host>/neondb?sslmode=require` |
+
+Es el formato `libpq` que da el panel de Neon, **no** el JDBC de `DB_URL`. Aquí
+sí van el usuario y la clave dentro de la cadena.
+
+### Qué cubre y qué no
+
+El flujo comprueba que el volcado sea restaurable antes de guardarlo: mide el
+tamaño y lee el índice con `pg_restore --list`, exigiendo un mínimo de tablas
+con datos. Sin esa comprobación, un fichero truncado o una página de error se
+guardarían con aspecto de respaldo y el fallo se descubriría el día que hiciera
+falta de verdad.
+
+**Los artefactos caducan a los 90 días**, que es el máximo por defecto de
+GitHub. Esto es una red de seguridad para el pasado reciente, **no un archivo
+fiscal**: un despacho está obligado a conservar información durante años. El
+paso siguiente natural, cuando haya datos de clientes reales, es que el mismo
+flujo suba el volcado a almacenamiento de objetos con retención larga.
+
+### Restaurar
+
+```bash
+pg_restore --no-owner --no-privileges --clean --if-exists \
+  -d "postgresql://usuario:clave@<host>/neondb?sslmode=require" \
+  fiscore-AAAAMMDD-HHMM.dump
+```
+
+Tres cosas que conviene saber antes de necesitarlo:
+
+- **El cliente debe ser PostgreSQL 17 o superior.** Neon corre 17.10 y las
+  herramientas se niegan a trabajar contra un servidor de versión mayor que la
+  suya. Los runners de Ubuntu traen la 16, por eso el flujo instala la 17.
+- **Desde una red corporativa puede no funcionar**: si el 5432 saliente está
+  cerrado, `pg_restore` no conecta (ver §10). La salida es restaurar desde otra
+  red, o lanzar un flujo de GitHub Actions que lo haga.
+- **El volcado incluye `flyway_schema_history`**, así que la base restaurada
+  conserva qué migraciones estaban aplicadas y la aplicación arranca sin
+  reintentarlas.
+
+Conviene además restaurar sobre una **rama nueva de Neon** en lugar de encima de
+la base viva: se comprueba que el respaldo sirve sin arriesgar los datos
+actuales. Con `ddl-auto=validate` una restauración incompleta no arranca, que es
+justo lo que se quiere — pero es mejor descubrirlo en una rama de prueba.
