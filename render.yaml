@@ -68,10 +68,12 @@ services:
       - key: SEED_ADMIN_MAIL
         sync: false
 
-      # Crea el esquema en el primer despliegue y añade columnas nuevas en
-      # los siguientes; nunca borra. Ver DEPLOY.md §6.
+      # El esquema lo gobierna Flyway (src/main/resources/db/migration).
+      # Hibernate solo valida que el modelo coincida con las tablas; si algo no
+      # cuadra, el arranque se detiene en lugar de seguir con un esquema
+      # desviado. Ver DEPLOY.md §6.
       - key: DDL_AUTO
-        value: update
+        value: validate
 
       - key: LOG_LEVEL_APP
         value: INFO

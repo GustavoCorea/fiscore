@@ -1,8 +1,10 @@
 package com.fiscore.core.security;
 
+import com.fiscore.core.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -65,6 +67,21 @@ public class SecurityConfig {
                     .csrfTokenRequestHandler(csrfTokenRequestHandler()))
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/login**", "/recover-password", "/autenticar", "/resources/**", "/error", "/assets/**").permitAll()
+
+                    // ---- Reservado al administrador ----
+                    // Los dos roles se concedian como authorities pero nadie los exigia:
+                    // cualquier sesion valida podia cambiar el NIT del emisor o anular
+                    // un documento. Se restringe lo que tiene consecuencia fiscal o
+                    // destruye informacion; el resto queda para cualquier usuario.
+                    //
+                    // ROL_ADMIN recibe ademas ROL_ACCESO (ver UsuarioService), asi que
+                    // el administrador conserva acceso a todo lo demas.
+                    .requestMatchers("/configuracion/**").hasAuthority(UsuarioService.ROL_ADMIN)
+                    .requestMatchers(HttpMethod.DELETE,
+                            "/clientes/**", "/servicios/**", "/contratos/**",
+                            "/proyectos/**", "/facturacion/**").hasAuthority(UsuarioService.ROL_ADMIN)
+                    .requestMatchers(HttpMethod.POST, "/facturacion/*/anular").hasAuthority(UsuarioService.ROL_ADMIN)
+
                     .anyRequest().authenticated()
                 )
                 .formLogin(login -> login

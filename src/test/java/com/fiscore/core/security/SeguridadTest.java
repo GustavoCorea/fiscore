@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -19,6 +21,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -151,5 +154,55 @@ class SeguridadTest {
         assertThatThrownBy(() -> usuarioService.crear(USUARIO, "otra", "X", "Y", "x@y.sv", null))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Ya existe un usuario");
+    }
+
+    // ---- Separación de roles ----
+    // Los dos roles se concedían como authorities pero nadie los exigía: bastaba
+    // una sesión válida para cambiar el NIT del emisor o anular un documento.
+
+    /** Sesión de un usuario corriente, con acceso pero sin mando. */
+    private static SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor soloAcceso() {
+        return user("empleado").authorities(new SimpleGrantedAuthority(UsuarioService.ROL_ACCESO));
+    }
+
+    @Test
+    @DisplayName("Un usuario sin rol de administrador no entra a la configuración fiscal")
+    void configuracionReservadaAlAdministrador() throws Exception {
+        mockMvc.perform(get("/configuracion/dte").with(soloAcceso()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/configuracion/dte/parametros").with(soloAcceso()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("El administrador sí entra a la configuración fiscal")
+    void configuracionAbiertaAlAdministrador() throws Exception {
+        mockMvc.perform(get("/configuracion/dte")
+                        .with(user(usuarioService.loadUserByUsername(USUARIO))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Un usuario sin rol de administrador no borra registros ni anula facturas")
+    void operacionesDestructivasReservadas() throws Exception {
+        mockMvc.perform(delete("/clientes/1").with(soloAcceso()).with(csrf()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(delete("/facturacion/1").with(soloAcceso()).with(csrf()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/facturacion/1/anular").with(soloAcceso()).with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("El trabajo del día a día sigue abierto a cualquier usuario")
+    void loCotidianoNoSeRestringe() throws Exception {
+        mockMvc.perform(get("/clientes/listar").with(soloAcceso()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/facturacion/listar").with(soloAcceso()))
+                .andExpect(status().isOk());
     }
 }

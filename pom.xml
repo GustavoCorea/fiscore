@@ -73,6 +73,17 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<!-- Migraciones versionadas. Sustituyen a ddl-auto=update, que creaba y
+		     ampliaba pero nunca borraba ni modificaba, dejando que el esquema se
+		     desviara en silencio. Ver DEPLOY.md §6. -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>

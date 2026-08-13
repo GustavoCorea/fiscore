@@ -2,6 +2,7 @@ package com.fiscore.core.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.math.BigDecimal;
@@ -11,13 +12,14 @@ import java.util.List;
 
 @Entity
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Table(name = "factura", uniqueConstraints = {
         // Última defensa contra correlativos repetidos: si la aplicación fallara
         // en la reserva, la base de datos rechaza el documento duplicado.
         @UniqueConstraint(name = "uk_factura_numero_control", columnNames = "numero_control"),
         @UniqueConstraint(name = "uk_factura_codigo_generacion", columnNames = "codigo_generacion")
 })
-public class Factura {
+public class Factura extends EntidadAuditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
