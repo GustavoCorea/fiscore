@@ -485,3 +485,57 @@ Conviene además restaurar sobre una **rama nueva de Neon** en lugar de encima d
 la base viva: se comprueba que el respaldo sirve sin arriesgar los datos
 actuales. Con `ddl-auto=validate` una restauración incompleta no arranca, que es
 justo lo que se quiere — pero es mejor descubrirlo en una rama de prueba.
+
+---
+
+## 12. Dónde se firma el DTE
+
+**Decidido el 13 de agosto de 2026: el firmador oficial de Hacienda como
+segundo servicio en Render.** Se anota aquí con sus alternativas porque en unas
+semanas no queda memoria de por qué se descartaron.
+
+### Por qué esa y no las otras
+
+| Opción | Por qué no |
+|---|---|
+| Firmar dentro del proceso, en Java | Obliga a implementar la firma exactamente como Hacienda la espera y a mantenerla cuando cambie. Cambia un problema de infraestructura —medible y reversible— por uno de criptografía, que cuando falla lo hace de forma opaca |
+| Firmador en el mismo contenedor | Devolvería la verdad a `localhost:8113`, pero quedan **225 MB** de los 512 tras los 287 que consume la aplicación (§7). Dos JVMs bajo ese techo convierten cualquier pico del firmador en una caída de la facturación: comparten contenedor |
+| Firmador en una máquina del despacho | Render tendría que alcanzarla, con IP pública o túnel. La red de la oficina ya bloquea puertos salientes (§10) |
+
+La elegida aísla el fallo: si el firmador se cae, la aplicación sigue en pie y
+los documentos quedan pendientes de envío en lugar de perderse.
+
+### Lo que impone el plan gratuito
+
+Render **suspende cada servicio tras 15 minutos sin tráfico**, y el firmador no
+es una excepción. Como `MODELO_FACTURACION` vale `1` —modelo previo, el DTE se
+firma y se transmite *antes* de entregarlo al cliente—, ese arranque en frío no
+se puede esconder detrás de un proceso en segundo plano: **lo paga el usuario,
+con el cliente delante**.
+
+La mitigación es despertar el firmador cuando se abre la pantalla de emisión, no
+cuando se pulsa el botón: entre que el usuario elige el cliente y confirma pasan
+segundos suficientes para que el servicio esté en pie.
+
+Esta es, con diferencia, la primera funcionalidad que justifica pagar el plan.
+Sin suspensión, la mitigación sobra y la opción elegida deja de tener contras.
+
+### El certificado
+
+Render no ofrece disco persistente, así que el `.crt` que emite Hacienda no
+puede vivir en el sistema de ficheros del servicio. Se inyecta como variable de
+entorno en base64 y el contenedor lo escribe a un directorio temporal al
+arrancar.
+
+**Nunca dentro de la imagen ni en el repositorio.** Una imagen se comparte, se
+publica y se conserva; una variable de entorno se rota. La clave privada del
+certificado va en `MH_CLAVE_PRIVADA`, que ya está declarada como parámetro de
+tipo secreto y nunca se devuelve al navegador.
+
+### Pendiente antes de poder construirlo
+
+- El **certificado de firma** de Hacienda.
+- Las **credenciales del ambiente de pruebas** (`MH_USUARIO`, `MH_CLAVE_API`),
+  hoy vacías.
+- Los **esquemas JSON** del DTE, para generar el documento contra ellos en lugar
+  de contra la memoria de nadie.
