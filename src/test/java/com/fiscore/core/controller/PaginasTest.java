@@ -175,6 +175,21 @@ class PaginasTest {
         mockMvc.perform(get("/clientes")).andExpect(status().isOk()).andExpect(view().name("cliente/clientes"));
         mockMvc.perform(get("/servicios")).andExpect(status().isOk()).andExpect(view().name("servicio/servicios"));
         mockMvc.perform(get("/contratos")).andExpect(status().isOk()).andExpect(view().name("gestion/contratos"));
+        mockMvc.perform(get("/usuarios")).andExpect(status().isOk()).andExpect(view().name("seguridad/usuarios"));
+    }
+
+    @Test
+    @DisplayName("Compras ofrece el año y su selector")
+    void compras() throws Exception {
+        mockMvc.perform(get("/compras"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("compras/compras"))
+                .andExpect(model().attributeExists("anioSeleccionado", "anios"));
+
+        // El año llega por parámetro para poder enlazar un periodo concreto
+        mockMvc.perform(get("/compras").param("anio", "2025"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("anioSeleccionado", 2025));
     }
 
     @Test
