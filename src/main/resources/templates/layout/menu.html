@@ -83,6 +83,14 @@
                     </a>
                 </li>
 
+                <li class="side-nav-item">
+                    <a th:href="@{/compras}" class="side-nav-link"
+                       th:classappend="${menuActivo == 'compras'} ? 'active'">
+                        <i class="mdi mdi-cart-outline"></i>
+                        <span>Compras</span>
+                    </a>
+                </li>
+
                 <!-- Facturación -->
                 <li class="side-nav-title">Facturación DTE</li>
 

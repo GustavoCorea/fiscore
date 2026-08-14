@@ -97,6 +97,23 @@ public class InicioController implements Serializable {
         return "seguridad/usuarios";
     }
 
+    /**
+     * Libro de compras. La pantalla pide sus propios datos por año, así que
+     * aquí solo viaja el año elegido: cargar el libro entero en el modelo
+     * obligaría a recargar la página para cambiar de periodo.
+     */
+    @GetMapping("/compras")
+    public String compras(HttpSession session, Model model,
+                          @org.springframework.web.bind.annotation.RequestParam(required = false) Integer anio) {
+        loginController.initAuthentication(session, model);
+        model.addAttribute("pageTitle", "Compras");
+        model.addAttribute("menuActivo", "compras");
+        model.addAttribute("anioSeleccionado",
+                anio != null ? anio : java.time.LocalDate.now().getYear());
+        model.addAttribute("anios", com.fiscore.core.controller.CompraController.aniosDisponibles());
+        return "compras/compras";
+    }
+
     @GetMapping("/servicios")
     public String servicios(HttpSession session, Model model) {
         loginController.initAuthentication(session, model);
