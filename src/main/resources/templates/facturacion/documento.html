@@ -173,6 +173,12 @@
                             <td class="text-muted">IVA retenido:</td>
                             <td class="text-end text-danger" th:text="'-$' + ${#numbers.formatDecimal(factura.ivaRetenido, 1, 'COMMA', 2, 'POINT')}"></td>
                         </tr>
+                        <!-- Solo aparece cuando hay retención: una línea en cero
+                             en un documento tributario invita a preguntas. -->
+                        <tr th:if="${factura.retencionRenta != null and factura.retencionRenta.signum() > 0}">
+                            <td class="text-muted">Retención de renta:</td>
+                            <td class="text-end text-danger" th:text="'-$' + ${#numbers.formatDecimal(factura.retencionRenta, 1, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
                         <tr class="border-top">
                             <td class="fw-bold fs-5">TOTAL A PAGAR:</td>
                             <td class="text-end fw-bold fs-5 text-success"
