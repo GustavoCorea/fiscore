@@ -60,16 +60,45 @@ public class Factura extends EntidadAuditable {
     private BigDecimal descuento;
     private BigDecimal ivaPercibido;    // 13%
     private BigDecimal ivaRetenido;
+    /**
+     * Retención de renta sobre honorarios profesionales. Como el IVA retenido,
+     * resta del total: es dinero que el cliente entera a Hacienda en lugar de
+     * pagarlo al despacho. Solo se calcula si RETENCION_RENTA_APLICA está
+     * activo y la base alcanza RETENCION_MONTO_MINIMO.
+     */
+    private BigDecimal retencionRenta;
     private BigDecimal montoTotal;
 
     // ---- Estados ----
     private String estado;              // BORRADOR, EMITIDA, PAGADA, ANULADA
-    private String estadoDte;           // PENDIENTE_ENVIO, ACEPTADO, RECHAZADO, CONTINGENCIA
+    /** Ciclo frente a Hacienda. Valores y transiciones válidas en {@link EstadoDte}. */
+    private String estadoDte;
+
+    /**
+     * Documento que corrige esta nota. Hacienda lo exige en los tipos 05 y 06:
+     * una nota de crédito que no dice qué documento corrige no es aceptada.
+     *
+     * Se guarda la referencia y no una copia de sus datos para que no puedan
+     * divergir. Queda fuera del JSON de los listados porque arrastraría la
+     * factura entera en cada fila; para mostrarla basta el número, que expone
+     * getNumeroFacturaRelacionada().
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "factura_relacionada_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private Factura facturaRelacionada;
 
     // ---- Respuesta MH ----
     private String respuestaMH;
 
     private String notas;
+
+    /** Número del documento corregido, para las pantallas. */
+    public String getNumeroFacturaRelacionada() {
+        return facturaRelacionada != null ? facturaRelacionada.getNumeroFactura() : null;
+    }
 
     @ToString.Exclude
     @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

@@ -4,6 +4,7 @@ import com.fiscore.core.config.ParametroDte;
 import com.fiscore.core.models.Contrato;
 import com.fiscore.core.models.ContratoServicio;
 import com.fiscore.core.models.DetalleFactura;
+import com.fiscore.core.models.EstadoDte;
 import com.fiscore.core.models.Factura;
 import com.fiscore.core.models.Proyecto;
 import com.fiscore.core.repositories.ContratoRepository;
@@ -272,6 +273,7 @@ public class FacturacionService {
         if (factura.getDetalles() == null || factura.getDetalles().isEmpty()) {
             throw new IllegalArgumentException("La factura debe tener al menos una línea de detalle.");
         }
+        exigirDocumentoRelacionado(factura);
         if (factura.getCliente() == null) {
             throw new IllegalArgumentException("Debe seleccionar el cliente receptor del documento.");
         }
@@ -317,6 +319,14 @@ public class FacturacionService {
     public Factura anular(Factura factura, String motivo) {
         if ("ANULADA".equals(factura.getEstado())) {
             throw new IllegalStateException("La factura ya se encuentra anulada.");
+        }
+        // Un documento con sello de recepción existe para Hacienda, y anularlo
+        // solo en el sistema dejaría las dos versiones en desacuerdo. Requiere
+        // el evento de invalidación ante el Ministerio, que aún no está hecho.
+        if (EstadoDte.desde(factura.getEstadoDte()).tieneValidezFiscal()) {
+            throw new IllegalStateException(
+                    "La factura tiene sello de Hacienda: hay que invalidarla ante el Ministerio, "
+                            + "no basta con anularla en el sistema.");
         }
         factura.setEstado("ANULADA");
         factura.setFechaPago(null);
@@ -385,6 +395,46 @@ public class FacturacionService {
                 return facturaRepository.save(factura);
             default:
                 throw new IllegalArgumentException("Estado no soportado: " + nuevoEstado);
+        }
+    }
+
+    /**
+     * Avanza el estado del documento frente a Hacienda validando la transición.
+     *
+     * Es el único punto por el que debería cambiar {@code estadoDte}: escribirlo
+     * a mano desde cada paso de la integración es como se acaba con documentos
+     * ACEPTADOS que nunca se enviaron.
+     */
+    @Transactional
+    public Factura cambiarEstadoDte(Factura factura, EstadoDte destino) {
+        EstadoDte actual = EstadoDte.desde(factura.getEstadoDte());
+        if (actual == destino) {
+            return factura;
+        }
+        if (!actual.puedePasarA(destino)) {
+            throw new IllegalStateException("Un documento en " + actual + " no puede pasar a "
+                    + destino + ". Desde " + actual + " solo cabe " + actual.siguientesPosibles() + ".");
+        }
+        factura.setEstadoDte(destino.name());
+        return facturaRepository.save(factura);
+    }
+
+    /**
+     * Las notas de crédito (05) y débito (06) deben decir qué documento
+     * corrigen: el esquema de Hacienda lo exige y sin ese dato el documento se
+     * rechaza. Se comprueba al guardar y no al transmitir para que el fallo
+     * aparezca mientras el usuario tiene el formulario delante.
+     */
+    private void exigirDocumentoRelacionado(Factura factura) {
+        boolean esNota = "05".equals(factura.getTipoDte()) || "06".equals(factura.getTipoDte());
+
+        if (esNota && factura.getFacturaRelacionada() == null) {
+            throw new IllegalArgumentException(
+                    "Una nota de crédito o débito debe indicar el documento que corrige.");
+        }
+        if (!esNota && factura.getFacturaRelacionada() != null) {
+            throw new IllegalArgumentException(
+                    "Solo las notas de crédito y débito pueden referirse a otro documento.");
         }
     }
 
@@ -525,10 +575,35 @@ public class FacturacionService {
         factura.setIvaPercibido(iva);
         if (factura.getIvaRetenido() == null) factura.setIvaRetenido(BigDecimal.ZERO);
 
-        factura.setMontoTotal(gravado.add(exento).add(noSujeto)
-                .subtract(descuento).add(iva)
+        BigDecimal base = gravado.add(exento).add(noSujeto).subtract(descuento).max(BigDecimal.ZERO);
+        factura.setRetencionRenta(retencionRentaSobre(base));
+
+        factura.setMontoTotal(base.add(iva)
                 .subtract(factura.getIvaRetenido())
+                .subtract(factura.getRetencionRenta())
                 .setScale(2, RoundingMode.HALF_UP));
+    }
+
+    /**
+     * Retención de renta sobre la base del documento.
+     *
+     * Devuelve cero salvo que el parámetro esté activo, porque no todo emisor la
+     * sufre: depende de su naturaleza, no del documento. Y por debajo del monto
+     * mínimo no hay obligación de retener, así que aplicarla igual descuadraría
+     * el cobro contra lo que el cliente realmente entera.
+     *
+     * Las tasas llevaban desde el principio en DTE_PARAMETRO sin que nada las
+     * leyera: este es su primer uso.
+     */
+    private BigDecimal retencionRentaSobre(BigDecimal base) {
+        if (!configuracion.getBooleano(ParametroDte.RETENCION_RENTA_APLICA)) {
+            return BigDecimal.ZERO;
+        }
+        if (base.compareTo(configuracion.getDecimal(ParametroDte.RETENCION_MONTO_MINIMO)) < 0) {
+            return BigDecimal.ZERO;
+        }
+        return base.multiply(configuracion.getDecimal(ParametroDte.RETENCION_RENTA_TASA))
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     /** Adelanta la próxima facturación del contrato según su periodicidad. */
