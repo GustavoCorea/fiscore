@@ -35,6 +35,7 @@ class DteFiscalTest {
     @Autowired private DteCorrelativoRepository correlativoRepository;
     @Autowired private CorrelativoService correlativoService;
     @Autowired private ContratoRepository contratoRepository;
+    @Autowired private com.fiscore.core.repositories.RegistroHorasRepository registroHorasRepository;
     @Autowired private ProyectoRepository proyectoRepository;
 
     private Cliente cliente;
@@ -46,6 +47,7 @@ class DteFiscalTest {
         facturaRepository.deleteAll();
         correlativoRepository.deleteAll();
         contratoRepository.deleteAll();
+        registroHorasRepository.deleteAll();   // apuntan a proyecto
         proyectoRepository.deleteAll();
         clienteRepository.deleteAll();
         correlativoService.inicializar();

@@ -26,6 +26,13 @@ public class Proyecto extends EntidadAuditable {
 
     private String categoria;           // CONTABILIDAD, LEGAL, AUDITORIA, CONSULTORIA, TRAMITES
     private BigDecimal presupuesto;
+
+    /**
+     * Tarifa por hora del caso. Sirve de valor por defecto al registrar horas;
+     * cada registro guarda la suya, de modo que cambiarla aquí no reescribe el
+     * precio del trabajo ya hecho.
+     */
+    private BigDecimal tarifaHora;
     private Integer porcentajeAvance;
     // COTIZADO, EN_EJECUCION, FINALIZADO, FACTURADO, CANCELADO
     private String estado;

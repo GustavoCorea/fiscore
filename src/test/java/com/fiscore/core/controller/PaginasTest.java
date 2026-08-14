@@ -36,6 +36,7 @@ class PaginasTest {
     @Autowired private ServicioRepository servicioRepository;
     @Autowired private ContratoRepository contratoRepository;
     @Autowired private FacturaRepository facturaRepository;
+    @Autowired private com.fiscore.core.repositories.RegistroHorasRepository registroHorasRepository;
     @Autowired private ProyectoRepository proyectoRepository;
     @Autowired private ContratoService contratoService;
     @Autowired private ProyectoService proyectoService;
@@ -47,6 +48,7 @@ class PaginasTest {
     void sembrarDatos() {
         facturaRepository.deleteAll();
         contratoRepository.deleteAll();
+        registroHorasRepository.deleteAll();   // apuntan a proyecto
         proyectoRepository.deleteAll();
         clienteRepository.deleteAll();
         servicioRepository.deleteAll();
