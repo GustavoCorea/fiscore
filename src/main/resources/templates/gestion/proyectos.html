@@ -608,6 +608,16 @@
                     </table>
                 </div>
             </div>
+            <div class="modal-footer justify-content-between">
+                <span class="text-muted small">
+                    <i class="mdi mdi-information-outline me-1"></i>
+                    Al facturar, las horas cobradas quedan bloqueadas. El caso sigue abierto.
+                </span>
+                <button type="button" class="btn btn-success" id="btnFacturarHoras"
+                        onclick="facturarHoras()" disabled>
+                    <i class="mdi mdi-file-send me-1"></i> Facturar pendientes
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -829,6 +839,52 @@ function pintarResumenHoras(r) {
         + tarjeta('Sin cobrar', horas(r.horasNoFacturables), 'text-muted')
         + tarjeta('Pendiente de facturar', dolares(r.importePendiente), 'text-warning')
         + tarjeta('Ya facturado', dolares(r.importeFacturado), 'text-success');
+
+    // Sin nada pendiente no hay nada que emitir: el botón se apaga en lugar
+    // de dejar que el usuario descubra el error al pulsarlo.
+    const pendiente = parseFloat(r.importePendiente) || 0;
+    const boton = document.getElementById('btnFacturarHoras');
+    boton.disabled = pendiente <= 0;
+    boton.innerHTML = pendiente > 0
+        ? '<i class="mdi mdi-file-send me-1"></i> Facturar ' + dolares(pendiente)
+        : '<i class="mdi mdi-file-send me-1"></i> Nada pendiente';
+}
+
+function facturarHoras() {
+    const id = document.getElementById('horasProyectoId').value;
+    const boton = document.getElementById('btnFacturarHoras');
+
+    Swal.fire({
+        title: '¿Emitir la minuta?',
+        text: 'Se cobrarán todas las horas pendientes del caso. Después ya no podrán modificarse.',
+        icon: 'question',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Emitir',
+        confirmButtonColor: '#0acf97'
+    }).then(res => {
+        if (!res.isConfirmed) return;
+        boton.disabled = true;
+
+        fetch(window.url('/facturacion/generar-horas/' + id), {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({})
+        })
+            .then(r => r.json())
+            .then(datos => {
+                if (datos.error) { Swal.fire('No se pudo facturar', datos.error, 'error'); return; }
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Minuta emitida',
+                    html: 'Documento <strong>' + datos.numeroFactura + '</strong> por <strong>$'
+                        + (parseFloat(datos.montoTotal) || 0).toFixed(2) + '</strong>'
+                });
+                cargarHoras();
+            })
+            .catch(() => Swal.fire('Error', 'No se pudo emitir la minuta.', 'error'))
+            .finally(() => { boton.disabled = false; });
+    });
 }
 
 function pintarHoras(registros) {

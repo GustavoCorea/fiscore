@@ -98,6 +98,27 @@ public class FacturacionController {
                 "montoTotal", factura.getMontoTotal()));
     }
 
+    /** Minuta de las horas pendientes de un caso. */
+    @PostMapping("/generar-horas/{proyectoId}")
+    @ResponseBody
+    public ResponseEntity<?> generarDesdeHoras(@PathVariable Long proyectoId,
+                                               @RequestBody(required = false) Map<String, Object> body) {
+        Proyecto proyecto = proyectoService.findById(proyectoId)
+                .orElseThrow(() -> new IllegalArgumentException("Caso no encontrado."));
+
+        Map<String, Object> datos = body != null ? body : Map.of();
+        Factura factura = facturacionService.generarDesdeHoras(
+                proyecto,
+                texto(datos.get("condicionPago")),
+                entero(datos.get("plazoCredito")));
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Minuta de horas generada exitosamente",
+                "id", factura.getId(),
+                "numeroFactura", factura.getNumeroFactura(),
+                "montoTotal", factura.getMontoTotal()));
+    }
+
     /** Facturación masiva de los contratos recurrentes con ciclo vencido. */
     @PostMapping("/generar-lote")
     @ResponseBody

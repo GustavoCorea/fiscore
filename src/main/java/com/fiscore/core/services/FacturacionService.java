@@ -7,6 +7,8 @@ import com.fiscore.core.models.DetalleFactura;
 import com.fiscore.core.models.EstadoDte;
 import com.fiscore.core.models.Factura;
 import com.fiscore.core.models.Proyecto;
+import com.fiscore.core.models.RegistroHoras;
+import com.fiscore.core.repositories.RegistroHorasRepository;
 import com.fiscore.core.repositories.ContratoRepository;
 import com.fiscore.core.repositories.FacturaRepository;
 import com.fiscore.core.repositories.ProyectoRepository;
@@ -53,6 +55,9 @@ public class FacturacionService {
 
     @Autowired
     private ProyectoRepository proyectoRepository;
+
+    @Autowired
+    private RegistroHorasRepository registroHorasRepository;
 
     @Autowired
     private ConfiguracionDteService configuracion;
@@ -208,6 +213,86 @@ public class FacturacionService {
         proyecto.setEstado("FACTURADO");
         if (proyecto.getFechaFin() == null) proyecto.setFechaFin(LocalDate.now());
         proyectoRepository.save(proyecto);
+
+        return guardada;
+    }
+
+    /**
+     * Emite el documento de las horas pendientes de un caso.
+     *
+     * A diferencia de {@link #generarDesdeProyecto}, el caso <b>no</b> queda
+     * marcado como facturado ni se cierra: un asunto que se cobra por tiempo
+     * sigue vivo después de cada minuta, y darlo por terminado al emitir lo
+     * sacaría de la lista de casos activos con trabajo aún por hacer.
+     *
+     * La tarifa se interpreta con IVA incluido, como los honorarios de contrato
+     * (ver {@code generarDesdeContrato}). Una sola convención en todo el sistema
+     * evita el error de emitir unas facturas con IVA dentro y otras fuera.
+     */
+    @Transactional
+    public Factura generarDesdeHoras(Proyecto proyecto, String condicionPago, Integer plazoCredito) {
+        if (proyecto.getCliente() == null) {
+            throw new IllegalArgumentException("El caso no tiene un cliente asignado.");
+        }
+
+        List<RegistroHoras> pendientes = registroHorasRepository.findPendientesDeFacturar(proyecto.getId());
+        if (pendientes.isEmpty()) {
+            throw new IllegalStateException(
+                    "El caso \"" + proyecto.getNombre() + "\" no tiene horas pendientes de facturar.");
+        }
+
+        // Un registro sin tarifa no puede cobrarse, pero tampoco puede quedarse
+        // fuera en silencio: se marcaría como facturado por cero y el trabajo
+        // desaparecería sin que nadie lo notara. Mejor detener y avisar.
+        long sinTarifa = pendientes.stream()
+                .filter(r -> r.getTarifaHora() == null || r.getTarifaHora().signum() <= 0)
+                .count();
+        if (sinTarifa > 0) {
+            throw new IllegalStateException(sinTarifa + " registro(s) de horas no tienen tarifa. "
+                    + "Corrígelos o fija la tarifa del caso antes de facturar.");
+        }
+
+        // Una línea por tarifa distinta: el documento sigue siendo legible
+        // aunque el caso acumule decenas de registros, y la aritmética queda a
+        // la vista del cliente. El detalle por día vive en el registro de horas.
+        Map<BigDecimal, BigDecimal> horasPorTarifa = new LinkedHashMap<>();
+        for (RegistroHoras r : pendientes) {
+            horasPorTarifa.merge(r.getTarifaHora(), r.getHoras(), BigDecimal::add);
+        }
+
+        Factura factura = nuevaFactura(tipoDtePara(proyecto.getCliente().getNrc()));
+        factura.setCliente(proyecto.getCliente());
+        factura.setProyecto(proyecto);
+        factura.setPeriodoFacturado(periodoDe(LocalDate.now()));
+        factura.setNotas("Honorarios por horas — " + proyecto.getNombre());
+        aplicarCondicionPago(factura, condicionPago, plazoCredito);
+
+        List<DetalleFactura> detalles = new ArrayList<>();
+        BigDecimal totalBruto = BigDecimal.ZERO;
+        int item = 1;
+
+        for (Map.Entry<BigDecimal, BigDecimal> grupo : horasPorTarifa.entrySet()) {
+            BigDecimal tarifa = grupo.getKey();
+            BigDecimal horas = grupo.getValue().setScale(2, RoundingMode.HALF_UP);
+            BigDecimal bruto = horas.multiply(tarifa).setScale(2, RoundingMode.HALF_UP);
+
+            totalBruto = totalBruto.add(bruto);
+            String descripcion = proyecto.getNombre() + " — " + horas.toPlainString()
+                    + " h a $" + tarifa.setScale(2, RoundingMode.HALF_UP).toPlainString();
+            detalles.add(nuevoDetalle(item++, descripcion, desagregarBase(bruto)));
+        }
+
+        asignarDetalles(factura, detalles);
+        cuadrarConTotalPactado(factura, totalBruto);
+
+        Factura guardada = facturaRepository.save(factura);
+
+        // El vínculo es lo que impide volver a cobrar las mismas horas y lo que
+        // bloquea su edición a partir de ahora.
+        for (RegistroHoras r : pendientes) {
+            r.setFactura(guardada);
+        }
+        registroHorasRepository.saveAll(pendientes);
 
         return guardada;
     }
