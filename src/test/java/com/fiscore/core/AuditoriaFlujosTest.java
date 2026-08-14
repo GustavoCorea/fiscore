@@ -46,6 +46,7 @@ class AuditoriaFlujosTest {
     @Autowired private ClienteRepository clienteRepository;
     @Autowired private ServicioRepository servicioRepository;
     @Autowired private ContratoRepository contratoRepository;
+    @Autowired private com.fiscore.core.repositories.RegistroHorasRepository registroHorasRepository;
     @Autowired private ProyectoRepository proyectoRepository;
     @Autowired private FacturaRepository facturaRepository;
     @Autowired private DteCorrelativoRepository correlativoRepository;
@@ -62,6 +63,7 @@ class AuditoriaFlujosTest {
         // Los correlativos no se reutilizan: para partir de 1 hay que reiniciarlos
         correlativoRepository.deleteAll();
         contratoRepository.deleteAll();
+        registroHorasRepository.deleteAll();   // apuntan a proyecto
         proyectoRepository.deleteAll();
         clienteRepository.deleteAll();
         servicioRepository.deleteAll();

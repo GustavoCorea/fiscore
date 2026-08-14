@@ -360,6 +360,12 @@
                                                title="Facturar">
                                                 <i class="mdi mdi-cash-register"></i>
                                             </a>
+                                            <a href="javascript:void(0);" class="action-icon text-secondary"
+                                               th:attr="data-id=${p.id},data-nombre=${p.nombre}"
+                                               onclick="abrirHoras(this.dataset.id, this.dataset.nombre)"
+                                               title="Horas dedicadas">
+                                                <i class="mdi mdi-clock-outline"></i>
+                                            </a>
                                             <a href="javascript:void(0);" class="action-icon text-info"
                                                th:onclick="'editarProyecto(' + ${p.id} + ')'" title="Editar">
                                                 <i class="mdi mdi-pencil"></i>
@@ -418,12 +424,20 @@
                             <option th:each="c : ${clientesList}" th:value="${c.id}" th:text="${c.nombre}"></option>
                         </select>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label fw-semibold">Presupuesto ($)</label>
                         <div class="input-group">
                             <span class="input-group-text">$</span>
                             <input type="number" class="form-control" id="proyPresupuesto" step="0.01" placeholder="0.00">
                         </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Tarifa por hora ($)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="proyTarifaHora" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-text">Se propone al registrar horas; cada registro guarda la suya.</div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Estado</label>
@@ -518,6 +532,86 @@
     </div>
 </div>
 
+<!-- Horas dedicadas al caso -->
+<div class="modal fade" id="modalHoras" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="mdi mdi-clock-outline me-2"></i>Horas dedicadas
+                    <span class="text-muted fw-normal" id="horasCaso"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="horasProyectoId">
+
+                <!-- Resumen -->
+                <div class="row g-2 mb-3" id="horasResumen"></div>
+
+                <!-- Alta rápida: el caso de uso es apuntar y seguir trabajando -->
+                <div class="border rounded p-3 mb-3 bg-light-subtle">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label small mb-1" for="horaFecha">Fecha</label>
+                            <input type="date" class="form-control form-control-sm" id="horaFecha">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label small mb-1" for="horaCantidad">Horas</label>
+                            <input type="number" step="0.25" min="0.25" max="24"
+                                   class="form-control form-control-sm" id="horaCantidad" placeholder="1.5">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-1" for="horaDescripcion">Trabajo realizado</label>
+                            <input type="text" class="form-control form-control-sm" id="horaDescripcion"
+                                   placeholder="Redacción del escrito de contestación">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-1" for="horaUsuario">Quién</label>
+                            <input type="text" class="form-control form-control-sm" id="horaUsuario"
+                                   placeholder="Yo mismo">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label small mb-1" for="horaTarifa">Tarifa</label>
+                            <input type="number" step="0.01" min="0"
+                                   class="form-control form-control-sm" id="horaTarifa">
+                        </div>
+                        <div class="col-md-1">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="horaFacturable" checked>
+                                <label class="form-check-label small" for="horaFacturable">Cobrable</label>
+                            </div>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-primary btn-sm w-100" onclick="guardarHoras()">
+                                <i class="mdi mdi-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Trabajo</th>
+                            <th>Quién</th>
+                            <th class="text-end">Horas</th>
+                            <th class="text-end">Tarifa</th>
+                            <th class="text-end">Importe</th>
+                            <th>Estado</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody id="cuerpoHoras"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script th:inline="none">
 $(document).ready(function() {
     $('#proyectos-datatable').DataTable({
@@ -552,6 +646,7 @@ function abrirModalNuevo() {
     document.getElementById('proyCategoria').value = 'CONSULTORIA';
     document.getElementById('proyClienteId').value = '';
     document.getElementById('proyPresupuesto').value = '';
+    document.getElementById('proyTarifaHora').value = '';
     document.getElementById('proyEstado').value = 'COTIZADO';
     document.getElementById('proyFechaInicio').value = '';
     document.getElementById('proyFechaEstimadaFin').value = '';
@@ -572,6 +667,7 @@ function editarProyecto(id) {
             document.getElementById('proyCategoria').value = p.categoria || 'CONSULTORIA';
             document.getElementById('proyClienteId').value = p.cliente?.id || '';
             document.getElementById('proyPresupuesto').value = p.presupuesto || '';
+            document.getElementById('proyTarifaHora').value = p.tarifaHora || '';
             document.getElementById('proyEstado').value = p.estado || 'COTIZADO';
             document.getElementById('proyFechaInicio').value = p.fechaInicio || '';
             document.getElementById('proyFechaEstimadaFin').value = p.fechaEstimadaFin || '';
@@ -592,6 +688,7 @@ function guardarProyecto() {
         categoria: document.getElementById('proyCategoria').value,
         clienteId: document.getElementById('proyClienteId').value,
         presupuesto: document.getElementById('proyPresupuesto').value,
+        tarifaHora: document.getElementById('proyTarifaHora').value || null,
         estado: document.getElementById('proyEstado').value,
         fechaInicio: document.getElementById('proyFechaInicio').value,
         fechaEstimadaFin: document.getElementById('proyFechaEstimadaFin').value,
@@ -678,6 +775,160 @@ async function confirmarFacturarProyecto() {
     } finally {
         boton.disabled = false;
     }
+}
+
+// =====================================================================
+// Horas dedicadas al caso
+// =====================================================================
+
+function abrirHoras(proyectoId, nombre) {
+    document.getElementById('horasProyectoId').value = proyectoId;
+    document.getElementById('horasCaso').textContent = '· ' + nombre;
+    document.getElementById('horaFecha').value = new Date().toISOString().slice(0, 10);
+    limpiarFormularioHoras();
+    cargarHoras();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalHoras')).show();
+}
+
+function limpiarFormularioHoras() {
+    document.getElementById('horaCantidad').value = '';
+    document.getElementById('horaDescripcion').value = '';
+    document.getElementById('horaUsuario').value = '';
+    document.getElementById('horaFacturable').checked = true;
+    // La tarifa no se limpia: al apuntar varias entradas seguidas del mismo
+    // caso, volver a escribirla cada vez sería trabajo inútil.
+}
+
+function cargarHoras() {
+    const id = document.getElementById('horasProyectoId').value;
+
+    fetch(window.url('/horas/proyecto/' + id))
+        .then(r => r.json())
+        .then(pintarHoras)
+        .catch(() => Swal.fire('Error', 'No se pudo cargar el detalle de horas.', 'error'));
+
+    fetch(window.url('/horas/proyecto/' + id + '/resumen'))
+        .then(r => r.json())
+        .then(pintarResumenHoras)
+        .catch(() => {});
+}
+
+function pintarResumenHoras(r) {
+    const tarjeta = (titulo, valor, color) =>
+        '<div class="col-6 col-md-3">'
+        + '<div class="border rounded p-2 text-center">'
+        + '<div class="text-muted small text-uppercase">' + titulo + '</div>'
+        + '<div class="h5 mb-0 ' + color + '">' + valor + '</div>'
+        + '</div></div>';
+
+    const horas = n => (parseFloat(n) || 0).toFixed(2) + ' h';
+    const dolares = n => '$' + (parseFloat(n) || 0).toFixed(2);
+
+    document.getElementById('horasResumen').innerHTML =
+          tarjeta('Horas totales', horas(r.horasTotales), '')
+        + tarjeta('Sin cobrar', horas(r.horasNoFacturables), 'text-muted')
+        + tarjeta('Pendiente de facturar', dolares(r.importePendiente), 'text-warning')
+        + tarjeta('Ya facturado', dolares(r.importeFacturado), 'text-success');
+}
+
+function pintarHoras(registros) {
+    const cuerpo = document.getElementById('cuerpoHoras');
+    cuerpo.innerHTML = '';
+
+    if (registros.length === 0) {
+        cuerpo.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">'
+            + 'Todavía no hay horas registradas en este caso.</td></tr>';
+        return;
+    }
+
+    registros.forEach(h => {
+        const fila = document.createElement('tr');
+        const estado = h.facturado
+            ? '<span class="badge bg-success">' + escHoras(h.numeroFactura) + '</span>'
+            : (h.facturable
+                ? '<span class="badge bg-warning text-dark">Por facturar</span>'
+                : '<span class="badge bg-secondary">No cobrable</span>');
+
+        fila.innerHTML =
+              '<td class="text-nowrap">' + escHoras(h.fecha) + '</td>'
+            + '<td>' + escHoras(h.descripcion) + '</td>'
+            + '<td class="text-muted">' + escHoras(h.usuario) + '</td>'
+            + '<td class="text-end">' + (parseFloat(h.horas) || 0).toFixed(2) + '</td>'
+            + '<td class="text-end text-muted">$' + (parseFloat(h.tarifaHora) || 0).toFixed(2) + '</td>'
+            + '<td class="text-end fw-semibold">$' + (parseFloat(h.importe) || 0).toFixed(2) + '</td>'
+            + '<td>' + estado + '</td>'
+            + '<td class="text-end"></td>';
+
+        // Lo ya cobrado no ofrece borrar: el candado esta en el servidor, pero
+        // mostrar un boton que siempre falla es peor que no mostrarlo.
+        if (!h.facturado) {
+            const boton = document.createElement('button');
+            boton.type = 'button';
+            boton.className = 'btn btn-sm btn-link p-0 text-danger';
+            boton.title = 'Eliminar';
+            boton.innerHTML = '<i class="mdi mdi-delete"></i>';
+            boton.addEventListener('click', () => eliminarHoras(h.id));
+            fila.querySelector('td:last-child').appendChild(boton);
+        }
+
+        cuerpo.appendChild(fila);
+    });
+}
+
+function escHoras(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function guardarHoras() {
+    const cuerpo = {
+        proyectoId: parseInt(document.getElementById('horasProyectoId').value, 10),
+        fecha: document.getElementById('horaFecha').value,
+        horas: document.getElementById('horaCantidad').value,
+        descripcion: document.getElementById('horaDescripcion').value.trim(),
+        usuario: document.getElementById('horaUsuario').value.trim(),
+        tarifaHora: document.getElementById('horaTarifa').value || null,
+        facturable: document.getElementById('horaFacturable').checked
+    };
+
+    if (!cuerpo.horas) { Swal.fire('Faltan las horas', 'Indica cuánto tiempo dedicaste.', 'warning'); return; }
+    if (!cuerpo.descripcion) { Swal.fire('Falta el trabajo', 'Describe qué hiciste.', 'warning'); return; }
+
+    fetch(window.url('/horas/guardar'), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(cuerpo)
+    })
+        .then(r => r.json())
+        .then(datos => {
+            if (datos.error) { Swal.fire('No se pudo registrar', datos.error, 'error'); return; }
+            limpiarFormularioHoras();
+            document.getElementById('horaDescripcion').focus();
+            cargarHoras();
+        })
+        .catch(() => Swal.fire('Error', 'No se pudieron registrar las horas.', 'error'));
+}
+
+function eliminarHoras(id) {
+    Swal.fire({
+        title: '¿Eliminar el registro?',
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Eliminar',
+        confirmButtonColor: '#fa5c7c'
+    }).then(res => {
+        if (!res.isConfirmed) return;
+        fetch(window.url('/horas/' + id), { method: 'DELETE' })
+            .then(r => r.json())
+            .then(datos => {
+                if (datos.error) { Swal.fire('No se pudo eliminar', datos.error, 'error'); return; }
+                cargarHoras();
+            })
+            .catch(() => Swal.fire('Error', 'No se pudo eliminar el registro.', 'error'));
+    });
 }
 </script>
 </body>

@@ -42,6 +42,7 @@ class SondeoDeDefectosTest {
     @Autowired private FacturaRepository facturaRepository;
     @Autowired private DteCorrelativoRepository correlativoRepository;
     @Autowired private com.fiscore.core.services.CorrelativoService correlativoService;
+    @Autowired private com.fiscore.core.repositories.RegistroHorasRepository registroHorasRepository;
     @Autowired private ProyectoRepository proyectoRepository;
 
     private Cliente cliente;
@@ -53,6 +54,7 @@ class SondeoDeDefectosTest {
         // Los correlativos no se reutilizan: para partir de 1 hay que reiniciarlos
         correlativoRepository.deleteAll();
         contratoRepository.deleteAll();
+        registroHorasRepository.deleteAll();   // apuntan a proyecto
         proyectoRepository.deleteAll();
         clienteRepository.deleteAll();
         servicioRepository.deleteAll();

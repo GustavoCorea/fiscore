@@ -116,6 +116,16 @@ public class ProyectoController {
             proyecto.setPresupuesto(new BigDecimal(presupuesto.toString()));
         }
 
+        // Tarifa por hora del caso: valor por defecto al registrar horas. Se
+        // admite vaciarla, a diferencia del presupuesto, porque un caso a
+        // precio cerrado no tiene por que llevar tarifa.
+        Object tarifa = body.get("tarifaHora");
+        if (tarifa == null || tarifa.toString().isBlank()) {
+            proyecto.setTarifaHora(null);
+        } else {
+            proyecto.setTarifaHora(new BigDecimal(tarifa.toString()));
+        }
+
         Object fi = body.get("fechaInicio");
         if (fi != null && !fi.toString().isBlank()) proyecto.setFechaInicio(LocalDate.parse(fi.toString()));
 
