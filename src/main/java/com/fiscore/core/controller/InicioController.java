@@ -84,6 +84,19 @@ public class InicioController implements Serializable {
         return "cliente/clientes";
     }
 
+    /**
+     * Gestión de usuarios. La página no recibe la lista desde el modelo: la pide
+     * la propia pantalla a /usuarios/listar, que devuelve una vista sin el hash
+     * de la contraseña. Cargarla aquí obligaría a repetir esa proyección.
+     */
+    @GetMapping("/usuarios")
+    public String usuarios(HttpSession session, Model model) {
+        loginController.initAuthentication(session, model);
+        model.addAttribute("pageTitle", "Usuarios");
+        model.addAttribute("menuActivo", "usuarios");
+        return "seguridad/usuarios";
+    }
+
     @GetMapping("/servicios")
     public String servicios(HttpSession session, Model model) {
         loginController.initAuthentication(session, model);

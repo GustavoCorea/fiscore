@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/layout :: head}"></head>
+<body>
+<div class="wrapper">
+    <header th:replace="~{layout/header :: header}"></header>
+    <aside th:replace="~{layout/menu :: aside}"></aside>
+
+    <div class="content-page">
+        <div class="content">
+            <div class="container-fluid">
+
+                <!-- Breadcrumb -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box">
+                            <div class="page-title-right">
+                                <ol class="breadcrumb m-0">
+                                    <li class="breadcrumb-item"><a th:href="@{/inicio}">Inicio</a></li>
+                                    <li class="breadcrumb-item active">Usuarios</li>
+                                </ol>
+                            </div>
+                            <h4 class="page-title"><i class="mdi mdi-account-key me-2 text-primary"></i>Gestión de Usuarios</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjetas de resumen -->
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <div class="card shadow-sm h-100 py-2" style="border-left: 4px solid #727cf5;">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3"><i class="mdi mdi-account-multiple font-24 text-primary"></i></div>
+                                    <div>
+                                        <div class="text-muted small text-uppercase fw-bold">Usuarios</div>
+                                        <div class="h4 mb-0 fw-bold" id="contadorTotal">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="card shadow-sm h-100 py-2" style="border-left: 4px solid #0acf97;">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3"><i class="mdi mdi-shield-account font-24 text-success"></i></div>
+                                    <div>
+                                        <div class="text-muted small text-uppercase fw-bold">Administradores</div>
+                                        <div class="h4 mb-0 fw-bold" id="contadorAdmin">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="card shadow-sm h-100 py-2" style="border-left: 4px solid #ffbc00;">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3"><i class="mdi mdi-account-off font-24 text-warning"></i></div>
+                                    <div>
+                                        <div class="text-muted small text-uppercase fw-bold">Desactivados</div>
+                                        <div class="h4 mb-0 fw-bold" id="contadorInactivos">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Listado -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <button type="button" class="btn btn-primary" onclick="abrirModalNuevo()">
+                                        <i class="mdi mdi-account-plus me-1"></i> Nuevo Usuario
+                                    </button>
+                                    <span class="text-muted small">
+                                        <i class="mdi mdi-information-outline me-1"></i>
+                                        Las cuentas se desactivan, no se borran: su nombre queda en el historial de facturas y contratos.
+                                    </span>
+                                </div>
+
+                                <table id="usuarios-datatable" class="table table-hover dt-responsive nowrap w-100">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Nombre</th>
+                                        <th>Correo</th>
+                                        <th>Teléfono</th>
+                                        <th>Rol</th>
+                                        <th>Estado</th>
+                                        <th>Última modificación</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="cuerpoUsuarios"></tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <footer th:replace="~{layout/footer :: footer}"></footer>
+    </div>
+</div>
+
+<!-- Modal de alta y edición -->
+<div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalUsuarioTitulo">Nuevo Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="usuarioId">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="username">Usuario <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="username" autocomplete="off"
+                               placeholder="Ej: mgarcia">
+                        <div class="form-text" id="ayudaUsername">No se puede cambiar después de crearlo.</div>
+                    </div>
+                    <div class="col-md-6" id="grupoPassword">
+                        <label class="form-label" for="password">Contraseña inicial <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="password" autocomplete="new-password">
+                        <div class="form-text">La cambiará la persona al entrar por primera vez.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="nombres">Nombres</label>
+                        <input type="text" class="form-control" id="nombres">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="apellidos">Apellidos</label>
+                        <input type="text" class="form-control" id="apellidos">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="correo">Correo</label>
+                        <input type="email" class="form-control" id="correo">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="telefono">Teléfono</label>
+                        <input type="text" class="form-control" id="telefono" placeholder="Ej: 2222-0000">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="rol">Rol <span class="text-danger">*</span></label>
+                        <select class="form-select" id="rol">
+                            <option value="CDSF-ACCESS">Acceso — trabajo diario</option>
+                            <option value="CDSF-ADMIN">Administrador — además configuración y anulaciones</option>
+                        </select>
+                        <div class="form-text">
+                            El administrador puede cambiar los parámetros fiscales, anular facturas,
+                            borrar registros y gestionar usuarios.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarUsuario()">
+                    <i class="mdi mdi-content-save me-1"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de restablecimiento de contraseña -->
+<div class="modal fade" id="modalPassword" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="mdi mdi-lock-reset me-2"></i>Restablecer contraseña</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="passwordUsuarioId">
+                <p class="text-muted">
+                    Se asignará una contraseña nueva a <strong id="passwordUsuarioNombre"></strong>.
+                    La anterior deja de servir de inmediato.
+                </p>
+                <label class="form-label" for="passwordNueva">Contraseña nueva <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="passwordNueva" autocomplete="new-password">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarPassword()">Restablecer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="none">
+let tablaUsuarios = null;
+
+$(document).ready(function () {
+    cargarUsuarios();
+});
+
+function cargarUsuarios() {
+    fetch(window.url('/usuarios/listar'))
+        .then(r => r.json())
+        .then(pintar)
+        .catch(() => Swal.fire('Error', 'No se pudo cargar la lista de usuarios.', 'error'));
+}
+
+function pintar(usuarios) {
+    // DataTables se destruye antes de repintar: reutilizar la instancia sobre
+    // un tbody sustituido deja la paginación descuadrada.
+    if (tablaUsuarios) { tablaUsuarios.destroy(); tablaUsuarios = null; }
+
+    const cuerpo = document.getElementById('cuerpoUsuarios');
+    cuerpo.innerHTML = '';
+
+    let admins = 0, inactivos = 0;
+
+    usuarios.forEach(u => {
+        if (u.rol === 'CDSF-ADMIN' && u.activo) admins++;
+        if (!u.activo) inactivos++;
+
+        const nombre = [u.nombres, u.apellidos].filter(Boolean).join(' ') || '—';
+        const esAdmin = u.rol === 'CDSF-ADMIN';
+
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td class="fw-semibold">${esc(u.username)}</td>
+            <td>${esc(nombre)}</td>
+            <td>${esc(u.correo) || '—'}</td>
+            <td>${esc(u.telefono) || '—'}</td>
+            <td>
+                <span class="badge ${esAdmin ? 'bg-primary' : 'bg-secondary'}">
+                    ${esAdmin ? 'Administrador' : 'Acceso'}
+                </span>
+            </td>
+            <td>
+                <span class="badge ${u.activo ? 'bg-success' : 'bg-danger'}">
+                    ${u.activo ? 'Activo' : 'Desactivado'}
+                </span>
+            </td>
+            <td class="text-muted small">
+                ${u.fechaModifica ? esc(u.fechaModifica) + '<br>' + esc(u.usuarioModifica || '') : '—'}
+            </td>
+            <td class="text-nowrap"></td>`;
+
+        const acciones = fila.querySelector('td:last-child');
+        acciones.appendChild(boton('mdi-pencil', 'text-primary', 'Editar',
+            () => editarUsuario(u.id)));
+        acciones.appendChild(boton('mdi-lock-reset', 'text-secondary', 'Restablecer contraseña',
+            () => abrirModalPassword(u.id, u.username)));
+        acciones.appendChild(boton(
+            u.activo ? 'mdi-account-off' : 'mdi-account-check',
+            u.activo ? 'text-danger' : 'text-success',
+            u.activo ? 'Desactivar' : 'Activar',
+            () => cambiarEstado(u.id, u.username, !u.activo)));
+
+        cuerpo.appendChild(fila);
+    });
+
+    document.getElementById('contadorTotal').textContent = usuarios.length;
+    document.getElementById('contadorAdmin').textContent = admins;
+    document.getElementById('contadorInactivos').textContent = inactivos;
+
+    tablaUsuarios = $('#usuarios-datatable').DataTable({
+        language: { url: window.url('/assets/vendor/datatables.net/i18n/es-ES.json') },
+        pageLength: 15,
+        columnDefs: [{ orderable: false, targets: 7 }]
+    });
+}
+
+/** Los datos vienen de la base y acaban en innerHTML: se escapan. */
+function esc(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function boton(icono, color, titulo, accion) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn btn-sm btn-link p-1 ' + color;
+    b.title = titulo;
+    b.setAttribute('aria-label', titulo);
+    b.innerHTML = '<i class="mdi ' + icono + ' font-18"></i>';
+    b.addEventListener('click', accion);
+    return b;
+}
+
+function abrirModalNuevo() {
+    document.getElementById('usuarioId').value = '';
+    ['username', 'password', 'nombres', 'apellidos', 'correo', 'telefono']
+        .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('rol').value = 'CDSF-ACCESS';
+    document.getElementById('username').disabled = false;
+    document.getElementById('grupoPassword').style.display = '';
+    document.getElementById('ayudaUsername').style.display = '';
+    document.getElementById('modalUsuarioTitulo').innerHTML =
+        '<i class="mdi mdi-account-plus me-2"></i>Nuevo Usuario';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalUsuario')).show();
+}
+
+function editarUsuario(id) {
+    fetch(window.url('/usuarios/' + id))
+        .then(r => r.json())
+        .then(u => {
+            document.getElementById('usuarioId').value = u.id;
+            document.getElementById('username').value = u.username || '';
+            document.getElementById('nombres').value = u.nombres || '';
+            document.getElementById('apellidos').value = u.apellidos || '';
+            document.getElementById('correo').value = u.correo || '';
+            document.getElementById('telefono').value = u.telefono || '';
+            document.getElementById('rol').value = u.rol === 'CDSF-ADMIN' ? 'CDSF-ADMIN' : 'CDSF-ACCESS';
+            // El nombre de usuario identifica los registros ya auditados; cambiarlo
+            // dejaria huerfanas las columnas CREADO_POR de facturas y contratos.
+            document.getElementById('username').disabled = true;
+            document.getElementById('grupoPassword').style.display = 'none';
+            document.getElementById('ayudaUsername').style.display = 'none';
+            document.getElementById('modalUsuarioTitulo').innerHTML =
+                '<i class="mdi mdi-account-edit me-2"></i>Editar Usuario';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalUsuario')).show();
+        })
+        .catch(() => Swal.fire('Error', 'No se pudo cargar el usuario.', 'error'));
+}
+
+let guardando = false;
+function guardarUsuario() {
+    if (guardando) return;
+
+    const id = document.getElementById('usuarioId').value;
+    const cuerpo = {
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value,
+        nombres: document.getElementById('nombres').value.trim(),
+        apellidos: document.getElementById('apellidos').value.trim(),
+        correo: document.getElementById('correo').value.trim(),
+        telefono: document.getElementById('telefono').value.trim(),
+        rol: document.getElementById('rol').value
+    };
+
+    if (!id && !cuerpo.username) { Swal.fire('Falta el usuario', 'Escribe un nombre de usuario.', 'warning'); return; }
+    if (!id && !cuerpo.password) { Swal.fire('Falta la contraseña', 'Escribe una contraseña inicial.', 'warning'); return; }
+
+    guardando = true;
+    const btn = document.querySelector('#modalUsuario .modal-footer .btn-primary');
+    if (btn) btn.disabled = true;
+
+    const url = id ? window.url('/usuarios/' + id) : window.url('/usuarios/guardar');
+    fetch(url, {
+        method: id ? 'PUT' : 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(cuerpo)
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) { Swal.fire('No se pudo guardar', data.error, 'error'); return; }
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalUsuario')).hide();
+            Swal.fire({ icon: 'success', title: data.message, timer: 1400, showConfirmButton: false });
+            cargarUsuarios();
+        })
+        .catch(() => Swal.fire('Error', 'No se pudo guardar el usuario.', 'error'))
+        .finally(() => { guardando = false; if (btn) btn.disabled = false; });
+}
+
+function abrirModalPassword(id, username) {
+    document.getElementById('passwordUsuarioId').value = id;
+    document.getElementById('passwordUsuarioNombre').textContent = username;
+    document.getElementById('passwordNueva').value = '';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPassword')).show();
+}
+
+function guardarPassword() {
+    const id = document.getElementById('passwordUsuarioId').value;
+    const clave = document.getElementById('passwordNueva').value;
+    if (!clave) { Swal.fire('Falta la contraseña', 'Escribe la contraseña nueva.', 'warning'); return; }
+
+    fetch(window.url('/usuarios/' + id + '/password'), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ password: clave })
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) { Swal.fire('No se pudo restablecer', data.error, 'error'); return; }
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPassword')).hide();
+            Swal.fire({ icon: 'success', title: data.message, timer: 1400, showConfirmButton: false });
+        })
+        .catch(() => Swal.fire('Error', 'No se pudo restablecer la contraseña.', 'error'));
+}
+
+function cambiarEstado(id, username, activar) {
+    Swal.fire({
+        title: activar ? '¿Activar la cuenta?' : '¿Desactivar la cuenta?',
+        text: activar
+            ? username + ' podrá volver a entrar.'
+            : username + ' no podrá entrar, pero su nombre se conserva en el historial.',
+        icon: 'question',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: activar ? 'Activar' : 'Desactivar',
+        confirmButtonColor: activar ? '#0acf97' : '#fa5c7c'
+    }).then(res => {
+        if (!res.isConfirmed) return;
+        fetch(window.url('/usuarios/' + id + '/estado'), {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ activo: activar })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) { Swal.fire('No se pudo cambiar', data.error, 'error'); return; }
+                Swal.fire({ icon: 'success', title: data.message, timer: 1400, showConfirmButton: false });
+                cargarUsuarios();
+            })
+            .catch(() => Swal.fire('Error', 'No se pudo cambiar el estado.', 'error'));
+    });
+}
+</script>
+
+</body>
+</html>
